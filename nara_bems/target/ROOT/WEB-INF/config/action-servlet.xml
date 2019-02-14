@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:p="http://www.springframework.org/schema/p"
+        xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+                http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+                http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+                http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd">
+
+    
+    <mvc:resources mapping="/**" location="/WEB-INF/" />
+    <!-- <mvc:resources mapping="/Bootstrap" location="/WEB-INF/Bootstrap/" />
+    <mvc:resources mapping="/config" location="/WEB-INF/config/" /> -->
+    <mvc:default-servlet-handler/>
+    
+    <context:component-scan base-package="egov.linkpay.ims" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Repository"/>
+        <context:include-filter type="annotation" expression="egov.linkpay.ims.common.common.CommonMail"/>
+    </context:component-scan>
+    
+
+    <mvc:annotation-driven>
+        <mvc:argument-resolvers>
+            <bean class="egov.linkpay.ims.common.resolver.CustomMapArgumentResolver"></bean>
+        </mvc:argument-resolvers>
+    </mvc:annotation-driven>
+    
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="*.do"/>
+            <bean id="loggerInterceptor" class="egov.linkpay.ims.common.logger.LoggerInterceptor"></bean>
+        </mvc:interceptor>
+    </mvc:interceptors>
+    
+    <aop:config proxy-target-class="true">        
+        <aop:pointcut id="serviceOperation" expression="execution(public * egov.linkpay.ims.*.service.*ServiceImpl.*(..))" />
+        <aop:advisor id="transactionAdvisor" pointcut-ref="serviceOperation" advice-ref="txAdvice"/>
+    </aop:config>
+    
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+	</bean>
+	
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+	        <tx:attributes>
+	               <tx:method name="insert*" propagation="REQUIRED" rollback-for="Exception"/>
+	               <tx:method name="update*" propagation="REQUIRED" rollback-for="Exception"/>
+	               <tx:method name="delete*" propagation="REQUIRED" rollback-for="Exception"/>
+	        </tx:attributes>
+	</tx:advice>
+	
+	<bean class="org.springframework.web.multipart.commons.CommonsMultipartResolver" id="multipartResolver">
+        <property name="maxUploadSize" value="12139520"></property>
+    </bean>
+        
+    <bean id="loggerAspect" class="egov.linkpay.ims.common.logger.LoggerAspect" />    
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.BeanNameViewResolver" p:order="0" />
+    
+    <!-- Tiles -->
+    <bean id="tilesViewResolver"
+          class="org.springframework.web.servlet.view.UrlBasedViewResolver"
+          p:viewClass="org.springframework.web.servlet.view.tiles3.TilesView"          
+          p:order="1" />
+          
+    <bean id="tilesConfigurer"
+          class="org.springframework.web.servlet.view.tiles3.TilesConfigurer"
+          p:definitions="/WEB-INF/config/tiles-config.xml" />
+    
+    <bean
+        class="org.springframework.web.servlet.view.UrlBasedViewResolver" 
+        p:viewClass="org.springframework.web.servlet.view.JstlView"        
+        p:order="2" />
+    
+    <!-- Json -->
+    
+    <bean id="jsonMapper" class="com.fasterxml.jackson.databind.ObjectMapper" />
+
+    <bean id="jsonView" class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">
+		<property name="objectMapper" ref="jsonMapper" />
+	</bean>
+    
+    <!-- Exception -->
+    <bean id="customExceptionResolver" class="egov.linkpay.ims.common.resolver.CustomExceptionResolver" />
+</beans>

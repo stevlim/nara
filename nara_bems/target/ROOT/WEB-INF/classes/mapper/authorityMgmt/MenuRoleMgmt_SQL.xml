@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="menuRoleMgmt">
+    <select id="selectMenuRoleMgmtList" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT AUTH_NO
+                  ,AUTH_NM
+                  ,AUTH_TYPE
+                  ,MER_AUTH_TYPE
+                  ,STATUS
+                  ,REG_DT
+                  ,CASE WHEN UPD_DT IS NULL THEN ' ' ELSE UPD_DT END AS UPD_DT
+                  ,WORKER
+                  ,WORKER_IP
+            FROM   TB_BO_USR_AUTH
+            WHERE  1=1
+            AND    AUTH_TYPE = #{AUTH_TYPE}
+            ORDER BY AUTH_NO
+        ]]>
+    </select>
+    
+    <select id="selectMenuRoleMgmtDtl" parameterType="hashmap" resultType="hashmap">
+        <choose>
+            <when test="AUTH_NO != null and AUTH_NO != ''">
+                <![CDATA[
+	                SELECT MENU_GRP_NO
+                          ,0 AS MENU_NO
+                          ,MENU_GRP_NM AS MENU_NM
+                          ,1 AS DEPTH
+                          ,0 AS MENU_SEQ
+                          ,MENU_GRP_SEQ AS PSORT_NO
+                          ,'0' AS STATUS
+                          ,'0' AS AUTH_CD
+                    FROM  TB_BO_MENU_GRP
+                    WHERE STATUS = 1
+                    AND   MENU_GRP_TYPE = ${AUTH_TYPE}
+                    UNION ALL
+                    SELECT B.MENU_GRP_NO
+                          ,B.MENU_NO
+                          ,B.MENU_NM
+                          ,2 AS DEPTH
+                          ,B.MENU_SEQ
+                          ,(SELECT MENU_GRP_SEQ FROM TB_BO_MENU_GRP A WHERE A.MENU_GRP_NO = B.MENU_GRP_NO) AS PSORT_NO
+                          ,B.STATUS
+                          ,COALESCE(D.AUTH_CD,'0') AS AUTH_CD
+                    FROM  TB_BO_MENU B
+                    INNER JOIN TB_BO_MENU_GRP C ON B.MENU_GRP_NO = C.MENU_GRP_NO
+                    LEFT OUTER JOIN TB_BO_USR_AUTH_DTL D ON (B.MENU_NO = D.MENU_NO
+                    AND D.AUTH_NO = ${AUTH_NO})
+                    WHERE B.MENU_TYPE = #{AUTH_TYPE}
+                    AND   B.STATUS = 1
+                    AND   C.STATUS = 1
+                    ORDER BY PSORT_NO, DEPTH, MENU_SEQ
+	            ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+					SELECT MENU_GRP_NO
+                          ,0 AS MENU_NO
+                          ,MENU_GRP_NM AS MENU_NM
+                          ,1 AS DEPTH
+                          ,0 AS MENU_SEQ
+                          ,MENU_GRP_SEQ AS PSORT_NO
+                          ,'0' AS STATUS
+                          ,0 AS AUTH_CD
+                    FROM  TB_BO_MENU_GRP
+                    WHERE STATUS = 1
+                    AND   MENU_GRP_TYPE = #{AUTH_TYPE}
+                    UNION ALL
+                    SELECT B.MENU_GRP_NO
+                          ,B.MENU_NO
+                          ,B.MENU_NM
+                          ,2 AS DEPTH
+                          ,B.MENU_SEQ
+                          ,(SELECT MENU_GRP_SEQ FROM TB_BO_MENU_GRP A WHERE A.MENU_GRP_NO = B.MENU_GRP_NO) AS PSORT_NO
+                          ,B.STATUS
+                          ,0 AS AUTH_CD
+                    FROM  TB_BO_MENU B
+                    WHERE MENU_TYPE = #{AUTH_TYPE}
+                    AND STATUS NOT IN ('9')
+                    ORDER BY PSORT_NO, DEPTH, MENU_SEQ
+                ]]>
+            </otherwise>
+        </choose>
+    </select>
+    
+    <insert id="insertMenuRoleMgmt" parameterType="hashmap">
+        <choose>
+            <when test="AUTH_TYPE == 1">
+                <![CDATA[
+		            INSERT INTO TB_BO_USR_AUTH (AUTH_NO, AUTH_NM, AUTH_TYPE, STATUS, WORKER, WORKER_IP, REG_DT)
+		                                VALUES ((SELECT COALESCE(MAX(UA.AUTH_NO),0) + 1 FROM TB_BO_USR_AUTH UA)
+		                                , #{AUTH_NM}, #{AUTH_TYPE}, #{STATUS}, #{WORKER}, #{WORKER_IP}
+		                                , DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"))
+		        ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+                    INSERT INTO TB_BO_USR_AUTH (AUTH_NO, AUTH_NM, AUTH_TYPE, MER_AUTH_TYPE, STATUS, WORKER
+                                               ,WORKER_IP, REG_DT)
+                                        VALUES ((SELECT COALESCE(MAX(UA.AUTH_NO),0) + 1 FROM TB_BO_USR_AUTH UA)
+                                        , #{AUTH_NM}, #{AUTH_TYPE}, #{MER_AUTH_TYPE}, #{STATUS}, #{WORKER}
+                                               ,#{WORKER_IP}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"))
+                ]]>
+            </otherwise>
+        </choose>
+    </insert>
+    
+    <insert id="insertMenuRoleDtl" parameterType="hashmap">
+        <!-- <selectKey keyProperty="C_AUTH_NO" resultType="int" order="BEFORE">
+            SELECT AUTH_NO FROM TB_BO_USR_AUTH
+            WHERE ROWNUM = 1
+            ORDER BY AUTH_NO DESC
+        </selectKey> -->
+        <selectKey keyProperty="C_AUTH_NO" resultType="int" order="BEFORE">
+            SELECT AUTH_NO FROM TB_BO_USR_AUTH
+            ORDER BY AUTH_NO DESC
+            LIMIT 1
+        </selectKey>
+        <![CDATA[
+            INSERT INTO TB_BO_USR_AUTH_DTL (AUTH_NO, MENU_NO, AUTH_CD, WORKER, WORKER_IP, REG_DT)
+			SELECT
+	    ]]>
+        <choose>
+            <when test="AUTH_NO != 0">
+                <![CDATA[
+                   ${AUTH_NO}
+                ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+                    ${C_AUTH_NO}
+                ]]>
+            </otherwise>
+        </choose>
+        <![CDATA[
+			      ,CAST(A.COLUMN_VALUE AS UNSIGNED)
+			      ,CASE WHEN B.COLUMN_VALUE IS NOT NULL THEN 1 ELSE 2 END
+			      ,#{WORKER}
+			      ,#{WORKER_IP}
+			      , DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+			FROM   (
+						SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(#{ADDLIST}, ',', T2.row_number), ',', -1) COLUMN_VALUE
+						FROM (SELECT @row_num := @row_num + 1 row_number
+						         FROM 
+						         (
+		]]>		
+				         
+        SELECT 1 AS TMP
+        <if test="ADDLIST_COUNT != 0">
+	      	<foreach collection="ADDLIST_ARR" item="item">
+	  			UNION ALL SELECT 1 AS TMP
+	   		</foreach>
+   		</if>
+   		
+		<![CDATA[			 ) a
+						         INNER JOIN (SELECT @row_num := 0) b
+						         WHERE @row_num < #{ADDLIST_COUNT}
+						         ) AS t2
+			
+						) A
+			LEFT OUTER JOIN (
+									SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(#{ALLLIST}, ',', T2.row_number), ',', -1) COLUMN_VALUE
+									FROM (SELECT @row_num := @row_num + 1 row_number
+									         FROM (
+		]]>				         
+        
+      	SELECT 1 AS TMP
+      	<if test="ALLLIST_COUNT != 0">
+	      	<foreach collection="ALLLIST_ARR" item="item">
+	  			UNION ALL SELECT 1 AS TMP
+	   		</foreach>
+   		</if>
+		       	
+		<![CDATA[			 ) a 
+								 INNER JOIN (SELECT @row_num := 0) b
+									         WHERE @row_num < #{ALLLIST_COUNT}
+									         ) AS t2
+									) B
+			ON     A.COLUMN_VALUE = B.COLUMN_VALUE
+			LEFT OUTER JOIN (
+									SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(#{READLIST}, ',', T2.row_number), ',', -1) COLUMN_VALUE
+									FROM (SELECT @row_num := @row_num + 1 row_number
+									         FROM (
+		]]>		
+				         
+        SELECT 1 AS TMP
+        <if test="READLIST_COUNT != 0">
+	      	<foreach collection="READLIST_ARR" item="item">
+	  			UNION ALL SELECT 1 AS TMP
+	   		</foreach>
+   		</if>
+   		
+		<![CDATA[			 ) a  
+								 INNER JOIN (SELECT @row_num := 0) b
+									         WHERE @row_num < #{READLIST_COUNT}
+									         ) AS t2
+									) C
+			ON     A.COLUMN_VALUE = C.COLUMN_VALUE
+			WHERE  A.COLUMN_VALUE <> 0
+        ]]>
+        <!-- <![CDATA[
+			      ,CAST(A.COLUMN_VALUE AS INT)
+			      ,CASE WHEN B.COLUMN_VALUE IS NOT NULL THEN 1 ELSE 2 END
+			      ,#{WORKER}
+			      ,#{WORKER_IP}
+			      , DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+			FROM   TABLE(UF_GET_SPLIT(#{ADDLIST}, ',')) A
+			LEFT OUTER JOIN TABLE(UF_GET_SPLIT(#{ALLLIST}, ',')) B
+			ON     A.COLUMN_VALUE = B.COLUMN_VALUE
+			LEFT OUTER JOIN TABLE(UF_GET_SPLIT(#{READLIST}, ',')) C
+			ON     A.COLUMN_VALUE = C.COLUMN_VALUE
+			WHERE  A.COLUMN_VALUE <> 0
+        ]]> -->
+    </insert>
+    
+    <update id="updateMenuRoleMgmt" parameterType="hashmap">
+        <![CDATA[
+            UPDATE TB_BO_USR_AUTH
+            SET    AUTH_NM   = #{AUTH_NM}
+                  ,STATUS    = #{STATUS}
+                  ,UPD_DT    = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+                  ,WORKER    = #{WORKER}
+                  ,WORKER_IP = #{WORKER_IP}
+            WHERE AUTH_NO = ${AUTH_NO}
+        ]]>
+    </update>
+    
+    <delete id="deleteMenuRoleDtl" parameterType="hashmap">
+        <![CDATA[
+            DELETE FROM TB_BO_USR_AUTH_DTL
+			WHERE AUTH_NO = ${AUTH_NO}
+			AND   MENU_NO IN (SELECT CAST(COLUMN_VALUE AS NUMBER) FROM TABLE(UF_GET_SPLIT(#{REMOVELIST}, ',')))
+        ]]>
+    </delete>
+    
+    <update id="updateAllMenuRoleDtl" parameterType="hashmap">
+        <![CDATA[
+            UPDATE TB_BO_USR_AUTH_DTL
+			SET    AUTH_CD = 1
+			      ,WORKER  = #{WORKER}
+			WHERE  AUTH_NO = ${AUTH_NO}
+			AND    MENU_NO IN ( SELECT CAST(COLUMN_VALUE AS NUMBER)
+			                    FROM   TABLE(UF_GET_SPLIT(#{ALLLIST}, ',')))
+        ]]>
+    </update>
+    
+    <update id="updateReadMenuRoleDtl" parameterType="hashmap">
+        <![CDATA[
+            UPDATE TB_BO_USR_AUTH_DTL
+            SET    AUTH_CD = 2
+                  ,WORKER  = #{WORKER}
+            WHERE  AUTH_NO = ${AUTH_NO}
+            AND    MENU_NO IN ( SELECT CAST(COLUMN_VALUE AS NUMBER)
+                                FROM  TABLE(UF_GET_SPLIT(#{READLIST}, ',')))
+        ]]>
+    </update>
+    
+    <select id="selectMenuRoleMerAuthTypeCnt" parameterType="hashmap" resultType="integer">
+        <![CDATA[
+            SELECT COALESCE(COUNT(1),0)
+            FROM TB_BO_USR_AUTH 
+            WHERE AUTH_TYPE     = 2
+            AND   MER_AUTH_TYPE = 1
+        ]]>
+    </select>
+</mapper>

@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="creditCardBINMgmt">
+	<select id="selectCreditCardBINSearch" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT * FROM 
+			(
+				SELECT 
+					CARD_BIN, VAN_CP_CD, CP_CD, CARD_NM, CHKCARD_FLG , (SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0020' AND CODE1=CHKCARD_FLG) AS CHKCARD_NM
+				   , CARD_TYPE_CD, CARD_INFO
+				   , CASE WHEN CARD_TYPE_CD = '01' THEN '개인'
+		                        WHEN CARD_TYPE_CD = '02' THEN '법인'
+		                        WHEN CARD_TYPE_CD = '03' THEN '개인+법인'
+		                        END AS CARD_TYPE_NM
+				   , (SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0002' AND CODE1=CP_CD) AS CARD_CD_NM, (SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0002' AND CODE1=ISS_CP_CD) AS ISS_CP_NM, OVER_FLG
+				   ,ROW_NUMBER()OVER(ORDER BY CARD_BIN DESC) RNUM
+			    FROM 
+			    	TB_CARD_BIN
+			  	WHERE 1=1
+		  	]]>
+		  	<if test="cardCd != null and cardCd!='' and cardCd != 'ALL'">
+			  	<![CDATA[
+			  		AND CP_CD = #{cardCd}
+			  	]]>
+		  	</if>
+		  	<if test="cardType != null  and cardType!='' and cardType != 'ALL'">
+			  	<![CDATA[
+			  		AND CARD_TYPE_CD = #{cardType}
+			  	]]>
+		  	</if>
+		  	<if test="foreignCardType != null and foreignCardType!='' and foreignCardType != 'ALL'">
+			  	<![CDATA[
+			  		AND OVER_FLG = #{foreignCardType}
+			  	]]>
+		  	</if>
+		  	<if test="cardBin != null and cardBin != ''">
+			  	<![CDATA[
+			  		AND CARD_BIN = #{cardBin}
+			  	]]>
+		  	</if>
+		  	<![CDATA[
+		  		AND USE_FLG = '0'
+	  			ORDER BY CARD_BIN
+  			) TBL
+  			WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	  	]]>
+	</select>
+	<select id="selectCreditCardBINSearchTotal" parameterType="hashmap" resultType="Integer">
+		<![CDATA[
+			SELECT 
+				COUNT(1)
+		    FROM 
+		    	TB_CARD_BIN
+		  	WHERE 1=1
+	  	]]>
+	  	<if test="cardCd != null and cardCd!='' and cardCd != 'ALL'">
+		  	<![CDATA[
+		  		AND CP_CD = #{cardCd}
+		  	]]>
+	  	</if>
+	  	<if test="cardType != null  and cardType!='' and cardType != 'ALL'">
+		  	<![CDATA[
+		  		AND CARD_TYPE_CD = #{cardType}
+		  	]]>
+	  	</if>
+	  	<if test="foreignCardType != null and foreignCardType!='' and foreignCardType != 'ALL'">
+		  	<![CDATA[
+		  		AND OVER_FLG = #{foreignCardType}
+		  	]]>
+	  	</if>
+	  	<if test="cardBin != null and cardBin != ''">
+		  	<![CDATA[
+		  		AND CARD_BIN = #{cardBin}
+		  	]]>
+	  	</if>
+	  	<![CDATA[
+	  		AND USE_FLG = '0'
+	  	]]>
+	</select>
+	<select id="selectAppLmtList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT * FROM 
+			(
+				SELECT 
+					ROWNUM AS RNUM,
+				   A.MID, 
+			       A.TR_DT, 
+			       A.PM_CD, 
+			       A.SPM_CD, 
+			       MAX(B.GID), 
+			       MAX(B.VID), 
+			       MAX(B.CO_NO), 
+			       A.CP_CD, 
+			       (SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0002' AND CODE1=A.CP_CD) AS CARD_NM,
+			       A.MBS_NO, 
+			       MAX(A.STMT_CYCLE), 
+			       MAX(B.PAY_ID_CD), 
+			       MAX(B.MBS_TYPE_CD), 
+			       MAX(B.MALL_TYPE_CD),
+			       /*   SUM(A.APP_CNT),    */
+			       A.APP_CNT ,
+			       SUM(A.APP_AMT) APP_AMT, 
+			       SUM(A.INST_CNT), 
+			       SUM(A.INST_AMT), 
+			       SUM(A.NON_INST_CNT), 
+			       SUM(A.NON_INST_AMT), 
+			       SUM(A.CAN_BF_CNT), 
+			       SUM(A.CAN_BF_AMT), 
+			       SUM(A.CAN_INST_BF_CNT), 
+			       SUM(A.CAN_INST_BF_AMT), 
+			       SUM(A.CAN_NINST_BF_CNT), 
+			       SUM(A.CAN_NINST_BF_AMT),
+			       SUM(A.CAN_AF_CNT), 
+			       SUM(A.CAN_AF_AMT), 
+			       SUM(A.CAN_INST_AF_CNT), 
+			       SUM(A.CAN_INST_AF_AMT), 
+			       SUM(A.CAN_NINST_AF_CNT), 
+			       SUM(A.CAN_NINST_AF_AMT),
+			       SUM(A.APP_AMT + A.INST_AMT + A.NON_INST_AMT) TOT_APP_AMT,
+			       SUM(A.CAN_BF_AMT + A.CAN_INST_BF_AMT + A.CAN_NINST_BF_AMT) CAN_BFT_AMT,
+			       SUM(A.CAN_AF_AMT + A.CAN_INST_AF_AMT + A.CAN_NINST_AF_AMT) CAN_AFT_AMT,
+			       CASE 
+			       		WHEN LIMIT_APP_ACQU = '0' AND LIMIT_CONO_FNNO = '0' AND D.MBS_NO = '00000000' THEN '총한도'
+	                	WHEN LIMIT_APP_ACQU = '0' AND D.MBS_NO != '00000000' THEN '승인한도'
+	                	WHEN LIMIT_APP_ACQU = '1' THEN '매입한도'
+	                	WHEN LIMIT_APP_ACQU = '2' THEN '일시불/할부'
+	                	END LIMIT_NM,
+			 	  CASE 
+			 	   		WHEN LIMIT_APP_ACQU = '0' THEN (MB_LMT - (APP_AMT + INST_AMT + NON_INST_AMT))
+		             	WHEN LIMIT_APP_ACQU = '1' THEN (MB_LMT - (CAN_BF_AMT + CAN_INST_BF_AMT + CAN_NINST_BF_AMT))
+			          	WHEN LIMIT_APP_ACQU = '2' THEN (LIMIT_LUMP_AMT - APP_AMT)
+			           	ELSE 0
+			           	END AS REMAIN_AMT,
+		          CASE 
+		          		WHEN LIMIT_APP_ACQU = '2' THEN (LIMIT_INSTMNT_AMT - INST_AMT)
+		               	ELSE 0
+		               	END AS REMAIN_INST_AMT,
+			  	  CASE 
+			  	  		WHEN LIMIT_APP_ACQU = '0' THEN TRUNC((APP_AMT + INST_AMT + NON_INST_AMT)/APP_CNT,0)
+		               	WHEN LIMIT_APP_ACQU = '1' THEN TRUNC((CAN_BF_AMT + CAN_INST_BF_AMT + CAN_NINST_BF_AMT)/CAN_BF_CNT,0)
+			            WHEN LIMIT_APP_ACQU = '2' THEN TRUNC(APP_AMT/APP_CNT,0)
+		               	ELSE 0
+		               	END AS DAILY_APP_AMT,
+		          CASE 
+		          		WHEN LIMIT_APP_ACQU = '2' THEN TRUNC(INST_AMT/APP_CNT,0)
+			            ELSE 0
+		               	END AS DAILY_APP_INST_AMT,
+		          CASE 
+		          		WHEN LIMIT_APP_ACQU = '0' THEN TRUNC((APP_AMT + INST_AMT + NON_INST_AMT)/APP_CNT,0)*ALL_APP_CNT
+			            WHEN LIMIT_APP_ACQU = '1' THEN TRUNC((CAN_BF_AMT + CAN_INST_BF_AMT + CAN_NINST_BF_AMT)/CAN_BF_CNT,0)*ALL_ACQU_CNT
+			            WHEN LIMIT_APP_ACQU = '2' THEN TRUNC(APP_AMT/APP_CNT,0)*ALL_APP_CNT
+			            ELSE 0
+		               	END AS MONTH_APP_AMT,
+		          CASE 
+		          		WHEN LIMIT_APP_ACQU = '2' THEN TRUNC(INST_AMT/APP_CNT,0)*ALL_APP_CNT
+		             	ELSE 0
+		               	END AS MONTH_APP_INST_AMT,
+		          CASE 
+		          		WHEN LIMIT_APP_ACQU = '0' THEN MB_LMT - TRUNC((APP_AMT + INST_AMT + NON_INST_AMT)/APP_CNT,0)*ALL_APP_CNT
+			            WHEN LIMIT_APP_ACQU = '1' THEN MB_LMT - TRUNC((CAN_BF_AMT + CAN_INST_BF_AMT + CAN_NINST_BF_AMT)/CAN_BF_CNT,0)*ALL_ACQU_CNT
+			            WHEN LIMIT_APP_ACQU = '2' THEN LIMIT_LUMP_AMT - TRUNC(APP_AMT/APP_CNT,0)*ALL_APP_CNT
+			            ELSE 0
+		               	END AS MONTH_REMAIN_AMT,
+		          CASE 
+		          		WHEN LIMIT_APP_ACQU = '2' THEN LIMIT_INSTMNT_AMT - TRUNC(INST_AMT/APP_CNT,0)*ALL_APP_CNT
+			            ELSE 0
+		               	END AS MONTH_REMAIN_INST_AMT,
+		          CASE 
+						WHEN LIMIT_APP_ACQU = '0' AND TRUNC((APP_AMT + INST_AMT + NON_INST_AMT)/APP_CNT,0) !=0 THEN TRUNC((COALESCE(MB_LMT,0) - TRUNC((APP_AMT + INST_AMT + NON_INST_AMT)/APP_CNT,0)*ALL_APP_CNT)/ TRUNC((APP_AMT + INST_AMT + NON_INST_AMT)/APP_CNT,0),0)
+		               	WHEN LIMIT_APP_ACQU = '1' AND TRUNC((CAN_BF_AMT + CAN_INST_BF_AMT + CAN_NINST_BF_AMT)/APP_CNT,0) !=0 THEN TRUNC((COALESCE(MB_LMT,0) - TRUNC((CAN_BF_AMT + CAN_INST_BF_AMT + CAN_NINST_BF_AMT)/ACQU_CNT,0)*ALL_ACQU_CNT)/TRUNC((CAN_BF_AMT + CAN_INST_BF_AMT + CAN_NINST_BF_AMT)/ACQU_CNT,0),0)
+		               	WHEN LIMIT_APP_ACQU = '2' AND TRUNC(APP_AMT/APP_CNT,0) !=0 THEN TRUNC((COALESCE(LIMIT_LUMP_AMT,0) - TRUNC(APP_AMT/APP_CNT,0)*ALL_APP_CNT)/TRUNC(APP_AMT/APP_CNT,0),0)
+		               	ELSE 0
+		               	END AS REMAIN_DAY,
+		          CASE 
+		          		WHEN LIMIT_APP_ACQU = '2' AND TRUNC(INST_AMT/APP_CNT,0) != 0 THEN TRUNC((LIMIT_INSTMNT_AMT - TRUNC(INST_AMT/APP_CNT,0)*ALL_APP_CNT)/TRUNC(INST_AMT/APP_CNT,0),0)
+		               	ELSE 0
+		               	END AS REMAIN_INST_DAY,
+		          CASE 
+		          		WHEN LIMIT_APP_ACQU = '0' AND MB_LMT != 0 THEN TRUNC((APP_AMT + INST_AMT + NON_INST_AMT)/MB_LMT*100,0)
+		               	WHEN LIMIT_APP_ACQU = '1' AND MB_LMT != 0 THEN TRUNC((CAN_BF_AMT + CAN_INST_BF_AMT + CAN_NINST_BF_AMT)/MB_LMT*100,0)
+		               	WHEN LIMIT_APP_ACQU = '2' AND LIMIT_LUMP_AMT != 0 THEN TRUNC(APP_AMT/LIMIT_LUMP_AMT*100,0)
+		               	ELSE 0
+		               	END AS APP_PER,
+		          CASE 
+		          		WHEN LIMIT_APP_ACQU = '2' AND LIMIT_INSTMNT_AMT != 0 THEN TRUNC(INST_AMT/LIMIT_INSTMNT_AMT*100,0)
+		               	ELSE 0
+		               	END AS APP_INST_PER,
+		          D.LIMIT_APP_ACQU, D.LIMIT_LUMP_AMT, D.LIMIT_INSTMNT_AMT, D.MB_LMT
+			      FROM (
+			          SELECT B.MID, C.APP_DT TR_DT, C.PM_CD, C.SPM_CD, A.APP_CARD_CD CP_CD, A.MBS_NO, MAX(C.STMT_CYCLE_CD) STMT_CYCLE,
+			                  /*   SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') THEN 1 ELSE 0 END) APP_CNT,   **/
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') THEN C.GOODS_AMT ELSE 0 END) APP_AMT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' THEN 1 ELSE 0 END) INST_CNT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' THEN C.GOODS_AMT ELSE 0 END) INST_AMT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' THEN 1 ELSE 0 END) NON_INST_CNT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' THEN C.GOODS_AMT ELSE 0 END) NON_INST_AMT,
+			                  0 CAN_BF_CNT, 0 CAN_BF_AMT,    0 CAN_INST_BF_CNT, 0 CAN_INST_BF_AMT, 0 CAN_NINST_BF_CNT,    0 CAN_NINST_BF_AMT,
+			                  0 CAN_AF_CNT,    0 CAN_AF_AMT,    0 CAN_INST_AF_CNT, 0 CAN_INST_AF_AMT,    0 CAN_NINST_AF_CNT,    0 CAN_NINST_AF_AMT,
+							 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND #{frDt} AND OFFDAY_CD = '1') AS ACQU_CNT,
+							 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND CONCAT(SUBSTR(#{frDt},1,6),'31') AND OFFDAY_CD = '1') AS ALL_ACQU_CNT,
+							 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND CONCAT(SUBSTR(#{frDt},1,6),'31')) AS ALL_APP_CNT,
+							 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND TO_DATE(#{frDt}-1,'YYYYMMDD')) AS APP_CNT
+			          FROM TB_CARD_TRX A, TB_MBS B, TB_MSTR_TRX C
+			          WHERE C.APP_DT = #{frDt}
+			            AND A.TID = C.OTID
+			            AND A.TID = C.TID
+			            /*   AND A.MBS_NO = B.MID   */
+			          GROUP BY B.MID, C.APP_DT, C.PM_CD, C.SPM_CD, A.APP_CARD_CD, A.MBS_NO, C.STMT_CYCLE_CD, C.GOODS_AMT
+			          UNION ALL
+			          SELECT B.MID, C.CC_DT TR_DT, C.PM_CD, C.SPM_CD, A.APP_CARD_CD CP_CD, A.MBS_NO, MAX(C.STMT_CYCLE_CD) STMT_CYCLE_CD,
+			                  /*  0 APP_CNT,   */ 0 APP_AMT,    0 INST_CNT,    0 INST_AMT,    0 NON_INST_CNT,    0 NON_INST_AMT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') AND C.TRX_ST_CD = '1' THEN 1 ELSE 0 END) CAN_BF_CNT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') AND C.TRX_ST_CD = '1' THEN C.GOODS_AMT ELSE 0 END) CAN_BF_AMT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' AND C.TRX_ST_CD = '1' THEN 1 ELSE 0 END) CAN_INST_BF_CNT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' AND C.TRX_ST_CD = '1' THEN C.GOODS_AMT ELSE 0 END) CAN_INST_BF_AMT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' AND C.TRX_ST_CD = '1' THEN 1 ELSE 0 END) CAN_NINST_BF_CNT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' AND C.TRX_ST_CD = '1' THEN C.GOODS_AMT ELSE 0 END) CAN_NINST_BF_AMT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') AND C.TRX_ST_CD = '2' THEN 1 ELSE 0 END) CAN_AF_CNT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') AND C.TRX_ST_CD = '2' THEN C.GOODS_AMT ELSE 0 END) CAN_AF_AMT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' AND C.TRX_ST_CD = '2' THEN 1 ELSE 0 END) CAN_INST_AF_CNT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' AND C.TRX_ST_CD = '2' THEN C.GOODS_AMT ELSE 0 END) CAN_INST_AF_AMT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' AND C.TRX_ST_CD = '2' THEN 1 ELSE 0 END) CAN_NINST_AF_CNT,
+			                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' AND C.TRX_ST_CD = '2' THEN C.GOODS_AMT ELSE 0 END) CAN_NINST_AF_AMT,
+							 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND #{frDt} AND OFFDAY_CD = '1') AS ACQU_CNT,
+							 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND CONCAT(SUBSTR(#{frDt},1,6),'31') AND OFFDAY_CD = '1') AS ALL_ACQU_CNT,
+							 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND CONCAT(SUBSTR(#{frDt},1,6),'31')) AS ALL_APP_CNT,
+							 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND TO_DATE(#{frDt}-1,'YYYYMMDD')) AS APP_CNT
+			          FROM TB_CARD_TRX A, TB_MBS B, TB_MSTR_TRX C
+			          WHERE C.CC_DT = #{frDt}
+			          AND C.TRX_ST_CD IN ('1','2')
+			          AND A.TID = C.TID
+			          /*   AND A.MBS_NO = B.MID   */
+			          GROUP BY B.MID, C.CC_DT, C.PM_CD, C.SPM_CD, A.APP_CARD_CD, A.MBS_NO, C.STMT_CYCLE_CD, C.GOODS_AMT          
+			      ) A, TB_MBS B, TB_CARD_MBS D
+			      WHERE B.MID = A.MID
+			      AND A.MBS_NO = D.MBS_NO
+			      ]]>
+			      <if test="merNo != null and merNo != ''">
+			      <![CDATA[
+			      	AND A.MBS_NO = #{merNo}
+			      ]]>
+			      </if>
+			      <if test="cardCd != 'ALL'" >
+			      <![CDATA[
+			      	AND A.CP_CD = #{cardCd}
+			      ]]>
+			      </if>
+			      <choose>
+			      	<when test="inquiryFlg == 0 ">
+			      	<![CDATA[
+			      	AND D.LIMIT_APP_ACQU = '0' AND D.MBS_NO = '00000000'
+			      	]]>
+			      	</when>
+			      	<when test="inquiryFlg == 3"> 
+			      	<![CDATA[
+			      	AND D.LIMIT_APP_ACQU = '0' AND D.MBS_NO != '00000000'
+			      	]]>
+			      	</when>
+			      	<when test="inquiryFlg == 1">
+			      	<![CDATA[
+			      	AND D.LIMIT_APP_ACQU = '1'
+			      	]]>
+			      	</when>
+			      	<when test="inquiryFlg == 2"> 
+			      	<![CDATA[
+			      	AND D.LIMIT_APP_ACQU = '2'
+			      	]]>
+			      	</when>
+			      	<otherwise>
+			      		<if test="cardCd==null and cardCd!==''">
+			      			<![CDATA[
+			      				(AND D.LIMIT_CONO_FNNO = '1' OR D.MBS_NO = '00000000')
+			      			]]>
+			      		</if>
+			      	</otherwise>
+			      </choose>
+			      <if test="merNo!=null and merNo!='' ">
+			      	<![CDATA[
+			      		AND B.CO_NO = #{merNo}
+			      	]]>
+			      </if>
+			      <![CDATA[
+			     GROUP BY A.MID, A.TR_DT, A.PM_CD, A.SPM_CD, A.CP_CD, A.MBS_NO, A.APP_AMT , A.INST_AMT , A.NON_INST_AMT,
+	          A.APP_CNT, A.ALL_APP_CNT, A.ALL_ACQU_CNT, A.ACQU_CNT,
+	          A.CAN_BF_AMT , A.CAN_INST_BF_AMT ,A.CAN_NINST_BF_AMT,A.CAN_BF_CNT,
+	          D.LIMIT_INSTMNT_AMT, D.LIMIT_LUMP_AMT, D.LIMIT_APP_ACQU,D.LIMIT_CONO_FNNO, D.MBS_NO, D.MB_LMT, ROWNUM
+	          ) TBL
+	          WHERE RNUM 	BETWEEN  ${intPageStart} AND ${intPageEnd}
+		]]>
+	</select>
+	<select id="selectAppLmtListTotal" parameterType="hashmap" resultType="Integer">
+		<![CDATA[
+			SELECT 
+			   COUNT(1)
+		      FROM (
+		          SELECT B.MID, C.APP_DT TR_DT, C.PM_CD, C.SPM_CD, A.APP_CARD_CD CP_CD, A.MBS_NO, MAX(C.STMT_CYCLE_CD) STMT_CYCLE,
+		                  /*   SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') THEN 1 ELSE 0 END) APP_CNT,   **/
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') THEN C.GOODS_AMT ELSE 0 END) APP_AMT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' THEN 1 ELSE 0 END) INST_CNT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' THEN C.GOODS_AMT ELSE 0 END) INST_AMT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' THEN 1 ELSE 0 END) NON_INST_CNT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' THEN C.GOODS_AMT ELSE 0 END) NON_INST_AMT,
+		                  0 CAN_BF_CNT, 0 CAN_BF_AMT,    0 CAN_INST_BF_CNT, 0 CAN_INST_BF_AMT, 0 CAN_NINST_BF_CNT,    0 CAN_NINST_BF_AMT,
+		                  0 CAN_AF_CNT,    0 CAN_AF_AMT,    0 CAN_INST_AF_CNT, 0 CAN_INST_AF_AMT,    0 CAN_NINST_AF_CNT,    0 CAN_NINST_AF_AMT,
+						 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND #{frDt} AND OFFDAY_CD = '1') AS ACQU_CNT,
+						 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND CONCAT(SUBSTR(#{frDt},1,6),'31') AND OFFDAY_CD = '1') AS ALL_ACQU_CNT,
+						 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND CONCAT(SUBSTR(#{frDt},1,6),'31')) AS ALL_APP_CNT,
+						 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND TO_DATE(#{frDt}-1,'YYYYMMDD')) AS APP_CNT
+		          FROM TB_CARD_TRX A, TB_MBS B, TB_MSTR_TRX C
+		          WHERE C.APP_DT = #{frDt}
+		            AND A.TID = C.OTID
+		            AND A.TID = C.TID
+		            /*   AND A.MBS_NO = B.MID   */
+		          GROUP BY B.MID, C.APP_DT, C.PM_CD, C.SPM_CD, A.APP_CARD_CD, A.MBS_NO, C.STMT_CYCLE_CD, C.GOODS_AMT
+		          UNION ALL
+		          SELECT B.MID, C.CC_DT TR_DT, C.PM_CD, C.SPM_CD, A.APP_CARD_CD CP_CD, A.MBS_NO, MAX(C.STMT_CYCLE_CD) STMT_CYCLE_CD,
+		                  /*  0 APP_CNT,   */ 0 APP_AMT,    0 INST_CNT,    0 INST_AMT,    0 NON_INST_CNT,    0 NON_INST_AMT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') AND C.TRX_ST_CD = '1' THEN 1 ELSE 0 END) CAN_BF_CNT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') AND C.TRX_ST_CD = '1' THEN C.GOODS_AMT ELSE 0 END) CAN_BF_AMT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' AND C.TRX_ST_CD = '1' THEN 1 ELSE 0 END) CAN_INST_BF_CNT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' AND C.TRX_ST_CD = '1' THEN C.GOODS_AMT ELSE 0 END) CAN_INST_BF_AMT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' AND C.TRX_ST_CD = '1' THEN 1 ELSE 0 END) CAN_NINST_BF_CNT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' AND C.TRX_ST_CD = '1' THEN C.GOODS_AMT ELSE 0 END) CAN_NINST_BF_AMT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') AND C.TRX_ST_CD = '2' THEN 1 ELSE 0 END) CAN_AF_CNT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') IN ('0','00','1','01') AND C.TRX_ST_CD = '2' THEN C.GOODS_AMT ELSE 0 END) CAN_AF_AMT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' AND C.TRX_ST_CD = '2' THEN 1 ELSE 0 END) CAN_INST_AF_CNT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '0' AND C.TRX_ST_CD = '2' THEN C.GOODS_AMT ELSE 0 END) CAN_INST_AF_AMT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' AND C.TRX_ST_CD = '2' THEN 1 ELSE 0 END) CAN_NINST_AF_CNT,
+		                  SUM(CASE WHEN COALESCE(A.QUOTA_MON, '00') NOT IN ('0', '00', '1', '01') AND COALESCE(A.NOINT_FLG, '0') = '1' AND C.TRX_ST_CD = '2' THEN C.GOODS_AMT ELSE 0 END) CAN_NINST_AF_AMT,
+						 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND #{frDt} AND OFFDAY_CD = '1') AS ACQU_CNT,
+						 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND CONCAT(SUBSTR(#{frDt},1,6),'31') AND OFFDAY_CD = '1') AS ALL_ACQU_CNT,
+						 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND CONCAT(SUBSTR(#{frDt},1,6),'31')) AS ALL_APP_CNT,
+						 (SELECT COUNT(*) CNT FROM TB_DAY WHERE DAY BETWEEN CONCAT(SUBSTR(#{frDt},1,6),'01') AND TO_DATE(#{frDt}-1,'YYYYMMDD')) AS APP_CNT
+		          FROM TB_CARD_TRX A, TB_MBS B, TB_MSTR_TRX C
+		          WHERE C.CC_DT = #{frDt}
+		          AND C.TRX_ST_CD IN ('1','2')
+		          AND A.TID = C.TID
+		          /*   AND A.MBS_NO = B.MID   */
+		          GROUP BY B.MID, C.CC_DT, C.PM_CD, C.SPM_CD, A.APP_CARD_CD, A.MBS_NO, C.STMT_CYCLE_CD, C.GOODS_AMT          
+		      ) A, TB_MBS B, TB_CARD_MBS D
+		      WHERE B.MID = A.MID
+		      AND A.MBS_NO = D.MBS_NO
+		      ]]>
+		      <if test="merNo != null and merNo != ''">
+		      <![CDATA[
+		      	AND A.MBS_NO = #{merNo}
+		      ]]>
+		      </if>
+		      <if test="cardCd != 'ALL'" >
+		      <![CDATA[
+		      	AND A.CP_CD = #{cardCd}
+		      ]]>
+		      </if>
+		      <choose>
+		      	<when test="inquiryFlg == 0 ">
+		      	<![CDATA[
+		      	AND D.LIMIT_APP_ACQU = '0' AND D.MBS_NO = '00000000'
+		      	]]>
+		      	</when>
+		      	<when test="inquiryFlg == 3"> 
+		      	<![CDATA[
+		      	AND D.LIMIT_APP_ACQU = '0' AND D.MBS_NO != '00000000'
+		      	]]>
+		      	</when>
+		      	<when test="inquiryFlg == 1">
+		      	<![CDATA[
+		      	AND D.LIMIT_APP_ACQU = '1'
+		      	]]>
+		      	</when>
+		      	<when test="inquiryFlg == 2"> 
+		      	<![CDATA[
+		      	AND D.LIMIT_APP_ACQU = '2'
+		      	]]>
+		      	</when>
+		      	<otherwise>
+		      		<if test="cardCd==null and cardCd!==''">
+		      			<![CDATA[
+		      				(AND D.LIMIT_CONO_FNNO = '1' OR D.MBS_NO = '00000000')
+		      			]]>
+		      		</if>
+		      	</otherwise>
+		      </choose>
+		      <if test="merNo!=null and merNo!='' ">
+		      	<![CDATA[
+		      		AND B.CO_NO = #{merNo}
+		      	]]>
+		      </if>
+	</select>
+</mapper>

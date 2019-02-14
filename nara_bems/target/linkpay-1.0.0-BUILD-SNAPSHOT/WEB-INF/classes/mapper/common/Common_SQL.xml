@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="common">
+    <insert id="insertUserWorkLog" parameterType="hashmap">
+        <![CDATA[
+            INSERT INTO TB_BO_USR_WORK_LOG (SEQ_NO, USR_ID, MENU_NO, MENU_LINK, METHOD_NM ,LOG_DESC
+                                           ,WORKER_IP)
+	                                 VALUES((SELECT IF(COUNT(A.SEQ_NO)=0, 1, MAX(COALESCE(A.SEQ_NO, 0))+1) FROM TB_BO_USR_WORK_LOG A)
+	                                 		, #{USR_ID}, #{MENU_NO}, #{MENU_LINK}, #{METHOD_NM}, #{LOG_DESC}
+	                                       ,#{WORKER_IP})
+        ]]>
+    </insert>
+    
+    <select id="selectUserPSWD" parameterType="hashmap" resultType="String">
+        <![CDATA[
+            SELECT PSWD
+            FROM TB_BO_USR_ACCT 
+            WHERE USR_ID = #{USR_ID}
+        ]]>
+    </select>
+    
+    <select id="selectChkAuthUserMenu" parameterType="hashmap" resultType="integer">
+        <![CDATA[
+	        SELECT COUNT(C.AUTH_CD)
+			FROM TB_BO_USR_ACCT A
+			INNER JOIN TB_BO_USR_AUTH B ON A.AUTH_NO = B.AUTH_NO
+			INNER JOIN TB_BO_USR_AUTH_DTL C ON B.AUTH_NO = C.AUTH_NO
+			INNER JOIN TB_BO_MENU D ON C.MENU_NO = D.MENU_NO
+			INNER JOIN TB_BO_MENU_GRP E ON D.MENU_GRP_NO = E.MENU_GRP_NO
+			WHERE A.USR_ID = #{USR_ID}
+			AND   D.MENU_URI_SGMNT = #{MENU_URI_SGMNT}
+			AND   B.STATUS   = '1'
+			AND   E.STATUS   = '1'
+			AND   D.STATUS   = '1'
+			AND   A.USR_TYPE = '2'
+		]]>
+    </select>
+    
+    <select id="selectChkMenu" parameterType="hashmap" resultType="integer">        
+    	<![CDATA[
+            SELECT COUNT(*)
+            FROM  TB_BO_MENU 
+            WHERE MENU_LINK = #{MENU_LINK}
+            AND   STATUS    = '1'
+            AND   MENU_TYPE = '2'
+        ]]>
+    </select>
+    
+    <select id="selectAuthUserMenu" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT C.AUTH_CD
+                  ,D.MENU_NO
+                  ,D.MENU_NM
+                  ,D.MENU_LINK
+                  ,E.MENU_GRP_NO
+                  ,E.MENU_GRP_NM
+                  ,A.MASTER_CD
+            FROM TB_BO_USR_ACCT A
+            INNER JOIN TB_BO_USR_AUTH B ON A.AUTH_NO = B.AUTH_NO
+            INNER JOIN TB_BO_USR_AUTH_DTL C ON B.AUTH_NO = C.AUTH_NO
+            INNER JOIN TB_BO_MENU D ON C.MENU_NO = D.MENU_NO
+            INNER JOIN TB_BO_MENU_GRP E ON D.MENU_GRP_NO = E.MENU_GRP_NO
+            WHERE A.USR_ID = #{USR_ID}
+            AND   D.MENU_URI_SGMNT = #{MENU_URI_SGMNT}
+            AND   B.STATUS   = '1'
+            AND   E.STATUS   = '1'
+            AND   D.STATUS   = '1'
+            AND   A.USR_TYPE = '2'
+        ]]>
+    </select>
+    
+    <select id="selectAuthUserMenuGrpList" parameterType="hashmap" resultType="hashmap">
+    	<![CDATA[
+    		SELECT CONCAT(TBL.MENU_GRP_NO) AS MENU_GRP_NO
+			      ,0 AS MENU_NO
+			      ,TBL.MENU_GRP_NM AS MENU_NM
+			      ,'' AS MENU_LINK
+			      ,'' AS MENU_URI_SGMNT
+			      ,1 AS DEPTH
+			      ,0 AS MENU_SEQ
+			      ,TBL.MENU_GRP_SEQ AS PSORT_NO
+			      ,'0' AS STATUS
+			      ,'0' AS AUTH_CD
+			FROM (
+			    SELECT E.MENU_GRP_NO
+			          ,E.MENU_GRP_NM
+			          ,E.MENU_GRP_SEQ
+			    FROM TB_BO_USR_ACCT A
+			    INNER JOIN TB_BO_USR_AUTH B ON A.AUTH_NO = B.AUTH_NO
+			    INNER JOIN TB_BO_USR_AUTH_DTL C ON B.AUTH_NO = C.AUTH_NO
+			    INNER JOIN TB_BO_MENU D ON C.MENU_NO = D.MENU_NO
+			    INNER JOIN TB_BO_MENU_GRP E ON D.MENU_GRP_NO = E.MENU_GRP_NO
+			    WHERE A.USR_ID   = #{USR_ID}
+			    AND   E.STATUS   = '1' 
+			    AND   A.USR_TYPE = '2'
+			    AND   B.AUTH_TYPE = '2'
+                AND   D.MENU_TYPE = '2'
+                AND   E.MENU_GRP_TYPE = '2'
+			    GROUP BY E.MENU_GRP_NO, E.MENU_GRP_NM, E.MENU_GRP_SEQ
+			)TBL
+			ORDER BY TBL.MENU_GRP_SEQ
+    	]]>
+    </select>
+    
+    <select id="selectAuthUserMenuList" parameterType="hashmap" resultType="hashmap">
+    	<![CDATA[
+    		SELECT CONCAT(E.MENU_GRP_NO) AS MENU_GRP_NO
+			      ,CONCAT(E.MENU_NO) AS MENU_NO
+			      ,E.MENU_NM
+			      ,E.MENU_LINK
+			      ,E.MENU_URI_SGMNT
+			      ,2 AS DEPTH
+			      ,E.MENU_SEQ
+			      ,(SELECT MENU_GRP_SEQ FROM TB_BO_MENU_GRP A WHERE A.MENU_GRP_NO = E.MENU_GRP_NO AND A.MENU_GRP_TYPE = '2') AS PSORT_NO
+			      ,E.STATUS
+			      ,COALESCE(D.AUTH_CD,'0') AS AUTH_CD
+			      ,CONCAT(E.PARENT_MENU_NO) AS PARENT_MENU_NO
+			FROM TB_BO_USR_ACCT B
+			INNER JOIN TB_BO_USR_AUTH C ON B.AUTH_NO = C.AUTH_NO
+			INNER JOIN TB_BO_USR_AUTH_DTL D ON C.AUTH_NO = D.AUTH_NO
+			INNER JOIN TB_BO_MENU E ON D.MENU_NO = E.MENU_NO
+			WHERE B.USR_ID   = #{USR_ID}
+			AND   E.STATUS   = '1'
+			AND   B.USR_TYPE = '2'
+			AND   C.AUTH_TYPE = '2'
+			AND   E.MENU_TYPE = '2'
+			ORDER BY PSORT_NO, DEPTH, MENU_SEQ
+    	]]>
+    	
+    	<!-- 
+        <![CDATA[
+	        SELECT TBL.MENU_GRP_NO
+			      ,0 AS MENU_NO
+			      ,TBL.MENU_GRP_NM AS MENU_NM
+			      ,'' AS MENU_LINK
+			      ,'' AS MENU_URI_SGMNT
+			      ,1 AS DEPTH
+			      ,0 AS MENU_SEQ
+			      ,TBL.MENU_GRP_SEQ AS PSORT_NO
+			      ,'0' AS STATUS
+			      ,'0' AS AUTH_CD
+			FROM (
+			    SELECT E.MENU_GRP_NO
+			          ,E.MENU_GRP_NM
+			          ,E.MENU_GRP_SEQ
+			    FROM TB_BO_USR_ACCT A
+			    INNER JOIN TB_BO_USR_AUTH B ON A.AUTH_NO = B.AUTH_NO
+			    INNER JOIN TB_BO_USR_AUTH_DTL C ON B.AUTH_NO = C.AUTH_NO
+			    INNER JOIN TB_BO_MENU D ON C.MENU_NO = D.MENU_NO
+			    INNER JOIN TB_BO_MENU_GRP E ON D.MENU_GRP_NO = E.MENU_GRP_NO
+			    WHERE A.USR_ID   = #{USR_ID}
+			    AND   E.STATUS   = '1' 
+			    AND   A.USR_TYPE = '1'
+			    GROUP BY E.MENU_GRP_NO, E.MENU_GRP_NM, E.MENU_GRP_SEQ
+			)TBL
+			UNION ALL
+			SELECT E.MENU_GRP_NO
+			      ,E.MENU_NO
+			      ,E.MENU_NM
+			      ,E.MENU_LINK
+			      ,E.MENU_URI_SGMNT
+			      ,2 AS DEPTH
+			      ,E.MENU_SEQ
+			      ,(SELECT MENU_GRP_SEQ FROM TB_BO_MENU_GRP A WHERE A.MENU_GRP_NO = E.MENU_GRP_NO) AS PSORT_NO
+			      ,E.STATUS
+			      ,COALESCE(D.AUTH_CD,'0') AS AUTH_CD
+			FROM TB_BO_USR_ACCT B
+			INNER JOIN TB_BO_USR_AUTH C ON B.AUTH_NO = C.AUTH_NO
+			INNER JOIN TB_BO_USR_AUTH_DTL D ON C.AUTH_NO = D.AUTH_NO
+			INNER JOIN TB_BO_MENU E ON D.MENU_NO = E.MENU_NO
+			WHERE B.USR_ID   = #{USR_ID}
+			AND   E.STATUS   = '1'
+			AND   B.USR_TYPE = '1'
+			ORDER BY PSORT_NO, DEPTH, MENU_SEQ
+		]]>
+		 -->
+    </select>
+    
+    <select id="selectBankNameList" resultType="hashmap">
+        <![CDATA[
+            SELECT BANK_CD
+                  --,BANK_NM
+                  ,(SELECT DESC3
+			        FROM TB_CODE
+			        WHERE CODE1 = BANK_CD
+			          AND CODE_CL = 'BANK') AS BANK_NM
+            FROM  TB_BO_BANK_MGMT
+        ]]>
+    </select>
+    
+    <select id="selectBankNameListByDesc1" resultType="hashmap">
+        <![CDATA[
+            SELECT BANK_CD
+                  ,(SELECT DESC1 FROM TB_CODE A WHERE A.CODE1 = BANK_CD AND CODE_CL = 'BANK') AS BANK_NM
+            FROM  TB_BO_BANK_MGMT
+        ]]>
+    </select>
+    
+    <select id="selectBankNameListByISO" resultType="hashmap">
+        <![CDATA[
+	            SELECT BANK_CD
+	                  ,BANK_NM
+	            FROM  TB_BO_BANK_MGMT
+	            WHERE CARD_TYPE = '1'
+        ]]>
+    </select>
+    
+    <select id="selectBMIDList" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT B_MID
+                  ,B_MID_NM
+            FROM  TB_BO_BANK_CARD_CONT
+            WHERE BANK_CD = #{BANK_CD}
+            GROUP BY B_MID, B_MID_NM
+        ]]>
+    </select>
+    
+    <select id="selectMerchantIDList" resultType="hashmap">
+        <![CDATA[
+            SELECT  I_MID
+                   ,MER_NM 
+            FROM   TB_BO_MER_MGMT
+        ]]>
+    </select>
+    
+    <select id="selectMerStatus" parameterType="hashmap" resultType="String">
+        <![CDATA[
+            SELECT STATUS 
+            FROM   TB_BO_MER_MGMT
+            WHERE  I_MID = #{I_MID}
+        ]]>
+    </select>
+    
+    <select id="selectMerchantInfo" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT
+            	MID 									-- 가맹점ID
+            	, GID 									-- 그룹ID
+            	, VID 									-- 가상그룹ID
+            	, TEL_NO 								-- 전화번호
+            	, FAX_NO 								-- 팩스번호
+            	, EMAIL 								-- 이메일
+            	, CONT_DT 								-- 계약일자
+            	, REG_DT 								-- 등록일자
+            	, CONT_EMP_NM 							-- 계약담당자
+            	, CONT_EMP_TEL 							-- 계약담당자 전화번호
+            	, CONT_EMP_FAX 							-- 계약담당자 팩스번호
+            	, CONT_EMP_HP 							-- 계약담당자 핸드폰 번호
+            	, CONT_EMP_EMAIL 						-- 계약담당자 이메일
+            	, STMT_EMP_NM 							-- 정산담당자 
+				, STMT_EMP_TEL 							-- 정산담당자 전화번호
+				, STMT_EMP_FAX 							-- 정산담당자 팩스번호
+				, STMT_EMP_CP 							-- 정산담당자 핸드폰 번호
+				, STMT_EMP_EMAIL 						-- 정산담당자 이메일
+				, TECH_EMP_NM 							-- 기술담당자
+				, TECH_EMP_TEL 							-- 기술담당자 전화번호
+				, TECH_EMP_FAX 							-- 기술담당자 팩스번호
+				, TECH_EMP_CP 							-- 기술담당자 핸드폰 번호
+				, TECH_EMP_EMAIL 						-- 기술담당자 이메일
+				, ACCNT_NO								-- 계좌번호
+            	, ACCNT_NM 								-- 예금주
+            	, VBANK_NM 								-- 가상계좌명
+            	, MID_URL 								-- URL
+            	, SIGN_NM 								-- 간판명
+            	, WORKER 								-- 작업자
+            	, CO_NO 								-- 사업자번호
+            FROM   
+            	TB_MBS 
+            WHERE  
+            	MID = #{MID}
+        ]]>
+    </select>
+    
+    <select id="selectTodayYMD" resultType="String">
+        <![CDATA[
+            SELECT DATE_FORMAT(NOW(), "%Y%m%d") 
+            FROM   DUAL
+        ]]>
+    </select>
+    
+    <select id="selectTodayYMDHHSS" resultType="String">
+        <![CDATA[
+            SELECT DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+            FROM   DUAL
+        ]]>
+    </select>
+    
+    <select id="selectCountryCodeList" resultType="hashmap">
+        <![CDATA[
+            SELECT 'ALL' AS CTRY_VAL
+			      ,'ALL' AS CTRY_CD
+			      ,'ALL' AS DES FROM DUAL
+			      
+			UNION ALL
+			
+			SELECT  CODE1 AS CTRY_VAL
+			            		,CODE1 AS CTRY_CD
+			            		,DESC1 AS DES
+			            FROM   TB_CODE
+			            WHERE CODE_CL='CTRY'
+			            ORDER BY DES
+        ]]>
+    </select>
+    <select id="selectKindCd" resultType="hashmap">
+        <![CDATA[
+           SELECT 
+           	 CODE_CL
+           	 , CODE1
+           	 , CODE2
+           	 , DESC1
+           	 , DESC2
+           	 , COL_NM
+           FROM TB_CODE 
+           WHERE 
+           	CODE_CL='0005'
+           AND
+           	CODE2='0000'
+          ]]>
+    </select>
+    <select id="selectSCateList" resultType="hashmap">
+        <![CDATA[
+           SELECT 
+           	 CODE_CL
+           	 , CODE1
+           	 , CODE2
+           	 , DESC1
+           	 , DESC2
+           	 , COL_NM
+           FROM TB_CODE 
+           WHERE 
+           	CODE_CL='0005'
+           AND
+           	CODE1='0000'
+          ]]>
+    </select>
+    <select id="selectMallTypeCd" resultType="hashmap">
+        <![CDATA[
+           SELECT 
+           	 DISTINCT CODE1
+           	 , DESC1
+           	 , COL_NM
+           FROM TB_CODE 
+           WHERE 
+           	CODE_CL='0014'
+           AND 
+            CODE1 != '****'
+           ORDER BY 
+           	CODE1 ASC 
+        ]]>
+    </select>
+    <select id="selectCodeCl" resultType="hashmap">
+        <![CDATA[
+           SELECT 
+           	DISTINCT
+           	  CODE1
+           	 , DESC1
+           	 , COL_NM
+           FROM TB_CODE 
+           WHERE CODE_CL=#{CODE_CL}
+           AND CODE1 != '****'
+           AND USE_FLG ='1'
+           
+           ORDER BY 
+           	CODE1, DESC1
+        ]]>
+    </select>
+    <select id="selectCateList" resultType="hashmap">
+        <![CDATA[
+           SELECT 
+           	 CODE_CL
+           	 , CODE2
+           	 , DESC2
+           	 , COL_NM
+           FROM TB_CODE 
+           WHERE 
+           	CODE_CL='0005'
+           AND 
+            CODE1!='****'
+           AND 
+            CODE1 =#{bigCategory}
+        ]]>
+    </select>
+    <select id="selectSettleCycleCode"  parameterType="hashmap" resultType="String">
+        <![CDATA[
+           SELECT 
+           	 DESC1
+           FROM TB_CODE 
+           WHERE 
+           	CODE_CL='0038'
+           AND 
+            CODE1 = #{STMT_CYCLE_CD}
+        ]]>
+    </select>
+    <select id="selectEmplList" parameterType="hashmap" resultType="hashmap">
+    	<![CDATA[
+    		SELECT 
+    			DISTINCT EMP_NO, EMP_NM
+		    FROM 
+		    	TB_EMP
+		    WHERE 
+		    	1 = 1
+		    ]]>
+		    <if test="dept!='ALL'" >
+		    	<![CDATA[
+				    AND DEPT_CD = #{dept}
+    			]]>
+    		</if>
+    		<if test="part!='ALL'">
+		    	<![CDATA[
+				    AND PART_CD = #{part}
+    			]]>
+    		</if>
+    		<if test="duty!='ALL'">
+		    	<![CDATA[
+				    AND DUTY_CD = #{duty}
+    			]]>
+    		</if>
+    		<if test="appAuth!='ALL'">
+		    	<![CDATA[
+				    AND APP_AUTH_TYPE = #{appAuth}
+    			]]>
+    		</if>
+    		<if test="status!='ALL'">
+		    	<![CDATA[
+				    AND ST_TYPE = #{status}
+    			]]>
+    		</if>
+    		<if test="dept!='ALL' and dept== 01 ">
+		    	<![CDATA[
+				    AND SUBSTR(SALES_AUTH_FLQ, 1, 1) = '1'
+    			]]>
+    		</if>
+    </select>
+    <select id="selectBankCd" parameterType="hashmap" resultType="hashmap">
+    	<![CDATA[
+    		SELECT
+    			CODE1, DESC1
+   			FROM 
+   				TB_CODE 
+          	WHERE 
+          		COL_NM='BANK_CD'
+          	AND 
+          		CODE1 <> '****'
+          	AND 
+          		USE_FLG='0'
+    	]]>
+    </select>
+    <select id="selectCardCd" parameterType="hashmap" resultType="hashmap">
+    	<![CDATA[
+    		SELECT 
+    			DISTINCT CODE1, DESC1
+		    FROM 
+		    	TB_CODE
+		    WHERE 
+		    	COL_NM='CARD_CD'
+		    AND 
+		    	CODE1 <> '****'
+		    AND  
+		    	CODE2 = #{code2}
+	    	ORDER BY CODE1
+    	]]>
+    </select>
+    <select id="selectCode2List" parameterType="hashmap" resultType="hashmap">
+    	<![CDATA[
+    		SELECT 
+    			DISTINCT CODE2, DESC2
+		    FROM 
+		    	TB_CODE
+		    WHERE 
+		    	CODE_CL=#{codeCl}
+		    AND 
+		    	CODE1 <> '****'
+		    AND  
+		    	USE_FLG = '0'
+		    AND
+		    	CODE1 = #{code2}
+		    AND 
+		    	CODE2 <> '*'
+	    	ORDER BY CODE2
+    	]]>
+    </select>
+</mapper>

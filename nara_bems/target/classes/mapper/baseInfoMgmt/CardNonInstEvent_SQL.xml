@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cardNonInstEvent">
+	<select id="selectNoInstCardEventList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT * FROM 
+			(
+				SELECT 
+					ROWNUM AS RNUM
+					, CARD_CD
+		          	, (SELECT DESC1 FROM TB_CODE WHERE COL_NM='CARD_CD' AND CODE1=CARD_CD) AS CARD_NM
+		          	, REG_DT, EVNT_AMT, INSTMN_MM, EVNT_FR_DT, EVNT_TO_DT, WORKER
+		          	, CASE 
+		          		WHEN EVNT_FR_DT > DATE_FORMAT(NOW(), "%Y%m%d") THEN '2'
+	                	WHEN EVNT_TO_DT < DATE_FORMAT(NOW(), "%Y%m%d") THEN '1' 
+		                ELSE '0' 
+	                	END PROC_CL
+               		, CASE 	
+		                WHEN EVNT_FR_DT > DATE_FORMAT(NOW(), "%Y%m%d") THEN '예정중'
+		                WHEN EVNT_TO_DT < DATE_FORMAT(NOW(), "%Y%m%d") THEN '마감'
+		                ELSE '진행중' 
+		                END PROC_NM
+			    FROM TB_EVNT_CARD
+			    WHERE 1 = 1	
+		    ]]>
+		    <if test="cardCd!='ALL' ">
+		    <![CDATA[
+		    	AND CARD_CD = #{cardCd}	
+		    ]]>
+		    </if>
+		    <choose>
+		    	<when test="status == 'prev' ">
+		    	<![CDATA[
+		    		AND EVNT_FR_DT > DATE_FORMAT(NOW(), "%Y%m%d")
+		    	]]>
+		    	</when>
+		    	<when test="status == 'now' ">
+		    	<![CDATA[
+		    		AND DATE_FORMAT(NOW(), "%Y%m%d") BETWEEN EVNT_FR_DT AND EVNT_TO_DT
+		    	]]>
+		    	</when>
+		    	<when test="status == 'end' ">
+		    	<![CDATA[
+		    		AND EVNT_TO_DT < DATE_FORMAT(NOW(), "%Y%m%d")
+		    	]]>
+		    	</when>
+		    	<otherwise></otherwise>
+		    </choose>
+		    <![CDATA[
+		    	ORDER BY REG_DT DESC
+			) TBL
+			WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+		]]>
+	</select>
+	<select id="selectNoInstCardEventListTotal" parameterType="hashmap" resultType="Integer">
+		<![CDATA[
+			SELECT 
+				COUNT(1)
+			FROM TB_EVNT_CARD
+			    WHERE 1 = 1	
+		    ]]>
+		    <if test="cardCd!='ALL' ">
+		    <![CDATA[
+		    	AND CARD_CD = #{cardCd}	
+		    ]]>
+		    </if>
+		    <choose>
+		    	<when test="status == 'prev' ">
+		    	<![CDATA[
+		    		AND EVNT_FR_DT > DATE_FORMAT(NOW(), "%Y%m%d")
+		    	]]>
+		    	</when>
+		    	<when test="status == 'now' ">
+		    	<![CDATA[
+		    		AND DATE_FORMAT(NOW(), "%Y%m%d") BETWEEN EVNT_FR_DT AND EVNT_TO_DT
+		    	]]>
+		    	</when>
+		    	<when test="status == 'end' ">
+		    	<![CDATA[
+		    		AND EVNT_TO_DT < DATE_FORMAT(NOW(), "%Y%m%d")
+		    	]]>
+		    	</when>
+		    	<otherwise></otherwise>
+		    </choose>
+	</select>
+	<insert id="insertNoInstCardEvent" parameterType="hashmap" >
+	<![CDATA[
+		INSERT INTO 
+		  TB_EVNT_CARD 
+		  (
+		    CARD_CD, REG_DT, EVNT_AMT, INSTMN_MM, EVNT_FR_DT, EVNT_TO_DT, WORKER
+		  )
+  		  VALUES
+		  (
+		  	#{cardCd},DATE_FORMAT(NOW(), "%Y%m%d"), 50000, #{instMM},#{frDt},#{toDt}, #{worker}
+		  )
+	]]>
+	</insert>
+	<update id="updateNoInstCardEvent" parameterType="hashmap">
+	<![CDATA[
+		    UPDATE 
+		      TB_EVNT_CARD
+		    SET 
+		      INSTMN_MM = #{instMM} 
+		      ]]>
+		     <if test="procCl==2">
+		     <![CDATA[
+		     	,EVENT_FR_DT = #{frDt}
+		     ]]>
+		     </if> 
+		     <![CDATA[
+		     ,EVNT_TO_DT = #{toDt}
+		     ,WORKER = #{worker}
+		    WHERE CARD_CD = #{cardCd}
+		    AND EVNT_FR_DT = #{frDt}
+	]]>
+	</update>
+</mapper>

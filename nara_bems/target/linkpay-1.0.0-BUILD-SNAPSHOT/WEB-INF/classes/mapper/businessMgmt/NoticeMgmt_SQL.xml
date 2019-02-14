@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="noticeMgmt" >
+	<select id="selectNoticeMgmtList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT 
+			 TBL.NO
+			,TBL.SEQ
+		    ,TBL.BODY
+		    ,TBL.TITLE
+		    ,DATE_FORMAT(TBL.REG_DNT, '%Y-%m-%d %H:%i:%s') AS REG_DT 
+		    ,TBL.WORKER
+		    ,TBL.NOTI_CD1
+		    ,TBL.NOTI_CD
+		    ,TBL.NOTI_TRG_CD1
+		    ,TBL.NOTI_TRG_CD
+		    ,TBL.NOTI_ST_CD1
+		    ,TBL.NOTI_ST_CD
+		FROM 
+			(
+				SELECT 
+					@rownum := @rownum+1 AS NO
+					,SEQ , SUBSTR(BODY, 1, 4000) AS BODY , TITLE , REG_DNT , WORKER , 
+			    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0027' AND USE_FLG = '1' AND CODE1=NOTI_CD) AS NOTI_CD1 , NOTI_CD ,
+			    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0028' AND USE_FLG = '1' AND CODE1=NOTI_TRG_CD) AS NOTI_TRG_CD1 , NOTI_TRG_CD, 
+			    	(SELECT DESC1 FROM TB_CODE WHERE COL_NM='NOTI_ST_CD' AND USE_FLG = '1' AND CODE1= NOTI_ST_CD) AS NOTI_ST_CD1, NOTI_ST_CD
+			   FROM TB_NOTICE, (SELECT @rownum:=0) R
+			   WHERE REG_DT BETWEEN #{frDt} AND #{toDt}
+			   AND NOTI_TRG_CD ='01'		 
+			]]>
+			<if test="BOARD_TYPE!=0">
+			<![CDATA[
+				AND NOTI_CD =#{BOARD_TYPE}
+			]]>
+			</if>
+
+			ORDER BY SEQ DESC
+			<![CDATA[
+			) TBL
+			]]>
+			WHERE NO BETWEEN  ${intPageStart} AND ${intPageEnd}
+			ORDER BY NO ASC
+	</select>
+			
+	<select id="selectNoticeMgmtListTotal" parameterType="hashmap" resultType="integer">
+		<![CDATA[
+		SELECT 
+			COUNT(1)
+		FROM 
+			(
+				SELECT 
+					@rownum := @rownum+1 AS NO
+					,SEQ , SUBSTR(BODY, 1, 4000) AS BODY , TITLE , REG_DT , WORKER , 
+			    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0027' AND USE_FLG = '1' AND CODE1=NOTI_CD) AS NOTI_CD1 , NOTI_CD ,
+			    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0028' AND USE_FLG = '1' AND CODE1=NOTI_TRG_CD) AS NOTI_TRG_CD1 , NOTI_TRG_CD, 
+			    	(SELECT DESC1 FROM TB_CODE WHERE COL_NM='NOTI_ST_CD' AND USE_FLG = '1' AND CODE1= NOTI_ST_CD) AS NOTI_ST_CD1, NOTI_ST_CD
+			   FROM TB_NOTICE, (SELECT @rownum:=0) R
+			   WHERE REG_DT BETWEEN #{frDt} AND #{toDt}
+			   AND NOTI_TRG_CD ='01'		 
+			]]>
+			<if test="BOARD_TYPE!=0">
+			<![CDATA[
+				AND NOTI_CD =#{BOARD_TYPE}
+			]]>
+			</if>
+			
+			ORDER BY SEQ DESC
+			<![CDATA[
+			) TBL
+			]]>
+			
+			ORDER BY NO ASC
+	</select>
+	
+	<select id="selectNoticeMgmt" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT 
+	    	SEQ , SUBSTR(BODY, 1, 4000) BODY , TITLE , REG_DT , WORKER , NOTI_ST_CD,
+	    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0027' AND USE_FLG = '1' AND CODE1=A.NOTI_CD) NOTI_CD1, NOTI_TRG_CD ,
+	    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0028' AND USE_FLG = '1' AND CODE1=A.NOTI_TRG_CD) NOTI_TRG_CD1, NOTI_CD
+	   FROM TB_NOTICE A
+	   WHERE SEQ = ${SEQ}
+	]]>
+	</select>
+	
+</mapper>
+        

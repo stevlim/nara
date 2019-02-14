@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="submall" >
+	<select id="selectCardStatusInfo" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+	    SELECT CP_CD, SMBS_ST_CD
+	    	,(SELECT DESC1 FROM TB_CODE WHERE COL_NM='SMBS_ST_CD' AND CODE1=SMBS_ST_CD)  SNAME ,RET_MSG,  REQ_CNT
+	    FROM TB_CARD_SMBS 
+	    WHERE CO_NO = #{CO_NO}
+	    ORDER BY REQ_CNT DESC
+	]]>
+	</select>
+	<select id="selectCardStatusList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT 
+				ROWNUM AS RNUM, C.CONT_DT, S.REQ_DT, C.CO_NM, C.CO_NO
+				, (SELECT MAX(X.EMP_NM) FROM TB_EMP X WHERE X.EMP_NO = C.CONT_EMP_NO)  EMP
+		        , C.BS_KIND, C.CO_URL
+		    FROM TB_CO C LEFT OUTER JOIN TB_CARD_SMBS S ON C.CO_NO = S.CO_NO
+			WHERE 1=1
+			AND S.ROWID IN (SELECT MAX(ROWID) FROM TB_CARD_SMBS GROUP BY S.CO_NO)
+		]]>
+		<if test="dateFlg=='cont'">
+		<![CDATA[
+			AND C.CONT_DT BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</if>
+		<if test="dateFlg=='req'">
+		<![CDATA[
+			AND S.REQ_DT BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</if>
+		<if test="searchTxt!=null and searchTxt!='' ">
+			<choose>
+				<when test="searchFlg==0"> <!-- 상호명  -->
+				<![CDATA[
+					AND C.CO_NM LIKE '%' || #{searchTxt}  || '%'
+				]]>
+				</when>
+				<when test="searchFlg==1"> <!-- 가맹점 번호  -->
+				<![CDATA[
+					AND C.CO_NO = #{searchTxt}
+				]]>
+				</when>
+				<otherwise> <!--  대표자 명  -->
+				<![CDATA[
+					AND C.REP_NM LIKE '%' || #{searchTxt}  || '%'
+				]]>
+				</otherwise>
+			</choose>
+		</if>
+		<if test="cardChk!='ALL'">
+		<![CDATA[
+			AND S.CP_CD = #{cardChk}
+		]]>
+		</if>
+		<if test="status!='ALL'">
+		<![CDATA[
+			AND S.SMBS_ST_CD = #{status}
+		]]>
+		</if>
+		<if test="contManager!='ALL'">
+		<![CDATA[
+			AND C.CONT_EMP_NO = #{contManager}
+		]]>
+		</if>
+		<![CDATA[
+			GROUP BY 
+				C.CONT_DT,S.REQ_DT,C.CO_NM, C.CO_NO, C.BS_KIND, C.CO_URL, C.CONT_EMP_NO, ROWNUM
+				, S.CP_CD, S.SMBS_ST_CD, SMBS_ST_CD,RET_MSG,REQ_CNT
+			ORDER BY ROWNUM ASC
+		) TBL
+		WHERE RNUM BETWEEN ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectCardStatusListTotal" parameterType="hashmap" resultType="integer">
+		<![CDATA[
+			SELECT
+				COUNT(1)
+			FROM TB_CO C 
+			LEFT OUTER JOIN TB_CARD_SMBS S ON C.CO_NO = S.CO_NO
+			WHERE 1=1
+			AND S.ROWID IN (SELECT MAX(ROWID) FROM TB_CARD_SMBS GROUP BY S.CO_NO)
+		]]>
+		<if test="dateFlg=='cont'">
+		<![CDATA[
+			AND C.CONT_DT BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</if>
+		<if test="dateFlg=='req'">
+		<![CDATA[
+			AND S.REQ_DT BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</if>
+		<if test="searchTxt!=null and searchTxt!='' ">
+			<choose>
+				<when test="searchFlg==0"> <!-- 상호명  -->
+				<![CDATA[
+					AND C.CO_NM LIKE '%' || #{searchTxt}  || '%'
+				]]>
+				</when>
+				<when test="searchFlg==1"> <!-- 가맹점 번호  -->
+				<![CDATA[
+					AND C.CO_NO = #{searchTxt}
+				]]>
+				</when>
+				<otherwise> <!--  대표자 명  -->
+				<![CDATA[
+					AND C.REP_NM LIKE '%' || #{searchTxt}  || '%'
+				]]>
+				</otherwise>
+			</choose>
+		</if>
+		<if test="cardChk!='ALL'">
+		<![CDATA[
+			AND S.CP_CD = #{cardChk}
+		]]>
+		</if>
+		<if test="status!='ALL'">
+		<![CDATA[
+			AND S.SMBS_ST_CD = #{status}
+		]]>
+		</if>
+		<if test="contManager!='ALL'">
+		<![CDATA[
+			AND C.CONT_EMP_NO = #{contManager}
+		]]>
+		</if>
+	</select>
+	<select id="selectCardSubMallInfo" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT  
+			MAX(CASE WHEN CP_CD = '01' THEN SMBS_ST_CD END) SEL01,
+            MAX(CASE WHEN CP_CD = '02' THEN SMBS_ST_CD END) SEL02,
+            MAX(CASE WHEN CP_CD = '03' THEN SMBS_ST_CD END) SEL03,
+            MAX(CASE WHEN CP_CD = '04' THEN SMBS_ST_CD END) SEL04,
+            MAX(CASE WHEN CP_CD = '06' THEN SMBS_ST_CD END) SEL06,
+            MAX(CASE WHEN CP_CD = '07' THEN SMBS_ST_CD END) SEL07,
+            MAX(CASE WHEN CP_CD = '08' THEN SMBS_ST_CD END) SEL08,
+            MAX(CASE WHEN CP_CD = '12' THEN SMBS_ST_CD END) SEL12,
+            MAX(CASE WHEN CP_CD = '01' THEN REQ_DT END) REQ_DT01,
+            MAX(CASE WHEN CP_CD = '02' THEN REQ_DT END) REQ_DT02,
+            MAX(CASE WHEN CP_CD = '03' THEN REQ_DT END) REQ_DT03,
+            MAX(CASE WHEN CP_CD = '04' THEN REQ_DT END) REQ_DT04,
+            MAX(CASE WHEN CP_CD = '06' THEN REQ_DT END) REQ_DT06,
+            MAX(CASE WHEN CP_CD = '07' THEN REQ_DT END) REQ_DT07,
+            MAX(CASE WHEN CP_CD = '08' THEN REQ_DT END) REQ_DT08,
+		   MAX(CASE WHEN CP_CD = '12' THEN REQ_DT END) REQ_DT12,
+		   MAX(CASE WHEN CP_CD = '01' THEN RET_MSG END) TXT01,
+		   MAX(CASE WHEN CP_CD = '02' THEN RET_MSG END) TXT02,
+		   MAX(CASE WHEN CP_CD = '03' THEN RET_MSG END) TXT03,
+		   MAX(CASE WHEN CP_CD = '04' THEN RET_MSG END) TXT04,
+		   MAX(CASE WHEN CP_CD = '06' THEN RET_MSG END) TXT06,
+		   MAX(CASE WHEN CP_CD = '07' THEN RET_MSG END) TXT07,
+		   MAX(CASE WHEN CP_CD = '08' THEN RET_MSG END) TXT08,
+		   MAX(CASE WHEN CP_CD = '12' THEN RET_MSG END) TXT12,
+           MAX(CASE WHEN CP_CD = '01'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_DT 
+            WHEN SMBS_ST_CD = '02' THEN RET_DT
+            ELSE ''
+        END
+             END) RSLT_DT01,
+            MAX(CASE WHEN CP_CD = '02'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_DT 
+            WHEN SMBS_ST_CD = '02' THEN RET_DT
+            ELSE ''
+        END
+             END) RSLT_DT02,
+            MAX(CASE WHEN CP_CD = '03'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_DT 
+            WHEN SMBS_ST_CD = '02' THEN RET_DT
+            ELSE ''
+        END
+             END) RSLT_DT03,
+            MAX(CASE WHEN CP_CD = '04'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_DT 
+            WHEN SMBS_ST_CD = '02' THEN RET_DT
+            ELSE ''
+        END
+             END) RSLT_DT04,
+            MAX(CASE WHEN CP_CD = '06'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_DT 
+            WHEN SMBS_ST_CD = '02' THEN RET_DT
+            ELSE ''
+        END
+             END) RSLT_DT06,
+            MAX(CASE WHEN CP_CD = '07'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_DT 
+            WHEN SMBS_ST_CD = '02' THEN RET_DT
+            ELSE ''
+        END
+             END) RSLT_DT07,
+            MAX(CASE WHEN CP_CD = '08' THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_DT 
+          WHEN SMBS_ST_CD = '02' THEN RET_DT
+          ELSE ''
+      END
+             END) RSLT_DT08,
+            MAX(CASE WHEN CP_CD = '12' THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_DT 
+          WHEN SMBS_ST_CD = '02' THEN RET_DT
+                 ELSE '' 
+             END
+             END) RSLT_DT12,
+            MAX(CASE WHEN CP_CD = '01'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_TM 
+            WHEN SMBS_ST_CD = '02' THEN RET_TM
+            ELSE ''
+        END
+             END) RSLT_TM01,
+            MAX(CASE WHEN CP_CD = '02'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_TM 
+            WHEN SMBS_ST_CD = '02' THEN RET_TM
+            ELSE ''
+        END
+             END) RSLT_TM02,
+            MAX(CASE WHEN CP_CD = '03'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_TM 
+            WHEN SMBS_ST_CD = '02' THEN RET_TM
+            ELSE ''
+        END
+             END) RSLT_TM03,
+            MAX(CASE WHEN CP_CD = '04'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_TM 
+            WHEN SMBS_ST_CD = '02' THEN RET_TM
+            ELSE ''
+        END
+             END) RSLT_TM04,
+            MAX(CASE WHEN CP_CD = '06'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_TM 
+            WHEN SMBS_ST_CD = '02' THEN RET_TM
+            ELSE ''
+        END
+             END) RSLT_TM06,
+            MAX(CASE WHEN CP_CD = '07'  THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_TM 
+            WHEN SMBS_ST_CD = '02' THEN RET_TM
+            ELSE ''
+        END
+             END) RSLT_TM07,
+            MAX(CASE WHEN CP_CD = '08' THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_TM 
+          WHEN SMBS_ST_CD = '02' THEN RET_TM
+          ELSE ''
+      END
+             END) RSLT_TM08,
+            MAX(CASE WHEN CP_CD = '12' THEN CASE WHEN SMBS_ST_CD = '88' THEN REG_TM 
+          WHEN SMBS_ST_CD = '02' THEN RET_TM
+                 ELSE '' 
+             END
+             END) RSLT_TM12,                                                                                 
+            COUNT(1) CNT
+ 	FROM TB_CARD_SMBS
+    WHERE CO_NO = #{coNo}
+	]]>
+	</select>
+	<!-- 카드사 서브몰 등록결과 반영 - 건별 -->
+	<insert id="insertSubMallRsltManual" parameterType="hashmap" >
+		<selectKey resultType ="String" keyProperty="reqDt" order="BEFORE">
+  		<![CDATA[
+   		SELECT DATE_FORMAT(NOW(), "%Y%m%d") AS REQ_DT  FROM TB_CARD_SMBS WHERE ROWNUM < 2
+  		]]>	
+	</selectKey>
+	<![CDATA[
+		INSERT INTO TB_CARD_SMBS
+		(
+			REQ_DT, CO_NO, CP_CD, REQ_CNT, SMBS_ST_CD
+			]]>
+			<if test="status=='88'">
+			<![CDATA[
+				, REG_DT, REG_TM
+			]]>
+			</if>
+			<if test="status=='02'">
+			<![CDATA[
+				,RET_DT, RET_TM
+			]]>
+			</if>
+			<![CDATA[
+			, RET_MSG
+			, WORKER
+			, REG_DNT
+		)
+		VALUES
+		(
+			#{reqDt}
+			,#{coNo}
+			,#{cpCd}
+			,1
+			,#{status}	
+			]]>
+			<if test="status=='88'">
+			<![CDATA[
+				, DATE_FORMAT(NOW(), "%Y%m%d"), DATE_FORMAT(NOW(), "%H%i%s")
+			]]>
+			</if>
+			<if test="status=='02'">
+			<![CDATA[
+				, DATE_FORMAT(NOW(), "%Y%m%d"), DATE_FORMAT(NOW(), "%H%i%s")
+			]]>
+			</if>
+			<![CDATA[
+			, #{retMsg}
+			, #{worker}
+			, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		)
+	]]>
+	</insert>
+	<!-- 카드사 서브몰 UPDATE -->
+	<insert id="updateSubMallRsltManual" parameterType="hashmap" >
+	<![CDATA[
+		UPDATE TB_CARD_SMBS
+		SET
+			SMBS_ST_CD = #{status}
+			, RET_MSG	 =#{retMsg}
+			, WORKER = #{worker}
+			]]>
+			<if test="status=='02'">
+			<![CDATA[
+				, RET_DT = DATE_FORMAT(NOW(), "%Y%m%d"), RET_TM = DATE_FORMAT(NOW(), "%H%i%s")
+			]]>
+			</if>
+			<if test="status!='02'">
+			<![CDATA[
+				, RET_DT = null , RET_TM = null
+			]]>
+			</if>
+			<if test="status!='08'">
+			<![CDATA[
+				, REG_DT = null , REG_TM = null
+			]]>
+			</if>
+			<if test="status=='88'">
+			<![CDATA[
+				, REG_DT = DATE_FORMAT(NOW(), "%Y%m%d"), REG_TM = DATE_FORMAT(NOW(), "%H%i%s")
+			]]>
+			</if>
+			<![CDATA[
+			, UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+			WHERE CO_NO =#{coNo}
+			AND CP_CD =#{cpCd}
+			AND REQ_DT =#{reqDt}
+	]]>
+	</insert>
+</mapper>

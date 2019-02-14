@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="batchMgmt">
+	<select id="selectBatchJobList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT
+	          ROW_NUMBER()OVER(ORDER BY JOB_ID DESC) RNUM,
+	          JOB_ID, 
+	          JOB_NAME,
+	          JOB_DETAIL,
+	          JOB_PACKAGE_PATH,
+	          JOB_CLASS_NAME,
+	          JOB_TRIGGER,
+	          JOB_USE,
+	          JOB_STATE,
+	          CASE WHEN JOB_USE='0' THEN '미사용' ELSE '사용' END AS JOB_USE_NM,
+	          CASE WHEN JOB_STATE='0' THEN '대기중' ELSE '실행중' END AS JOB_STATE_NM
+	        FROM TB_JOB_LIST
+	        ORDER BY JOB_ID DESC
+        ) TBL
+        WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectBatchJobListTotal" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT
+          COUNT(1)
+        FROM TB_JOB_LIST
+	]]>
+	</select>
+	
+	<insert id="insertBatchJob" parameterType="hashmap">
+	<selectKey keyProperty="seq"  resultType="String" order="BEFORE">
+	<![CDATA[
+        SELECT LPAD(SEQ_JOB_LIST.NEXTVAL, 5,'0') FROM DUAL
+    ]]>    
+    </selectKey>
+	<![CDATA[
+		INSERT INTO TB_JOB_LIST 
+        (
+          JOB_ID,
+          JOB_NAME,
+          JOB_DETAIL,
+          JOB_PACKAGE_PATH,
+          JOB_CLASS_NAME,
+          JOB_TRIGGER,
+          JOB_USE,
+          JOB_STATE,
+          WORKER,
+          REG_DNT
+        ) VALUES 
+        (
+          #{seq},
+		  #{jobName},
+          #{jobDetail},
+          #{jobPack},
+          #{jobClassNm},
+          #{jobTrigger},
+          '0',
+          '0',
+          #{worker},
+          DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+        )
+	]]>
+	</insert>
+	<!--  batch job update -->
+	<update id="updateBatchJob" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_JOB_LIST
+		SET
+          	JOB_NAME = #{jobName},
+          	JOB_DETAIL= #{jobDetail},
+          	JOB_PACKAGE_PATH= #{jobPack},
+          	JOB_CLASS_NAME= #{jobClassNm},
+          	JOB_TRIGGER= #{jobTrigger},
+          	UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE 
+			JOB_ID = #{jobId}
+	]]>
+	</update>
+	<select id="selectBatchJobInfo" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT 
+			JOB_ID, 
+	          JOB_NAME,
+	          JOB_DETAIL,
+	          JOB_PACKAGE_PATH,
+	          JOB_CLASS_NAME,
+	          JOB_TRIGGER,
+	          JOB_USE,
+	          JOB_STATE,
+	          CASE WHEN JOB_USE='0' THEN '미사용' ELSE '사용' END AS JOB_USE_NM,
+	          CASE WHEN JOB_STATE='0' THEN '대기중' ELSE '실행중' END AS JOB_STATE_NM
+		FROM TB_JOB_LIST
+		WHERE JOB_ID = #{jobId}
+	]]>
+	</select>
+	
+	<select id="selectBatchJobHistList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+        (
+            SELECT 
+                ROW_NUMBER()OVER(ORDER BY JOB_START_TIME DESC) RNUM,
+                JOB_HISTORY_ID,
+                JOB_ID,
+                JOB_START_TIME,
+                JOB_END_TIME,
+                JOB_DURING_TIME,
+                IS_SUCCESS,
+                RETRY_COUNT,
+                COALESCE(ERR_REASON, ' ') AS ERR_REASON
+            FROM 
+                TB_JOB_HISTORY
+           	WHERE SUBSTR(JOB_START_TIME, 0, 10) BETWEEN #{frDt} AND #{toDt}	 	
+            ]]>    
+            <if test="jobId != null and jobId != ''">
+            <![CDATA[
+	            AND JOB_ID LIKE( '%' || #{jobId})	 	
+            ]]>
+            </if>
+            <if test="successFlg!='ALL'  ">
+            <![CDATA[
+	            AND IS_SUCCESS =#{successFlg}
+            ]]>
+            </if>
+            <![CDATA[
+            ORDER BY JOB_START_TIME DESC 
+         ) TBL
+         WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectBatchJobHistListTotal" parameterType="hashmap"  resultType="Integer">
+	<![CDATA[
+           SELECT 
+               COUNT(1)
+           FROM 
+               TB_JOB_HISTORY
+           WHERE SUBSTR(JOB_START_TIME, 0, 10) BETWEEN #{frDt} AND #{toDt}
+           ]]>    
+            <if test="jobId != null and jobId != ''">
+            <![CDATA[
+	            AND JOB_ID LIKE( '%' || #{jobId})
+            ]]>
+            </if>
+            <if test="successFlg!='ALL'  ">
+            <![CDATA[
+	            AND IS_SUCCESS =#{successFlg}
+            ]]>
+            </if>
+	</select>
+	
+	<update id="updateRetryCnt" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_JOB_HISTORY
+		SET 
+			RETRY_COUNT = ${retryCnt}
+		WHERE JOB_HISTORY_ID = #{jobHistId}
+		
+	]]>
+	</update>
+</mapper>

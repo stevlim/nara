@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="noticeMgmt" >
+	<select id="selectNoticeMgmtList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT 
+		    	ROW_NUMBER()OVER(ORDER BY SEQ DESC) AS NO, SEQ , DBMS_LOB.SUBSTR(BODY, 4000, 1) BODY , TITLE , REG_DT , WORKER , 
+		    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0027' AND CODE1=NOTI_CD) AS NOTI_CD1 , NOTI_CD ,
+		    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0028' AND CODE1=NOTI_TRG_CD) AS NOTI_TRG_CD1 , NOTI_TRG_CD, 
+		    	(SELECT DESC1 FROM TB_CODE WHERE COL_NM='NOTI_ST_CD' AND CODE1= NOTI_ST_CD) AS NOTI_ST_CD1, NOTI_ST_CD
+		   FROM TB_NOTICE
+		   WHERE REG_DT BETWEEN #{frDt} AND #{toDt}
+		]]>
+		<if test="BOARD_TYPE!=0">
+		<![CDATA[
+			AND NOTI_CD =#{BOARD_TYPE}
+		]]>
+		</if>
+		<if test="BOARD_CHANNEL!=00">
+		<![CDATA[
+			AND NOTI_TRG_CD =#{BOARD_CHANNEL}
+		]]>
+		</if>
+		) TBL
+		WHERE SEQ BETWEEN  ${intPageStart} AND ${intPageEnd}
+		ORDER BY ROWNUM ASC
+		</select>
+		<select id="selectNoticeMgmtListTotal" parameterType="hashmap" resultType="integer">
+		<![CDATA[
+			SELECT 
+			    	COUNT(1)
+			   FROM TB_NOTICE
+			   WHERE REG_DT BETWEEN #{frDt} AND #{toDt}
+			]]>
+			<if test="BOARD_TYPE!=0">
+			<![CDATA[
+				AND NOTI_CD =#{BOARD_TYPE}
+			]]>
+			</if>
+			<if test="BOARD_CHANNEL!=00">
+			<![CDATA[
+				AND NOTI_TRG_CD =#{BOARD_CHANNEL}
+			]]>
+			</if>
+	</select>
+	
+	<insert id="insertNoticeMgmt" parameterType="hashmap">
+		<selectKey keyProperty="seq" resultType="integer" order="BEFORE">
+		<![CDATA[
+			SELECT SEQ_NOTICES.NEXTVAL FROM DUAL
+		]]>
+		</selectKey>
+		<![CDATA[
+			INSERT INTO TB_NOTICE
+			(
+				SEQ
+				, NOTI_ST_CD
+				, REG_DT
+				, REG_DNT
+				]]>
+				<if test="division!=''">
+				<![CDATA[
+					, NOTI_CD
+				]]>
+				</if>
+				<if test="TITLE!=''">
+				<![CDATA[
+					, TITLE
+				]]>
+				</if>
+				<if test="MEMO_EDITOR!=''">
+				<![CDATA[
+					, BODY
+				]]>
+				</if>
+				<if test="notiLocation!=''">
+				<![CDATA[
+					, NOTI_TRG_CD
+				]]>
+				</if>
+				<if test="register!=''">
+				<![CDATA[
+					, WORKER
+				]]>
+				</if>
+		<![CDATA[
+			) 
+			VALUES 
+			(
+				#{seq}
+				, '1'
+				, DATE_FORMAT(NOW(), "%Y%m%d")
+				, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		]]>
+			<if test="division!=''">
+				<![CDATA[
+					, #{division}
+				]]>
+				</if>
+				<if test="TITLE!=''">
+				<![CDATA[
+					, #{TITLE}
+				]]>
+				</if>
+				<if test="MEMO_EDITOR!=''">
+				<![CDATA[
+					, #{MEMO_EDITOR}
+				]]>
+				</if>
+				<if test="notiLocation!=''">
+				<![CDATA[
+					, #{notiLocation}
+				]]>
+				</if>
+				<if test="register!=''">
+				<![CDATA[
+					, #{register}
+				]]>
+				</if>
+			<![CDATA[
+				)
+			]]>
+	</insert>
+	<update id="updateNoticeMgmt" parameterType="hashmap">
+	<![CDATA[
+		UPDATE 
+			TB_NOTICE
+		SET 
+			 NOTI_CD = #{division}
+			 , TITLE = #{TITLE}
+			 , BODY = #{MEMO_EDITOR}
+			 , NOTI_TRG_CD = #{notiLocation}
+			 , WORKER = #{register}
+			 , NOTI_ST_CD= #{selectStatus}
+		WHERE	 
+			 SEQ = #{seq}
+	]]>
+	</update>
+	<select id="selectNoticeMgmt" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT 
+	    	SEQ , DBMS_LOB.SUBSTR(BODY, 4000, 1) BODY , TITLE , REG_DT , WORKER , NOTI_ST_CD,
+	    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0027' AND CODE1=NOTI_TRG_CD) NOTI_TRG_CD1 , NOTI_TRG_CD ,
+	    	(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0028' AND CODE1=NOTI_CD) NOTI_CD1 , NOTI_CD
+	   FROM TB_NOTICE
+	   WHERE SEQ = ${seq}
+	]]>
+	</select>
+	
+</mapper>
+        

@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="calcuMgmt">
+	<select id="getCardSettlmntLstCnt" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT COUNT(1) TOT_CNT, SUM(COALESCE(A.ACQ_AMT, 0)) TR_AMT, SUM(COALESCE(A.ACQ_FEE, 0)) ORG_AMT,
+			           SUM(COALESCE(A.ACQ_AMT, 0) - COALESCE(A.ACQ_FEE, 0)) ACQ_AMT, SUM(COALESCE(A.ACQ_RE_AMT, 0) - COALESCE(A.ACQ_RE_FEE, 0)) RE_AMT,
+			           SUM(COALESCE(A.ACQ_RTN_AMT, 0) - COALESCE(A.ACQ_RTN_FEE, 0)) RTN_AMT,
+			           SUM(COALESCE(B.REASON_00 + B.REASON_01, 0)) RESR_AMT, SUM(COALESCE(C.REASON_99, 0)) ETC_AMT,            
+			           SUM(COALESCE(A.DPST_AMT, 0)) DPST_AMT, 
+			           SUM((COALESCE(A.ACQ_AMT, 0) - COALESCE(A.ACQ_FEE, 0)) + (COALESCE(A.ACQ_RE_AMT, 0) - COALESCE(A.ACQ_RE_FEE, 0)) - (COALESCE(A.ACQ_RTN_AMT, 0) - COALESCE(A.ACQ_RTN_FEE, 0)) + COALESCE(B.REASON_00 + B.REASON_01, 0) + COALESCE(C.REASON_99, 0)) EXP_AMT,
+			           SUM(COALESCE(A.DPST_AMT, 0) - ((COALESCE(A.ACQ_AMT, 0) - COALESCE(A.ACQ_FEE, 0)) + (COALESCE(A.ACQ_RE_AMT, 0) - COALESCE(A.ACQ_RE_FEE, 0)) - (COALESCE(A.ACQ_RTN_AMT, 0) - COALESCE(A.ACQ_RTN_FEE, 0)) + COALESCE(B.REASON_00 + B.REASON_01, 0) + COALESCE(C.REASON_99, 0))) GAP_AMT
+			    FROM TB_ACQ_STMT A, 
+			        (SELECT AMT, DPST_DT, ACQ_DT, MBS_NO, OVER_FLG,
+			                COALESCE(SUM(CASE WHEN REASON = '00' THEN AMT ELSE 0 END), 0) REASON_00,
+			                COALESCE(SUM(CASE WHEN REASON = '01' THEN AMT ELSE 0 END), 0) REASON_01
+			        FROM TB_ACQ_STMT_EXP
+			        WHERE 1=1
+		]]>
+				<if test='searchType == "0"'>
+				<![CDATA[
+					AND ACQ_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='searchType == "1"'>
+				<![CDATA[
+					AND DPST_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+		<![CDATA[
+		        AND ST_TYPE != '9'
+		        AND REASON != '99'
+		        GROUP BY AMT, DPST_DT, ACQ_DT, MBS_NO, OVER_FLG) B,
+		        (SELECT AMT, DPST_DT, ACQ_DT, MBS_NO, OVER_FLG,
+		                COALESCE(SUM(CASE WHEN REASON = '99' THEN AMT ELSE 0 END), 0) REASON_99
+		        FROM TB_ACQ_STMT_EXP
+		        WHERE 1=1
+		]]>
+				<if test='searchType == "0"'>
+				<![CDATA[
+					AND ACQ_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='searchType == "1"'>
+				<![CDATA[
+					AND DPST_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+		<![CDATA[
+		        AND ST_TYPE != '9'
+		        AND REASON = '99'
+		        GROUP BY AMT, DPST_DT, ACQ_DT, MBS_NO, OVER_FLG) C
+		    WHERE 1=1
+		        AND B.AMT = A.DPST_AMT AND B.MBS_NO = A.MBS_NO
+		        AND B.ACQ_DT = A.ACQ_DT AND B.OVER_FLG = A.OVER_FLG
+		        AND C.AMT = A.DPST_AMT AND C.MBS_NO = A.MBS_NO
+		        AND C.ACQ_DT = A.ACQ_DT AND C.OVER_FLG = A.OVER_FLG
+		]]>
+				<if test='searchType == "0"'>
+				<![CDATA[
+					AND A.ACQ_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='searchType == "1"'>
+				<![CDATA[
+					AND A.DPST_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='MER_TYPE != null and MER_TYPE != "ALL"'>
+				<![CDATA[
+					AND A.MBS_TYPE_CD = #{MER_TYPE}
+				]]>
+				</if>
+				<if test='CardCompanyList != null and CardCompanyList != "ALL"'>
+				<![CDATA[
+					AND A.CARD_CD = #{CardCompanyList}
+				]]>
+				</if>
+				<if test='merNo != null and merNo != ""'>
+				<![CDATA[
+					AND A.MBS_NO = #{merNo}
+				]]>
+				</if>
+				<if test='inOutChk != null and inOutChk != "ALL"'>
+				<![CDATA[
+					AND A.OVER_FLG = #{inOutChk}
+				]]>
+				</if>
+		<![CDATA[
+		ORDER BY A.ACQ_DT, A.DPST_DT, A.CARD_CD, A.MBS_NO
+		]]> 
+	</select>
+	
+	<select id="getCardSettlmntLst" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		 SELECT * 
+            FROM (      
+			SELECT ROWNUM AS RNUM,
+				   A.MBS_NO, 
+				   A.ACQ_DT, 
+				   A.OVER_FLG, 
+				   A.CARD_CD, 
+				   FN_NM_CODE1('card_cd', A.CARD_CD) FN_NM, 
+				   (COALESCE(A.ACQ_AMT, 0)) TR_AMT, 
+				   (COALESCE(A.ACQ_FEE, 0)) ORG_AMT,
+		           (COALESCE(A.ACQ_AMT, 0) - COALESCE(A.ACQ_FEE, 0)) ACQ_AMT, 
+		           (COALESCE(A.ACQ_RE_AMT, 0) - COALESCE(A.ACQ_RE_FEE, 0)) RE_AMT,
+		           (COALESCE(A.ACQ_RTN_AMT, 0) - COALESCE(A.ACQ_RTN_FEE, 0)) RTN_AMT,
+		           COALESCE(B.REASON_00 + B.REASON_01, 0) RESR_AMT, 
+		           COALESCE(C.REASON_99, 0) ETC_AMT,            
+		           COALESCE(A.DPST_AMT, 0) DPST_AMT, 
+		           ((COALESCE(A.ACQ_AMT, 0) - COALESCE(A.ACQ_FEE, 0)) + (COALESCE(A.ACQ_RE_AMT, 0) - COALESCE(A.ACQ_RE_FEE, 0)) - (COALESCE(A.ACQ_RTN_AMT, 0) - COALESCE(A.ACQ_RTN_FEE, 0)) + COALESCE(B.REASON_00 + B.REASON_01, 0) + COALESCE(C.REASON_99, 0)) EXP_AMT,
+		           (COALESCE(A.DPST_AMT, 0) - ((COALESCE(A.ACQ_AMT, 0) - COALESCE(A.ACQ_FEE, 0)) + (COALESCE(A.ACQ_RE_AMT, 0) - COALESCE(A.ACQ_RE_FEE, 0)) - (COALESCE(A.ACQ_RTN_AMT, 0) - COALESCE(A.ACQ_RTN_FEE, 0)) + COALESCE(B.REASON_00 + B.REASON_01, 0) + COALESCE(C.REASON_99, 0))) GAP_AMT,
+		           A.DPST_DT, 
+		           A.MBS_TYPE_CD, 
+		           A.CONFIRM_FLG
+		    FROM TB_ACQ_STMT A,
+		        (SELECT DPST_DT, ACQ_DT, MBS_NO, OVER_FLG, 
+		                COALESCE(SUM(CASE WHEN REASON = '00' THEN AMT ELSE 0 END), 0) REASON_00,
+		                COALESCE(SUM(CASE WHEN REASON = '01' THEN AMT ELSE 0 END), 0) REASON_01
+		        FROM TB_ACQ_STMT_EXP
+		        WHERE 1=1
+		]]>
+				<if test='searchType == "0"'>
+				<![CDATA[
+					AND ACQ_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='searchType == "1"'>
+				<![CDATA[
+					AND DPST_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+		<![CDATA[
+		        AND ST_TYPE != '9'
+		        AND REASON != '99'
+		        GROUP BY DPST_DT, ACQ_DT, MBS_NO, OVER_FLG) B,  
+		        (SELECT DPST_DT, ACQ_DT, MBS_NO, OVER_FLG,
+		                COALESCE(SUM(CASE WHEN REASON = '99' THEN AMT ELSE 0 END), 0) REASON_99
+		        FROM TB_ACQ_STMT_EXP
+		        WHERE 1=1
+		]]>
+				<if test='searchType == "0"'>
+				<![CDATA[
+					AND ACQ_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='searchType == "1"'>
+				<![CDATA[
+					AND DPST_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+		<![CDATA[  
+		        AND ST_TYPE != '9'
+		        AND REASON = '99'
+		        GROUP BY DPST_DT, ACQ_DT, MBS_NO, OVER_FLG) C
+		    WHERE 1=1
+		        AND B.DPST_DT = A.DPST_DT AND B.MBS_NO = A.MBS_NO 
+		        AND B.ACQ_DT = A.ACQ_DT AND B.OVER_FLG = A.OVER_FLG
+		        AND C.DPST_DT = A.DPST_DT AND C.MBS_NO = A.MBS_NO 
+		        AND C.ACQ_DT = A.ACQ_DT AND C.OVER_FLG = A.OVER_FLG
+		]]>
+				<if test='searchType == "0"'>
+				<![CDATA[
+					AND A.ACQ_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='searchType == "1"'>
+				<![CDATA[
+					AND A.DPST_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='MER_TYPE != null and MER_TYPE != "ALL"'>
+				<![CDATA[
+					AND A.MBS_TYPE_CD = #{MER_TYPE}
+				]]>
+				</if>
+				<if test='CardCompanyList != null and CardCompanyList != "ALL"'>
+				<![CDATA[
+					AND A.CARD_CD = #{CardCompanyList}
+				]]>
+				</if>
+				<if test='merNo != null and merNo != ""'>
+				<![CDATA[
+					AND A.MBS_NO = #{merNo}
+				]]>
+				</if>
+				<if test='inOutChk != null and inOutChk != "ALL"'>
+				<![CDATA[
+					AND A.OVER_FLG = #{inOutChk}
+				]]>
+				</if>
+		<![CDATA[
+				ORDER BY A.ACQ_DT, A.DPST_DT, A.CARD_CD, A.MBS_NO
+		]]> 
+		<![CDATA[
+            ) TBL
+            ]]>
+		<if test="intPageStart != null and intPageStart != ''">
+           <![CDATA[
+               WHERE RNUM BETWEEN ${intPageStart} AND ${intPageEnd}
+           ]]>
+       </if>
+       
+       <if test="intPageStart == null or intPageStart == ''">
+           <![CDATA[
+               WHERE RNUM BETWEEN 1 AND 50000
+           ]]>
+       </if>
+	</select>
+	
+	<select id="getReceiveDeferLstCnt" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT COUNT(1)
+			  FROM TB_ACQ_STMT_EXP A 
+			 WHERE 1=1
+			   AND A.REASON != '99'
+			   AND A.ST_TYPE != '9'		
+		]]>
+				<if test='dateChk == "2"'>
+				<![CDATA[
+					AND A.ACQ_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='dateChk == "1"'>
+				<![CDATA[
+					AND A.DPST_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='MER_TYPE != null and MER_TYPE != "ALL"'>
+				<![CDATA[
+					AND A.MBS_TYPE_CD = #{MER_TYPE}
+				]]>
+				</if>
+				<if test='CardCompanyList != null and CardCompanyList != "ALL"'>
+				<![CDATA[
+					AND A.CARD_CD = #{CardCompanyList}
+				]]>
+				</if>
+				<if test='merNo != null and merNo != ""'>
+				<![CDATA[
+					AND A.MBS_NO = #{merNo}
+				]]>
+				</if>
+				<if test='inOutChk != null and inOutChk != "ALL"'>
+				<![CDATA[
+					AND A.OVER_FLG = #{inOutChk}
+				]]>
+				</if>
+	</select>
+	
+	<select id="getReceiveDeferLst" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		 SELECT * 
+            FROM (      
+			SELECT ROWNUM AS RNUM,
+				   A.MBS_NO, 
+				   FN_NM_CODE1 ('card_cd', B.MBS_TYPE_CD) CARD_NM, 
+				   A.DPST_DT,
+			       A.ACQ_DT, 
+			       A.AMT, 
+			       A.TID,
+			       FN_NM_CODE1 ('exp_reason', A.REASON) REASON_NM, 
+			       A.REASON, 
+			       A.ST_TYPE,
+			       A.REG_DT, A.SEQ,
+			       CASE
+			       	 WHEN A.OVER_FLG = '0'
+			         THEN '국내'
+			       ELSE '해외'
+			       END OVER_FLG_NM, 
+			       A.OVER_FLG, 
+			       A.MEMO
+			  FROM TB_ACQ_STMT_EXP A, TB_CARD_MBS B
+			 WHERE 1 = 1
+	           AND B.MBS_NO = A.MBS_NO
+			   AND A.ACQ_DT BETWEEN B.FR_DT AND B.TO_DT
+			   AND A.REASON != '99'
+			   AND A.ST_TYPE != '9'
+		]]>
+				<if test='dateChk == "2"'>
+				<![CDATA[
+					AND A.ACQ_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='dateChk == "1"'>
+				<![CDATA[
+					AND A.DPST_DT BETWEEN #{frDt} AND #{toDt}
+				]]>
+				</if>
+				<if test='MER_TYPE != null and MER_TYPE != "ALL"'>
+				<![CDATA[
+					AND A.MBS_TYPE_CD = #{MER_TYPE}
+				]]>
+				</if>
+				<if test='CardCompanyList != null and CardCompanyList != "ALL"'>
+				<![CDATA[
+					AND A.CARD_CD = #{CardCompanyList}
+				]]>
+				</if>
+				<if test='merNo != null and merNo != ""'>
+				<![CDATA[
+					AND A.MBS_NO = #{merNo}
+				]]>
+				</if>
+				<if test='inOutChk != null and inOutChk != "ALL"'>
+				<![CDATA[
+					AND A.OVER_FLG = #{inOutChk}
+				]]>
+				</if>
+		<![CDATA[
+				ORDER BY A.ACQ_DT
+		]]> 
+		<![CDATA[
+            ) TBL
+            ]]>
+		<if test="intPageStart != null and intPageStart != ''">
+           <![CDATA[
+               WHERE RNUM BETWEEN ${intPageStart} AND ${intPageEnd}
+           ]]>
+       </if>
+       
+       <if test="intPageStart == null or intPageStart == ''">
+           <![CDATA[
+               WHERE RNUM BETWEEN 1 AND 50000
+           ]]>
+       </if>
+	</select>
+	
+	<!-- 차액 내역 삭제 -->
+  	<update id="delAcqSettExp" parameterType="hashmap">
+  		<![CDATA[
+    		UPDATE TB_ACQ_STMT_EXP
+			   SET ST_TYPE = '9',
+			       WORKER = #{worker}
+			 WHERE SEQ = #{seq}
+    	]]>
+  	</update>
+  	
+  	<!-- 신용카드 입금보고서 차액(기타) Count -->
+  	<select id="getCardSettlmntExpLstCnt" parameterType="hashmap" resultType="hashmap">
+  		<![CDATA[
+    		SELECT COUNT(1)
+			  FROM TB_ACQ_STMT_EXP A
+			  LEFT OUTER JOIN TB_ACQ_STMT B ON A.MBS_NO = B.MBS_NO
+			 WHERE A.DPST_DT BETWEEN #{frDt} AND #{toDt}
+			 AND A.REASON = '99'
+			 AND A.ST_TYPE != '9'
+    	]]>
+    	<if test='searchType == "0"'>
+			<![CDATA[
+				AND A.ACQ_DT BETWEEN #{frDt} AND #{toDt}
+			]]>
+		</if>
+    	<if test='CardCompanyList != null and CardCompanyList != "ALL"'>
+			<![CDATA[
+				AND B.CARD_CD = #{CardCompanyList}
+			]]>
+		</if>
+    	<if test='merNo != null and merNo != ""'>
+			<![CDATA[
+				AND A.MBS_NO = #{merNo}
+			]]>
+		</if>
+  	</select>
+  	
+  	<!-- 신용카드 입금보고서 차액(기타) List -->
+  	<select id="getCardSettlmntExpLst" parameterType="hashmap" resultType="hashmap">
+  		<![CDATA[
+  		SELECT * 
+          FROM (      
+			SELECT ROWNUM AS RNUM,
+	    		   A.SEQ, 
+	    		   FN_NM_CODE1 ('card_cd', B.MBS_TYPE_CD) CARD_NM, 
+	    		   A.MBS_NO,
+			       A.DPST_DT, 
+			       A.ACQ_DT, 
+			       A.MEMO, 
+			       A.AMT
+			  FROM TB_ACQ_STMT_EXP A,
+			  	   TB_CARD_MBS B			       
+			 WHERE 1=1
+			   AND B.MBS_NO = A.MBS_NO 
+			   AND A.DPST_DT BETWEEN B.FR_DT AND B.TO_DT
+			   AND A.DPST_DT BETWEEN #{frDt} AND #{toDt} 
+			   AND A.REASON = '99' 
+			   AND A.ST_TYPE != '9'
+		]]>   
+		<if test='searchType == "0"'>
+			<![CDATA[
+				AND A.ACQ_DT BETWEEN #{frDt} AND #{toDt}
+			]]>
+		</if>
+    	<if test='CardCompanyList != null and CardCompanyList != "ALL"'>
+			<![CDATA[
+				AND A.CARD_CD = #{CardCompanyList}
+			]]>
+		</if>
+    	<if test='merNo != null and merNo != ""'>
+			<![CDATA[
+				AND A.MBS_NO = #{merNo}
+			]]>
+		</if>
+			<![CDATA[
+				ORDER BY A.SEQ
+            ) TBL
+            ]]>
+		<if test="intPageStart != null and intPageStart != ''">
+           <![CDATA[
+               WHERE RNUM BETWEEN ${intPageStart} AND ${intPageEnd}
+           ]]>
+        </if>
+  	</select>
+  	
+  	<!-- 차액(보류/해제)내역 생성 -->
+	<insert id="insCardSettlmntRD" parameterType="hashmap">
+		<![CDATA[
+			INSERT 
+			  INTO TB_ACQ_STMT_EXP(SEQ, 
+			                       MBS_NO, 
+			                       OVER_FLG, 
+			                       DPST_DT, 
+			                       ACQ_DT, 
+			                       REASON, 
+			                       AMT, 
+			                       TID, 
+			                       MEMO, 
+			                       ST_TYPE, 
+			                       REG_DT, 
+			                       WORKER, 
+			                       REG_DNT
+			                       )
+			VALUES(SEQ_ACQ_STMT_EXP.NEXTVAL, 
+			       #{mbsNo}, 
+			       #{overFlg},
+			       #{dpstDt}, 
+			       #{acqDt}, 
+			       '00', 
+			       #{amt}, 
+			       #{tid}, 
+			       #{memo}, 
+			       #{stType}, 
+			       DATE_FORMAT(NOW(), "%Y%m%d"), 
+			       #{worker}, 
+			       DATE_FORMAT(NOW(), "%Y%m%d%H")
+			       )
+		]]>
+	</insert>
+	
+	<!-- 차액내역 생성 -->
+  	<insert id="insCardSettlmntExp" parameterType="hashmap">
+		<![CDATA[
+			INSERT 
+			  INTO TB_ACQ_STMT_EXP(SEQ, 
+			                       MBS_NO, 
+			                       OVER_FLG, 
+			                       DPST_DT, 
+			                       ACQ_DT, 
+			                       REASON, 
+			                       AMT, 
+			                       TID, 
+			                       MEMO, 
+			                       ST_TYPE, 
+			                       REG_DT, 
+			                       WORKER, 
+			                       REG_DNT
+			                       )
+			VALUES(SEQ_ACQ_STMT_EXP.NEXTVAL, 
+			       #{mbsNo}, 
+			       #{overFlg},
+			       #{dpstDt}, 
+			       #{acqDt}, 
+			       '99', 
+			       #{amt}, 
+			       #{tid}, 
+			       #{memo}, 
+			       #{stType}, 
+			       DATE_FORMAT(NOW(), "%Y%m%d"), 
+			       #{worker}, 
+			       DATE_FORMAT(NOW(), "%Y%m%d%H")
+			       )
+		]]>
+	</insert>
+	
+	<!-- 신용카드 입금보고서 차액(보류/해제)에서 TID 정보 조회 -->
+  	<select id="getReceiveDeferGetTIDData" parameterType="String" resultType="hashmap">
+  		<![CDATA[
+		    SELECT MBS_NO, OVER_FLG, FN_CODE1 ('0163', OVER_FLG) AS OVER_FLG_NM,
+			       NVL (  GOODS_AMT
+			               - FN_BASE_FEE (MID,
+			                              ACQ_CARD_CD,
+			                              NOINT_FLG,
+			                              SPM_CD,
+			                              MBS_NO,
+			                              QUOTA_MON,
+			                              APP_DT,
+			                              GOODS_AMT,
+			                              CHKCARD_FLG,
+			                              FN_OVER_CARD (APP_CARD_CD)
+			                             ),
+			               0
+			              ) GOODS_AMT
+			  FROM TB_ACQ
+			 WHERE TID = #{tid}
+			   AND ROWNUM = 1
+		]]>
+  	</select>
+</mapper>

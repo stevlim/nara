@@ -1,0 +1,482 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/* CSS Reset */
+* { margin:0; padding:0; border:0; outline:0; vertical-align:top; }
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section { display:block; }
+ul, ol, dl { list-style:none; }
+img, video { max-width:100%; }
+a { text-decoration:none; color: #000; }
+table { border-collapse:collapse; border-spacing:0; }
+input, select { vertical-align: middle; }
+body { background: #FFF; font-size:100%; line-height:1; }
+label { cursor:pointer; }
+.blind,legend,hr,caption { display:block; overflow:hidden; position:absolute; top:0; left:-1000em; }
+i,em,address { font-style:normal; }
+
+
+/* 본문 영역
+----------------------------------------------------------------------*/
+#wrap_ims {
+  /* position: fixed; */
+  background-image: url("../img/login/wrapper_bg2.png");
+  background-repeat: no-repeat;
+  background-position: 0em 0em;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: -10;
+}
+
+#wrap_mms {
+  /* position: fixed; */
+  background-image: url("../img/login/wrapper_bg3.png");
+  background-repeat: no-repeat;
+  background-position: 0em 0em;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: -10;
+}
+
+.wrap_bg{
+  position: absolute;
+  top: 70%;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(45deg, #633994, #5F00FF);
+  transform: skewY(-10deg);
+  transform-origin: top left;
+  z-index:-3;
+}
+
+.wrap_test{
+  position: absolute;
+  top: 130%;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: skewY(-30deg);
+  transform-origin: top left;
+  z-index:-3;
+  background: linear-gradient(60deg, #5F00FF, #512DA8);
+  background-size: 1800% 1800%;
+  -webkit-animation: rainbow 18s ease infinite;
+  -z-animation: rainbow 18s ease infinite;
+  -o-animation: rainbow 18s ease infinite;
+    animation: rainbow 18s ease infinite;
+  }
+
+  @-webkit-keyframes rainbow {
+      0%{background-position:0% 82%}
+      50%{background-position:100% 19%}
+      100%{background-position:0% 82%}
+  }
+  @-moz-keyframes rainbow {
+      0%{background-position:0% 82%}
+      50%{background-position:100% 19%}
+      100%{background-position:0% 82%}
+  }
+  @-o-keyframes rainbow {
+      0%{background-position:0% 82%}
+      50%{background-position:100% 19%}
+      100%{background-position:0% 82%}
+  }
+  @keyframes rainbow { 
+      0%{background-position:0% 82%}
+      50%{background-position:100% 19%}
+      100%{background-position:0% 82%}
+  }
+
+/* 로그인 영역
+----------------------------------------------------------------------*/
+.box_wrapper {
+  position: fixed;
+  display: inline-block;
+  top: 0;
+  left: 18%;
+  right: 0;
+  bottom: 0;
+  width: 725px;
+  height: 420px;
+  margin: auto;
+  z-index: 0;
+}
+
+.box_left {
+	position: absolute;
+  display: inline-block;
+  top:50%;
+  transform: translateY(-50%);
+	width: 322px;
+	height: 350px;
+  margin-left: 0.18em;
+	background-color: #5F00FF;
+	box-shadow: 0px 0px 15px 0px #000000;
+	font-family: 'Noto Sans KR', sans-serif;
+	font-size: 1.8em;
+	font-weight: 500;
+	color: #FFFFFF;
+	/* background: url(http://oneslab.net/imsmms/img/mask.png); */
+	background: url('../img/login/mask.png');
+  background-size: 100% 100%;
+	z-index: -2;
+}
+
+.left_title {
+  position: relative;
+  display: inline-block;
+  top: 0;
+  bottom: 2em;
+  left: 0;
+  right: 11em;
+  margin-top: 1.5em;
+  margin-left: 1em;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: #FFFFFF;
+  z-index: 4;
+}
+
+.line_white {
+  position: relative;
+  margin-top: 1.4em;
+  margin-bottom: 0.3em;
+  border: 0;
+  background-color: #FFFFFF;
+  width: 300px;
+  height: 1px;
+}
+
+.left_text {
+  position: relative;
+  display: inline-block;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin-top: 0.5em;
+  margin-left: -0.05em;
+  line-height: 1.3em;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 1.6em;
+  font-weight: 900;
+  color: #FFFFFF;
+  z-index: 4;
+}
+
+.left_text_italic {
+  position: relative;
+  display: inline-block;
+  top: 0;
+  bottom: 2em;
+  left: 0;
+  right: 11em;
+  margin-top: 0.4em;
+  margin-left: -0.15em;
+  line-height: 1.1em;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 1.6em;
+  font-weight: 100;
+  font-style: italic;
+  color: #FFFFFF;
+  z-index: 4;
+}
+
+.box_right {
+  position: relative;
+  display: inline-block;
+  float: right;
+	width: 400px;
+	height: 570px;
+	border-radius: 15px;
+	background-color: #FFFFFF;
+	box-shadow: 0px 0px 20px 0px #000000;
+	font-family: 'Noto Sans KR', sans-serif;
+	font-size: 2em;
+	font-weight: 500;
+	color: #FFFFFF;
+	z-index: 8;
+	margin-top: -60px;
+}
+
+.right_title {
+  position: relative;
+  display: inline-block;
+  left: 0;
+  margin-top: 4em;
+  margin-bottom: 1.3em;
+  margin-left: 3em;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.45em;
+  font-weight: 500;
+  color: #58595b;
+  z-index: 4;
+}
+
+.login_text_fixed {
+  position: relative;
+  display: inline-block;
+  left: 0;
+  width:100%;
+  margin-top: 3em;
+  margin-left: 3.95em;
+  text-transform: uppercase;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.35em;
+  font-weight: 500;
+  color: #58595B;
+  z-index: 4;
+}
+
+.line_black {
+  position: relative;
+  margin-top: 1em;
+  margin-left: 1.4em;
+  border: 0;
+  background-color: #000000;
+  width: 180px;
+  height: 1px;
+}
+
+.login_btn {
+  margin-top: 0.7em;
+  margin-left: 3.3em;
+  border-radius: 50px;
+  background-color: #5F00FF;
+  cursor: pointer;
+  padding-left: 30px;
+  text-align: left;
+  width: 200px;
+  height: 35px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.4em;
+  font-weight: 500; 
+  color: #FFFFFF;
+  z-index: 5;
+}
+
+.terms {
+  position: relative;
+  display: inline-block;
+  top: 0.8em;
+  left: 3.5em;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.4em;
+  font-weight: 500; 
+  color: #999999;
+  z-index: 15;
+}
+
+.copyright {
+  position: absolute;
+  display: inline-block;
+  bottom: 1em;
+  right: 1em;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.8em;
+  font-weight: 300; 
+  color: #FFFFFF;
+  z-index: 15;
+}
+
+/* RESPONSIVE AREA----------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------*/
+@media screen and (max-width: 885px) {
+.wrap_test{
+  position: absolute;
+  top: 80%;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: skewY(-20deg);
+  transform-origin: top left;
+  z-index:-3;
+  background: linear-gradient(60deg, #5F00FF, #512DA8);
+  background-size: 1800% 1800%;
+  -webkit-animation: rainbow 18s ease infinite;
+  -z-animation: rainbow 18s ease infinite;
+  -o-animation: rainbow 18s ease infinite;
+    animation: rainbow 18s ease infinite;
+  }
+
+  @-webkit-keyframes rainbow {
+      0%{background-position:0% 82%}
+      50%{background-position:100% 19%}
+      100%{background-position:0% 82%}
+  }
+  @-moz-keyframes rainbow {
+      0%{background-position:0% 82%}
+      50%{background-position:100% 19%}
+      100%{background-position:0% 82%}
+  }
+  @-o-keyframes rainbow {
+      0%{background-position:0% 82%}
+      50%{background-position:100% 19%}
+      100%{background-position:0% 82%}
+  }
+  @keyframes rainbow { 
+      0%{background-position:0% 82%}
+      50%{background-position:100% 19%}
+      100%{background-position:0% 82%}
+  }
+
+
+.box_wrapper {
+  position: fixed;
+  display: inline-block;
+  left: 0;
+  width: 420px;
+  height: 420px;
+  z-index: 0;
+}
+
+.box_left {
+  position: absolute;
+  display: inline-block;
+  top: 0%;
+  transform: translateY(-50%);
+  height: 70px;
+  background-color: #5F00FF;
+  box-shadow: 0px 0px 15px 0px #000000;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 1.8em;
+  font-weight: 500;
+  margin: auto;
+  color: #FFFFFF;
+  /* background: url(http://oneslab.net/imsmms/img/mask.png); */
+  background: url('../img/login/mask.png');
+  z-index: 9;
+}
+
+.left_title {
+  position: relative;
+  display: inline-block;
+  top: 0;
+  bottom: 2em;
+  left: 0;
+  right: 11em;
+  margin-top: 1em;
+  margin-left: 1em;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: #FFFFFF;
+  z-index: 4;
+}
+
+.line_white {
+  position: relative;
+  margin-top: 0.5em;
+  margin-bottom: 0.3em;
+  border: 0;
+  background-color: #FFFFFF;
+  width: 299px;
+  height: 1px;
+}
+
+.left_text {
+  display: none;
+}
+
+.left_text_italic {
+  display: none;
+}
+
+.box_right {
+  position: relative;
+  display: inline-block;
+  float: right;
+  width: 400px;
+  height: 420px;
+  border-radius: 15px;
+  background-color: #FFFFFF;
+  box-shadow: 0px 0px 20px 0px #000000;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 2em;
+  font-weight: 500;
+  color: #FFFFFF;
+  z-index: 8;
+}
+
+.right_title {
+  position: relative;
+  display: inline-block;
+  left: 0;
+  margin-top: 4em;
+  margin-bottom: 1.3em;
+  margin-left: 3em;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.45em;
+  font-weight: 500;
+  color: #58595b;
+  z-index: 4;
+}
+
+.login_text_fixed {
+  position: relative;
+  display: inline-block;
+  left: 0;
+  width:100%;
+  margin-top: 3em;
+  margin-left: 3.95em;
+  text-transform: uppercase;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.35em;
+  font-weight: 500;
+  color: #58595B;
+  z-index: 4;
+}
+
+.line_black {
+  position: relative;
+  margin-top: 1em;
+  margin-left: 1.4em;
+  border: 0;
+  background-color: #000000;
+  width: 180px;
+  height: 1px;
+}
+
+.login_btn {
+  margin-top: 0.7em;
+  margin-left: 3.3em;
+  border-radius: 50px;
+  background-color: #5F00FF;
+  cursor: pointer;
+  padding-left: 30px;
+  text-align: left;
+  width: 200px;
+  height: 35px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.4em;
+  font-weight: 500; 
+  color: #FFFFFF;
+  z-index: 5;
+}
+
+}
+
+@media screen and (max-width: 769px) {
+}
+
+@media screen and (max-width: 700px) {
+  
+}
+
+@media screen and (max-width: 600px) {
+}
+
+@media screen and (max-width: 480px) {
+}
+
+/* RESPONSIVE AREA----------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------*/

@@ -1,0 +1,686 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="settlementCalender">
+    <select id="selectSettlementCalenderList" parameterType="hashmap" resultType="hashmap">
+	    SELECT AL.* FROM (
+			(
+			 select a.ID, a.STMT_DT, a.ST_TYPE, a.DD, a.OFFDAY_CD, a.MEMO
+				, ifnull((a.DPST_AMT - a.resr_amt + a.resr_cc_amt + a.extra_amt + a.off_amt), '0') AS DPST_AMT
+		        , APP_AMT
+		        , '0' AS PRE_CC_AMT
+		        , CC_AMT
+		        , ifnull(TOT_AMT, '0') AS TOT_AMT
+		        , a.RESR_AMT
+		        , a.RESR_CC_AMT, (a.extra_amt+a.off_amt) EXTRA_AMT
+		        , ifnull(a.FEE, '0') AS FEE
+				, ifnull(a.VAT, '0') AS VAT
+						   , 'D' AS DATA_TYPE
+				  from (  
+					 select #{worker} as ID, c.STMT_DT, ifnull(b.ST_TYPE, '0') ST_TYPE, a.DD, a.OFFDAY_CD, a.MEMO,
+							   sum(c.DPST_AMT) DPST_AMT,
+							   sum(case when c.PM_CD = '01' then c.APP_AMT else 0 end) APP_AMT,
+							   sum(case when c.PM_CD = '01' then c.CC_AMT else 0 end) CC_AMT,                       
+							   sum(c.APP_AMT + c.CC_AMT) TOT_AMT,
+							   ifnull((select sum(x.RESR_AMT) from TB_DFR_RELESE x where x.ID = c.MID and x.RESR_DT = c.STMT_DT and x.RESR_TYPE = '01' and x.DEL_FLG = '0'), 0) RESR_AMT,
+							   ifnull((select sum(x.RESR_AMT) from TB_DFR_RELESE x where x.ID = c.MID and x.RESR_DT = c.STMT_DT and x.RESR_TYPE = '02' and x.DEL_FLG = '0'), 0) RESR_CC_AMT,
+							   ifnull((select sum(x.AMT) from TB_EXTRA_HIST x where x.EXTRA_ID = c.MID and x.EXTRA_DT = c.STMT_DT and x.DEL_FLG = '0'), 0) EXTRA_AMT,
+							   ifnull((select sum(-1*x.amt) from TB_EXTRA_HIST x where x.OFF_ID = c.MID and x.EXTRA_DT = c.STMT_DT and x.DEL_FLG = '0'), 0) OFF_AMT,
+							   sum(c.FEE) FEE,
+							   sum(c.VAT) VAT
+							   
+					 from TB_DAY a 
+							left outer join 
+							(SELECT ST_TYPE , STMT_DT FROM TB_STMT  WHERE 1=1 
+							
+							<choose>
+					      		<when test="MER_TYPE=='m'.toString()">
+					      		<![CDATA[
+					      			AND ID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='g'.toString()">
+					      		<![CDATA[
+					      			AND ID IN (SELECT MID FROM TB_MBS WHERE GID = #{MER_ID})
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='v'.toString()" >
+					      		<![CDATA[
+					      			AND ID IN (SELECT MID FROM TB_MBS WHERE VID = #{MER_ID})
+					      		]]>
+					      		</when>
+					      		<otherwise></otherwise>
+					      	</choose> 
+							
+							GROUP BY ID, STMT_DT) b ON b.STMT_DT = a.DAY
+							left outer join TB_SUB_STMT c on c.STMT_DT = a.DAY 
+							
+							<choose>
+					      		<when test="MER_TYPE=='m'.toString()">
+					      		<![CDATA[
+					      			AND c.MID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='g'.toString()">
+					      		<![CDATA[
+					      			AND c.GID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='v'.toString()" >
+					      		<![CDATA[
+					      			AND c.VID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<otherwise></otherwise>
+					      	</choose> 
+							
+						   
+					 where YY = #{yyyyList}
+					 and MM = #{mmList}
+					 group by ID, c.STMT_DT, a.DD, a.OFFDAY_CD, a.MEMO, b.ST_TYPE, c.MID
+				  ) a
+				  order by a.DD
+		
+			)
+			UNION ALL
+			(
+		
+			SELECT a.ID, a.DAY AS STMT_DT, '' AS ST_TYPE, '' as DD, '' AS OFFDAY_CD, '' AS MEMO
+					, CAST(IFNULL(GOODS_AMT_0, '0') as signed) + CAST(IFNULL(GOODS_AMT_2, '0') as signed) AS DPST_AMT
+                    
+					, CAST(IFNULL(GOODS_AMT_0, '0') as signed) AS APP_AMT
+                    , CAST(IFNULL(GOODS_AMT_1, '0') as signed) AS PRE_CC_AMT
+                    , CAST(IFNULL(GOODS_AMT_2, '0') as signed) AS CC_AMT
+						, '' AS TOT_AMT
+						, '' AS RESR_AMT, '' AS RESR_CC_AMT, '' AS EXTRA_AMT
+						, '' AS FEE
+						, '' AS VAT
+						, 'S' AS DATA_TYPE
+				 
+ 			from (  
+					     
+                     select #{worker} as ID, a.DAY
+						, (SELECT SUM(GOODS_AMT) FROM TB_TRX_HIST  WHERE 1=1 
+							
+							<choose>
+					      		<when test="MER_TYPE=='m'.toString()">
+					      		<![CDATA[
+					      			AND MID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='g'.toString()">
+					      		<![CDATA[
+					      			AND GID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='v'.toString()" >
+					      		<![CDATA[
+					      			AND VID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<otherwise></otherwise>
+					      	</choose> 
+							
+							AND TRX_STAT_CD IN ('0')
+							AND APP_DT = a.DAY
+						  GROUP BY APP_DT, TRX_STAT_CD
+						  LIMIT 1
+						) AS GOODS_AMT_0
+						, (SELECT SUM(0) FROM TB_TRX_HIST  WHERE 1=1
+							
+							<choose>
+					      		<when test="MER_TYPE=='m'.toString()">
+					      		<![CDATA[
+					      			AND MID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='g'.toString()">
+					      		<![CDATA[
+					      			AND GID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='v'.toString()" >
+					      		<![CDATA[
+					      			AND VID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<otherwise></otherwise>
+					      	</choose> 
+							
+							AND TRX_STAT_CD IN ('1')
+							AND APP_DT = a.DAY
+						  GROUP BY APP_DT, TRX_STAT_CD
+						  LIMIT 1
+						) AS GOODS_AMT_1
+						, (SELECT SUM(GOODS_AMT) * (-1) FROM TB_TRX_HIST  WHERE 1=1 
+							
+							<choose>
+					      		<when test="MER_TYPE=='m'.toString()">
+					      		<![CDATA[
+					      			AND MID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='g'.toString()">
+					      		<![CDATA[
+					      			AND GID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='v'.toString()" >
+					      		<![CDATA[
+					      			AND VID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<otherwise></otherwise>
+					      	</choose> 
+							
+							AND TRX_STAT_CD IN ('2')
+							AND APP_DT = a.DAY
+						  GROUP BY APP_DT, TRX_STAT_CD
+						  LIMIT 1
+						) AS GOODS_AMT_2
+				 from TB_DAY a 
+						
+				 where YY = #{yyyyList}
+				 and MM = #{mmList}
+				 
+				 AND (
+
+						(SELECT APP_DT FROM TB_TRX_HIST  WHERE 1=1 
+						
+							<choose>
+					      		<when test="MER_TYPE=='m'.toString()">
+					      		<![CDATA[
+					      			AND MID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='g'.toString()">
+					      		<![CDATA[
+					      			AND GID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='v'.toString()" >
+					      		<![CDATA[
+					      			AND VID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<otherwise></otherwise>
+					      	</choose> 
+							
+							AND TRX_STAT_CD IN ('0')
+												AND APP_DT = a.DAY
+											  GROUP BY APP_DT, TRX_STAT_CD
+											  LIMIT 1
+											) IS NOT NULL
+					                        
+					    OR
+						
+						(SELECT APP_DT FROM TB_TRX_HIST  WHERE 1=1 
+						
+							<choose>
+					      		<when test="MER_TYPE=='m'.toString()">
+					      		<![CDATA[
+					      			AND MID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='g'.toString()">
+					      		<![CDATA[
+					      			AND GID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<when test="MER_TYPE=='v'.toString()" >
+					      		<![CDATA[
+					      			AND VID = #{MER_ID}
+					      		]]>
+					      		</when>
+					      		<otherwise></otherwise>
+					      	</choose>
+							
+							AND TRX_STAT_CD IN ('2')
+												AND APP_DT = a.DAY
+											  GROUP BY APP_DT, TRX_STAT_CD
+											  LIMIT 1
+											)
+				                        
+				    )
+				 group by ID, a.DAY, a.DD
+                     
+				  ) a
+				  order by a.DAY
+				  
+				  
+			)   
+		) AL 
+		ORDER BY AL.STMT_DT, AL.DATA_TYPE
+      
+    </select>
+    
+    <select id="selectSettlementSettCalenderList" parameterType="hashmap" resultType="hashmap">
+	    select a.ID, a.STMT_DT, a.ST_TYPE, a.DD, a.OFFDAY_CD, a.MEMO
+	    	, ifnull((a.DPST_AMT - a.resr_amt + a.resr_cc_amt + a.extra_amt + a.off_amt), '0') AS DPST_AMT
+            , APP_AMT, CC_AMT
+            , ifnull(TOT_AMT, '0') AS TOT_AMT
+            , a.RESR_AMT, a.RESR_CC_AMT, (a.extra_amt+a.off_amt) EXTRA_AMT
+            , ifnull(a.FEE, '0') AS FEE
+            , ifnull(a.VAT, '0') AS VAT
+	      from (  
+	         select #{worker} as ID, c.STMT_DT, ifnull(b.ST_TYPE, '0') ST_TYPE, a.DD, a.OFFDAY_CD, a.MEMO,
+	                   sum(c.DPST_AMT) DPST_AMT,
+	                   sum(case when c.PM_CD = '01' then c.APP_AMT else 0 end) APP_AMT,
+	                   sum(case when c.PM_CD = '01' then c.CC_AMT else 0 end) CC_AMT,                       
+	                   sum(c.APP_AMT + c.CC_AMT) TOT_AMT,
+	                   ifnull((select sum(x.RESR_AMT) from TB_DFR_RELESE x where x.ID = c.MID and x.RESR_DT = c.STMT_DT and x.RESR_TYPE = '01' and x.DEL_FLG = '0'), 0) RESR_AMT,
+	                   ifnull((select sum(x.RESR_AMT) from TB_DFR_RELESE x where x.ID = c.MID and x.RESR_DT = c.STMT_DT and x.RESR_TYPE = '02' and x.DEL_FLG = '0'), 0) RESR_CC_AMT,
+	                   ifnull((select sum(x.AMT) from TB_EXTRA_HIST x where x.EXTRA_ID = c.MID and x.EXTRA_DT = c.STMT_DT and x.DEL_FLG = '0'), 0) EXTRA_AMT,
+	                   ifnull((select sum(-1*x.amt) from TB_EXTRA_HIST x where x.OFF_ID = c.MID and x.EXTRA_DT = c.STMT_DT and x.DEL_FLG = '0'), 0) OFF_AMT,
+	                   sum(c.FEE) FEE,
+	                   sum(c.VAT) VAT
+	         from TB_DAY a 
+	                left outer join 
+	                (SELECT ST_TYPE , STMT_DT FROM TB_STMT  WHERE  ID = #{merId} GROUP BY ID, STMT_DT) b ON b.STMT_DT = a.DAY
+	                left outer join TB_SUB_STMT c on c.STMT_DT = a.DAY and c.MID = #{merId}
+	               
+	         where YY = #{yyyyList}
+	         and MM = #{mmList}
+	         group by ID, c.STMT_DT, a.DD, a.OFFDAY_CD, a.MEMO, b.ST_TYPE, c.MID
+	      ) a
+	      order by a.DD
+      
+    </select>
+    
+    <select id="selectSettlementDetailList" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+			SELECT DECODE(GROUPING(B.PAY_METHOD),1,'TOTAL',UF_GET_PAY_METHOD_NAME(B.PAY_METHOD)) AS PAY_METHOD
+                  ,NVL(SUM(A.APP_CNT),0) AS APP_CNT
+                  ,NVL(SUM(A.APP_AMT),0) AS APP_AMT
+                  ,NVL(SUM(A.CC_CNT),0) AS CC_CNT
+                  ,NVL(SUM(A.CC_AMT),0) AS CC_AMT
+                  ,NVL(SUM(A.APP_AMT)-SUM(A.CC_AMT),0) AS TRANS_AMT
+                  ,0 AS PG_FEE
+                  ,0 AS VAT
+                  ,NVL(SUM(A.SETTLMNT_AMT),0) AS EXPECT_SETTLMNT_AMT
+                  ,0 AS RESR_AMT
+                  ,0 AS RESR_CC_AMT
+                  ,0 AS OFF_AMT
+                  ,0 AS SETTLMNT_AMT
+                  ,0 AS REFUND_AMT
+            FROM TB_BO_SETTLMNT_DT A 
+            RIGHT OUTER JOIN (SELECT DISTINCT PAY_METHOD FROM TB_BO_MER_PAY_METHOD WHERE PAY_METHOD='06') B
+            ON (A.PAY_METHOD = B.PAY_METHOD
+            AND A.SETTLMNT_DT = #{SETTLMNT_DT}
+            AND A.I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ','))))
+            AND A.PAY_METHOD='06'
+            GROUP BY ROLLUP ((B.PAY_METHOD))
+			UNION ALL
+			SELECT 'ADDROW' AS PAY_METHOD
+			      ,0 AS APP_CNT
+			      ,0 AS APP_AMT
+			      ,0 AS CC_CNT
+			      ,0 AS CC_AMT
+			      ,0 AS TRANS_AMT
+			      ,NVL(SUM(PG_FEE),0) AS PG_FEE
+           		  ,NVL(SUM(VAT),0) AS VAT
+			      ,0 AS EXPECT_SETTLMNT_AMT
+			      ,NVL(SUM(RESR_AMT),0) AS RESR_AMT
+			      ,NVL(SUM(RESR_CC_AMT),0) AS RESR_CC_AMT
+			      ,NVL(SUM(OFF_AMT),0) AS OFF_AMT
+			      ,NVL((SUM(SETTLMNT_AMT)-SUM(RESR_AMT)+SUM(RESR_CC_AMT)+SUM(OFF_AMT)),0)-NVL(SUM(VAT),0) AS SETTLMNT_AMT
+			      ,NVL(SUM(REFUND_AMT),0) AS REFUND_AMT
+			FROM  (
+			        SELECT SETTLMNT_DT
+			              ,I_MID
+			              ,NVL(SUM(SETTLMNT_AMT),0) AS SETTLMNT_AMT
+			              ,0 AS RESR_AMT
+			              ,0 AS RESR_CC_AMT
+			              ,0 AS OFF_AMT
+			              ,0 AS PG_FEE
+                          ,0 AS VAT
+                          ,0 AS REFUND_AMT
+			        FROM   TB_BO_SETTLMNT_DT
+			        WHERE  SETTLMNT_DT = #{SETTLMNT_DT}
+			        AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+			        AND PAY_METHOD='06'
+			        GROUP BY I_MID, SETTLMNT_DT
+			        UNION ALL
+			        SELECT SETTLMNT_DT
+                          ,I_MID
+                          ,0 AS SETTLMNT_AMT
+                          ,0 AS RESR_AMT
+                          ,0 AS RESR_CC_AMT
+                          ,0 AS OFF_AMT
+                          ,NVL(SUM(FEE)+SUM(INSTMNT_FEE)+SUM(FDS_FEE),0) AS PG_FEE
+                          ,NVL(SUM(VAT),0) AS VAT
+                          ,0 AS REFUND_AMT
+                    FROM   TB_BO_SETTLMNT_DT
+                    WHERE  SETTLMNT_DT = #{SETTLMNT_DT}
+                    AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+                    AND PAY_METHOD='06'
+                    GROUP BY I_MID, SETTLMNT_DT
+			        UNION ALL
+			        SELECT SETTLMNT_DT
+			              ,I_MID
+			              ,0 AS SETTLMNT_AMT
+			              ,NVL(SUM(DECODE(HIST_TYPE,'1',AMT,0)),0) AS RESR_AMT
+			              ,NVL(SUM(DECODE(HIST_TYPE,'2',AMT,0)),0) AS RESR_CC_AMT
+			              ,0 AS OFF_AMT
+			              ,0 AS PG_FEE
+                          ,0 AS VAT
+                          ,0 AS REFUND_AMT
+			        FROM   TB_BO_RESR_HIST
+			        WHERE  SETTLMNT_DT = #{SETTLMNT_DT}
+			        AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+			        GROUP BY I_MID, SETTLMNT_DT
+			        UNION ALL
+			        SELECT SETTLMNT_DT
+			              ,I_MID
+			              ,0 AS SETTLMNT_AMT
+			              ,0 AS RESR_AMT
+			              ,0 AS RESR_CC_AMT
+			              ,NVL(SUM(OFF_AMT),0) AS OFF_AMT
+			              ,0 AS PG_FEE
+                          ,0 AS VAT
+                          ,0 AS REFUND_AMT
+			        FROM   TB_BO_BOND_OFF
+			        WHERE  SETTLMNT_DT = #{SETTLMNT_DT}
+			        AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+			        GROUP BY I_MID, SETTLMNT_DT
+			        UNION ALL
+			        SELECT SETTLMNT_DT
+			              ,BOND_OFF_I_MID AS I_MID
+			              ,0 AS SETTLMNT_AMT
+			              ,0 AS RESR_AMT
+			              ,0 AS RESR_CC_AMT
+			              ,NVL(SUM(OFF_AMT*(-1)),0) AS OFF_AMT
+			              ,0 AS PG_FEE
+                          ,0 AS VAT
+                          ,0 AS REFUND_AMT
+			        FROM   TB_BO_BOND_OFF
+			        WHERE  SETTLMNT_DT = #{SETTLMNT_DT}
+			        AND    BOND_OFF_TYPE = '2'
+			        AND    BOND_OFF_I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+			        GROUP BY BOND_OFF_I_MID, SETTLMNT_DT
+			) Z
+        ]]>
+    </select>
+    
+    <select id="selectPerMerchantReportExcelList" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT *
+            FROM
+            (
+                SELECT ROW_NUMBER()OVER(ORDER BY TBL1.SETTLMNT_DT) RNUM
+                      ,NVL(TBL1.SETTLMNT_DT,'TOTAL') AS SETTLMNT_DT
+                      ,NVL(TBL1.I_MID,'-') AS I_MID
+                      ,NVL(UF_GET_MER_NAME(TBL1.I_MID),'-') AS MER_NAME
+                      ,SUM(TBL1.DCARD_APP_AMT) AS DCARD_APP_AMT
+                      ,(SUM(TBL1.DCARD_APP_AMT)) AS TOTAL_APP_AMT
+                      ,SUM(TBL1.PG_FEE) AS PG_FEE
+                      ,SUM(TBL1.VAT) AS VAT
+                      ,SUM(TBL1.TOTAL_FEE) AS TOTAL_FEE
+                      ,SUM(TBL1.TOTAL_APP_CNT) AS TOTAL_APP_CNT
+                      ,SUM(TBL1.SETTLMNT_AMT) AS EXPECT_SETTLE_AMT
+                      ,SUM(TBL1.RESR_AMT) AS RESR_AMT
+                      ,SUM(TBL1.RESR_CC_AMT) AS RESR_CC_AMT
+                      ,SUM(TBL1.OFF_AMT) AS OFF_AMT
+                      ,(SUM(TBL1.SETTLMNT_AMT)-SUM(TBL1.RESR_AMT)+SUM(TBL1.RESR_CC_AMT)+SUM(TBL1.OFF_AMT)) AS SETTLMNT_AMT
+                      ,NVL(UF_GET_BANK_NAME3((SELECT A.BANK_CD FROM TB_BO_MER_SETTLMNT A WHERE A.I_MID = TBL1.I_MID)),'-') AS BANK_NAME
+	                  ,NVL((SELECT A.BANK_CD FROM TB_BO_MER_SETTLMNT A WHERE A.I_MID = TBL1.I_MID),'-') AS BANK_CD
+	                  ,NVL((SELECT A.ACCT_NO FROM TB_BO_MER_SETTLMNT A WHERE A.I_MID = TBL1.I_MID),'-') AS ACCT_NO
+	                  ,NVL((SELECT A.ACCT_NM FROM TB_BO_MER_SETTLMNT A WHERE A.I_MID = TBL1.I_MID),'-') AS ACCT_NM
+	                  ,SUM(REFUND_AMT) AS REFUND_AMT
+                FROM (
+                        SELECT  SETTLMNT_DT
+                               ,I_MID
+                               ,NVL(DECODE(PAY_METHOD,'06',(SUM(APP_AMT)-SUM(CC_AMT)),0),0) AS DCARD_APP_AMT
+                               ,NVL(SUM(APP_CNT)+SUM(CC_CNT),0) AS TOTAL_APP_CNT
+                               ,NVL(SUM(FEE)+SUM(INSTMNT_FEE),0) AS PG_FEE
+                               ,NVL(SUM(VAT),0) AS VAT
+                               ,NVL(SUM(FEE)+SUM(INSTMNT_FEE)+SUM(FDS_FEE)+SUM(VAT),0) AS TOTAL_FEE
+                               ,NVL(SUM(SETTLMNT_AMT),0) AS SETTLMNT_AMT
+                               ,0 AS RESR_AMT
+                               ,0 AS RESR_CC_AMT
+                               ,0 AS OFF_AMT
+                               ,0 AS REFUND_AMT
+                        FROM TB_BO_SETTLMNT_DT 
+                        WHERE SETTLMNT_DT = #{SETTLMNT_DT}
+                        AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+                        AND PAY_METHOD='06'
+                        GROUP BY SETTLMNT_DT, I_MID, PAY_METHOD
+                        UNION ALL
+                        SELECT SETTLMNT_DT
+                              ,I_MID
+                              ,0 AS DCARD_APP_AMT
+                              ,0 AS TOTAL_APP_CNT
+                              ,0 AS PG_FEE
+                              ,0 AS VAT
+                              ,0 AS TOTAL_FEE
+                              ,0 AS SETTLMNT_AMT
+                              ,NVL(SUM(DECODE(HIST_TYPE,'1',AMT,0)),0) AS RESR_AMT
+                              ,NVL(SUM(DECODE(HIST_TYPE,'2',AMT,0)),0) AS RESR_CC_AMT
+                              ,0 AS OFF_AMT
+                              ,0 AS REFUND_AMT
+                        FROM   TB_BO_RESR_HIST
+                        WHERE SETTLMNT_DT = #{SETTLMNT_DT}
+                        AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+                        GROUP BY I_MID, SETTLMNT_DT
+                        UNION ALL
+                        SELECT SETTLMNT_DT
+                              ,I_MID
+                              ,0 AS DCARD_APP_AMT
+                              ,0 AS TOTAL_APP_CNT
+                              ,0 AS PG_FEE
+                              ,0 AS VAT
+                              ,0 AS TOTAL_FEE
+                              ,0 AS SETTLMNT_AMT
+                              ,0 AS RESR_AMT
+                              ,0 AS RESR_CC_AMT
+                              ,NVL(SUM(OFF_AMT),0) AS OFF_AMT
+                              ,0 AS REFUND_AMT
+                        FROM   TB_BO_BOND_OFF
+                        WHERE  SETTLMNT_DT = #{SETTLMNT_DT}
+                        AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+                        GROUP BY I_MID, SETTLMNT_DT
+                        UNION ALL
+                        SELECT SETTLMNT_DT
+                              ,BOND_OFF_I_MID AS I_MID
+                              ,0 AS DCARD_APP_AMT
+                              ,0 AS TOTAL_APP_CNT
+                              ,0 AS PG_FEE
+                              ,0 AS VAT
+                              ,0 AS TOTAL_FEE
+                              ,0 AS SETTLMNT_AMT
+                              ,0 AS RESR_AMT
+                              ,0 AS RESR_CC_AMT
+                              ,NVL(SUM(OFF_AMT*(-1)),0) AS OFF_AMT
+                              ,0 AS REFUND_AMT
+                        FROM   TB_BO_BOND_OFF
+                        WHERE SETTLMNT_DT = #{SETTLMNT_DT}
+                        AND    BOND_OFF_TYPE = '2' 
+                        AND    BOND_OFF_I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+                        GROUP BY BOND_OFF_I_MID, SETTLMNT_DT
+                )TBL1 GROUP BY ROLLUP ((TBL1.SETTLMNT_DT, TBL1.I_MID))
+                ORDER BY TBL1.I_MID
+            )TBL2 WHERE RNUM BETWEEN 1 AND 50000
+        ]]>
+    </select>
+    
+    <select id="selectPerMerchantReportExcelCnt" parameterType="hashmap" resultType="integer">
+        <![CDATA[
+            SELECT NVL(COUNT(1),0)
+            FROM (
+                SELECT ROW_NUMBER()OVER(ORDER BY TBL1.SETTLMNT_DT) RNUM
+                      ,TBL1.SETTLMNT_DT
+                      ,TBL1.I_MID
+                      ,SUM(TBL1.CARD_APP_AMT) AS CARD_APP_AMT
+                      ,SUM(TBL1.VACCT_APP_AMT) AS VACCT_APP_AMT
+                      ,(SUM(TBL1.CARD_APP_AMT)+SUM(TBL1.VACCT_APP_AMT)) AS TOTAL_APP_AMT
+                      ,SUM(TBL1.PG_FEE) AS PG_FEE
+                      ,SUM(TBL1.FDS_FEE) AS FDS_FEE
+                      ,SUM(TBL1.VAT) AS VAT
+                      ,SUM(TBL1.TOTAL_FEE) AS TOTAL_FEE
+                      ,SUM(TBL1.TOTAL_APP_CNT) AS TOTAL_APP_CNT
+                      ,SUM(TBL1.SETTLMNT_AMT) AS EXPECT_SETTLE_AMT
+                      ,SUM(TBL1.RESR_AMT) AS RESR_AMT
+                      ,SUM(TBL1.RESR_CC_AMT) AS RESR_CC_AMT
+                      ,SUM(TBL1.OFF_AMT) AS OFF_AMT
+                      ,(SUM(TBL1.SETTLMNT_AMT)-SUM(TBL1.RESR_AMT)+SUM(TBL1.RESR_CC_AMT)+SUM(TBL1.OFF_AMT)) AS SETTLMNT_AMT
+                FROM (
+                        SELECT  SETTLMNT_DT
+                               ,I_MID
+                               ,NVL(DECODE(PAY_METHOD,'01',(SUM(APP_AMT)-SUM(CC_AMT)),0),0) AS CARD_APP_AMT
+                               ,NVL(DECODE(PAY_METHOD,'02',(SUM(APP_AMT)-SUM(CC_AMT)),0),0) AS VACCT_APP_AMT
+                               ,NVL(SUM(APP_CNT)+SUM(CC_CNT),0) AS TOTAL_APP_CNT
+                               ,NVL(SUM(FEE)+SUM(INSTMNT_FEE),0) AS PG_FEE
+                               ,NVL(SUM(FDS_FEE),0) AS FDS_FEE
+                               ,NVL(SUM(VAT),0) AS VAT
+                               ,NVL(SUM(FEE)+SUM(INSTMNT_FEE)+SUM(FDS_FEE)+SUM(VAT),0) AS TOTAL_FEE
+                               ,NVL(SUM(SETTLMNT_AMT),0) AS SETTLMNT_AMT
+                               ,0 AS RESR_AMT
+                               ,0 AS RESR_CC_AMT
+                               ,0 AS OFF_AMT
+                        FROM TB_BO_SETTLMNT_DT 
+                        WHERE SETTLMNT_DT = #{SETTLMNT_DT}
+                        AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+                        GROUP BY SETTLMNT_DT, I_MID, PAY_METHOD
+                        UNION ALL
+                        SELECT SETTLMNT_DT
+                              ,I_MID
+                              ,0 AS CARD_APP_AMT
+                              ,0 AS VCCT_APP_AMT
+                              ,0 AS TOTAL_APP_CNT
+                              ,0 AS PG_FEE
+                              ,0 AS FDS_FEE
+                              ,0 AS VAT
+                              ,0 AS TOTAL_FEE
+                              ,0 AS SETTLMNT_AMT
+                              ,NVL(SUM(DECODE(HIST_TYPE,'1',AMT,0)),0) AS RESR_AMT
+                              ,NVL(SUM(DECODE(HIST_TYPE,'2',AMT,0)),0) AS RESR_CC_AMT
+                              ,0 AS OFF_AMT
+                        FROM   TB_BO_RESR_HIST
+                        WHERE SETTLMNT_DT = #{SETTLMNT_DT}
+                        AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+                        GROUP BY I_MID, SETTLMNT_DT
+                        UNION ALL
+                        SELECT SETTLMNT_DT
+                              ,I_MID
+                              ,0 AS CARD_APP_AMT
+                              ,0 AS VCCT_APP_AMT
+                              ,0 AS TOTAL_APP_CNT
+                              ,0 AS PG_FEE
+                              ,0 AS FDS_FEE
+                              ,0 AS VAT
+                              ,0 AS TOTAL_FEE
+                              ,0 AS SETTLMNT_AMT
+                              ,0 AS RESR_AMT
+                              ,0 AS RESR_CC_AMT
+                              ,NVL(SUM(OFF_AMT),0) AS OFF_AMT
+                        FROM   TB_BO_BOND_OFF
+                        WHERE SETTLMNT_DT = #{SETTLMNT_DT}
+                        AND    I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+                        GROUP BY I_MID, SETTLMNT_DT
+                        UNION ALL
+                        SELECT SETTLMNT_DT
+                              ,BOND_OFF_I_MID AS I_MID
+                              ,0 AS CARD_APP_AMT
+                              ,0 AS VCCT_APP_AMT
+                              ,0 AS TOTAL_APP_CNT
+                              ,0 AS PG_FEE
+                              ,0 AS FDS_FEE
+                              ,0 AS VAT
+                              ,0 AS TOTAL_FEE
+                              ,0 AS SETTLMNT_AMT
+                              ,0 AS RESR_AMT
+                              ,0 AS RESR_CC_AMT
+                              ,NVL(SUM(OFF_AMT*(-1)),0) AS OFF_AMT
+                        FROM   TB_BO_BOND_OFF
+                        WHERE SETTLMNT_DT = #{SETTLMNT_DT}
+                        AND    BOND_OFF_TYPE = '2' 
+                        AND    BOND_OFF_I_MID IN (SELECT COLUMN_VALUE FROM TABLE(UF_GET_SPLIT(#{I_MID}, ',')))
+                        GROUP BY BOND_OFF_I_MID, SETTLMNT_DT
+                )TBL1 GROUP BY TBL1.SETTLMNT_DT, TBL1.I_MID
+            )TBL2
+        ]]>
+    </select>
+    
+    <select id="selectTaxInvoiceList" parameterType="hashmap" resultType="hashmap">
+       select SEQ, RNUM, ID, TAX_DT, ISS_DT, CO_NM,RECPT_TYPE, SUPP_AMT, VAT, TAX_AMT, TAX_ITEM_CD,  ITEM_NM,IO_TYPE,VOLM_NO, TAX_INDEX, TAX_ISS_CD, ISS_NM, ST_TYPE, MEMO
+		  from (
+				select SEQ, @rownum:=@rownum+1 AS RNUM, ID, TAX_DT, ISS_DT, 
+		             case when ID_CD = '0' then (select x.CO_NM from TB_MBS x where x.MID = a.ID) 
+		                  when ID_CD = '1' then (select x.G_NM from TB_GRP x where x.GID = a.ID)
+		                  when ID_CD = '2' then (select x.VGRP_NM from TB_VGRP x where x.VID = a.ID)
+		                  else '' end CO_NM,
+		             case when RECPT_TYPE = '0' then '영수' else '청구' end RECPT_TYPE, 
+		             SUPP_AMT, VAT, TAX_AMT, TAX_ITEM_CD, (select x.DESC1 from TB_CODE x where x.CODE_CL = '0049' and CODE1 = TAX_ITEM_CD) ITEM_NM, 
+		             case when RECPT_TYPE = '0' and IO_TYPE = '0' then ''
+		                  when RECPT_TYPE = '0' and IO_TYPE = '1' then ''
+		                  when RECPT_TYPE = '1' and IO_TYPE = '0' then '수납'
+		                  when RECPT_TYPE = '1' and IO_TYPE = '1' then '미납' end IO_TYPE,
+		             VOLM_NO, TAX_INDEX, TAX_ISS_CD,  (select x.DESC1 from TB_CODE x where x.CODE_CL = '0015' and CODE1 = TAX_ISS_CD) ISS_NM, ST_TYPE, MEMO
+		        from TB_TAX_HEAD a, (SELECT @rownum:=0) tmp
+		        
+		        where TAX_DT = ${txtFromDate}
+		        <if test="sendCategorySearch!='all'"> AND RECPT_TYPE = '${sendCategorySearch}' </if>
+		        
+		        <if test="MER_ID!=''"> 
+		        	<choose>
+			      		<when test="MER_TYPE=='m'.toString()">
+			      		<![CDATA[
+			      			AND ID = #{MER_ID}
+			      		]]>
+			      		</when>
+			      		<when test="MER_TYPE=='g'.toString()">
+			      		<![CDATA[
+			      			AND ID IN (SELECT MID FROM TB_MBS WHERE GID = #{MER_ID})
+			      		]]>
+			      		</when>
+			      		<when test="MER_TYPE=='v'.toString()" >
+			      		<![CDATA[
+			      			AND ID IN (SELECT MID FROM TB_MBS WHERE VID = #{MER_ID})
+			      		]]>
+			      		</when>
+			      		<otherwise></otherwise>
+			      	</choose> 
+		        </if>
+		        
+		        and DEL_FLG = '0'            
+		        ORDER BY  TAX_DT DESC
+           )A
+        WHERE A.RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+    </select>
+    
+    <select id="selectTaxInvoiceListTotal" parameterType="hashmap" resultType="integer">
+	<![CDATA[
+		SELECT COUNT(1) AS TOTPAGECNT
+			FROM (
+			select SEQ
+			from TB_TAX_HEAD
+	]]>
+		        where TAX_DT = ${txtFromDate}
+		       <if test="sendCategorySearch!='all'"> AND RECPT_TYPE = '${sendCategorySearch}' </if>
+		        
+		        <if test="MER_ID!=''"> 
+		        	<choose>
+			      		<when test="MER_TYPE=='m'.toString()">
+			      		<![CDATA[
+			      			AND ID = #{MER_ID}
+			      		]]>
+			      		</when>
+			      		<when test="MER_TYPE=='g'.toString()">
+			      		<![CDATA[
+			      			AND ID IN (SELECT MID FROM TB_MBS WHERE GID = #{MER_ID})
+			      		]]>
+			      		</when>
+			      		<when test="MER_TYPE=='v'.toString()" >
+			      		<![CDATA[
+			      			AND ID IN (SELECT MID FROM TB_MBS WHERE VID = #{MER_ID})
+			      		]]>
+			      		</when>
+			      		<otherwise></otherwise>
+			      	</choose> 
+		        </if>
+		        
+		        and DEL_FLG = '0'
+		   )TBL
+	
+	</select>
+</mapper>

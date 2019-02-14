@@ -1,0 +1,1917 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="reportMgmt">
+	<select id="selectStmtIdChk" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+	      COUNT(1) AS CNT
+	    FROM 
+	      TB_MBS
+	]]>
+	<choose>
+	<when test="division=='mid'">
+	<![CDATA[
+		WHERE MID = #{id}
+	]]>
+	</when>
+	<when test="division=='gid'">
+	<![CDATA[
+		WHERE GID = #{id}
+	]]>
+	</when>
+	<when test="division=='vid'">
+	<![CDATA[
+		WHERE VID = #{id}
+	]]>
+	</when>
+	<otherwise></otherwise>
+	</choose>
+	</select>
+	<!-- 정산 기생성건 확인 -->
+	<select id="selectStmtCnt" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+	      COUNT(1) AS CNT
+	    FROM 
+	      TB_STMT
+	    WHERE 
+	    	STMT_DT = DATE_FORMAT(NOW(), "%Y%m%d")  
+	]]>
+	<if test="division!='ALL'">
+	<![CDATA[
+		AND ID =#{id}
+	]]>
+	</if>
+	<if test="stmtCd!='' and stmtCd != null">
+	<![CDATA[
+		AND ST_TYPE =#{stmtCd}
+	]]>
+	</if>
+	</select>
+	<select id="selectStmtList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT 
+				ROWNUM AS RNUM, ID, STMT_DT, APP_CNT, APP_AMT, CC_CNT, CC_AMT, RESR_AMT, RESR_CC_AMT, EXTRA_AMT, FEE, VAT, DPST_AMT
+		    FROM 
+		    	TB_STMT
+		    WHERE 
+		    	/*   STMT_DT = DATE_FORMAT(NOW(), "%Y%m%d") */ 
+		    	STMT_DT='20170707'
+		    	]]>
+			<if test="division!='ALL'">
+			<![CDATA[
+				AND ID =#{id}
+			]]>
+				</if>
+			<if test="stmtCd!='' and stmtCd != null">
+			<![CDATA[
+				AND ST_TYPE =#{stmtCd}
+			]]>
+			</if>
+		<![CDATA[
+			ORDER BY RNUM ASC
+		) TBL
+		WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectStmtListTotal" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+			COUNT(1)
+	    FROM 
+	    	TB_STMT
+	    WHERE 
+	    	/*   STMT_DT = DATE_FORMAT(NOW(), "%Y%m%d")   */
+	    	STMT_DT='20170707'
+    	]]>
+		<if test="division!='ALL'">
+		<![CDATA[
+			AND ID =#{id}
+		]]>
+			</if>
+		<if test="stmtCd!='' and stmtCd != null">
+		<![CDATA[
+			AND ST_TYPE =#{stmtCd}
+		]]>
+		</if>
+	</select>
+	<select id="selectAmtChk" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+			COALESCE(SUM(RESR_AMT - RESR_CC_AMT),0) AS RESR_AMT
+	    FROM 
+	    	TB_DFR_SET 
+	    WHERE 
+	    	CC_END_DT = '99999999'
+	    AND 
+	    	RESR_AMT != 0
+	    AND 
+	    	DEL_FLG = '0'
+	]]>
+	<choose>
+	<when test="division=='mid'">
+	<![CDATA[
+		AND ID = #{id}
+	]]>
+	</when>
+	<when test="division=='gid'">
+   	<![CDATA[
+   		AND ID IN (SELECT X.MID FROM TB_MBS X WHERE X.GID = #{id})
+   	]]>
+   	</when>
+   	<when test="division=='vid'">
+   	<![CDATA[
+   		AND ID IN (SELECT X.MID FROM TB_MBS X WHERE X.VID = #{id})
+   	]]>
+   	</when>
+	<otherwise></otherwise>
+	</choose>
+	</select>
+	<select id="selectResrList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT
+				A.SEQ, A.RESR_DT, C.CO_NM, A.ID, A.RESR_TYPE, A.RESR_TYPE_NM, A.RESR_REASON, A.RESR_AMT, A.REMAIN_AMT, A.RESR_DESC
+			  	, CASE WHEN A.RESR_DT < DATE_FORMAT(NOW(), "%Y%m%d") THEN '1' ELSE '2' END DP_FLG
+			  	, COALESCE((SELECT MAX(X.CONF1_EMP_NO) FROM TB_STMT X WHERE X.STMT_DT = A.RESR_DT), 'X') PROC_FLG 
+		  	FROM 
+		  	(
+			   SELECT 
+				   	RESR_DT, ID, RESR_TYPE, SEQ
+				   ,(SELECT DESC1 FROM TB_CODE WHERE COL_NM='RESR_CD' AND CODE1=RESR_TYPE  AND ROWNUM < 2 ) AS RESR_TYPE_NM
+				   ,(SELECT DESC2 FROM TB_CODE WHERE COL_NM='RESR_CD' AND CODE1=RESR_TYPE AND CODE2=RESR_REASON  AND ROWNUM < 2) AS RESR_REASON
+				   ,RESR_AMT, REMAIN_AMT, RESR_DESC RESR_DESC  
+			   FROM 
+			   	TB_DFR_RELESE 
+			   WHERE 
+			   	RESR_DT BETWEEN #{frDt} AND #{toDt}
+			   AND
+			   	DEL_FLG = '0'
+			   	]]>
+			   	<if test="division != 'ALL'">
+				   	<choose>
+				   	<when test="division=='mid'">
+				   	<![CDATA[
+				   		AND ID = #{id}
+				   	]]>
+				   	</when>
+				   	<when test="division=='gid'">
+				   	<![CDATA[
+				   		AND ID IN (SELECT X.MID FROM TB_MBS X WHERE X.GID = #{id})
+				   	]]>
+				   	</when>
+				   	<when test="division=='vid'">
+				   	<![CDATA[
+				   		AND ID IN (SELECT X.MID FROM TB_MBS X WHERE X.VID = #{id})
+				   	]]>
+				   	</when>
+				   	</choose>
+			   	</if>
+			   	<if test="selCD1 != 'ALL'">
+			   	<![CDATA[
+			   		AND RESR_TYPE = #{selCD1}
+			   	]]>
+			   	</if>
+			   	<if test="selCD2 != 'ALL'">
+			   	<![CDATA[
+			   		AND RESR_REASON = #{selCD2}
+			   	]]>
+			   	</if>
+			   <![CDATA[	
+				   UNION ALL
+				   
+				   SELECT 
+				   		EXTRA_DT RESR_DT, EXTRA_ID ID, '03' RESR_TYPE, SEQ, '별도가감' 
+					   ,(SELECT DESC2 FROM TB_CODE WHERE COL_NM='RESR_CD' AND CODE1='03' AND CODE2=REASON  AND ROWNUM < 2) AS REASON
+					   , AMT RESR_AMT, 0 REMAIN_AMT, MEMO
+				   FROM 
+				   	TB_EXTRA_HIST 
+				   WHERE 
+				   	EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+			   	   AND
+				   	DEL_FLG = '0'
+		   	   ]]>
+			   	<if test="division != 'ALL'">
+				   	<choose>
+				   	<when test="division=='mid'">
+				   	<![CDATA[
+				   		AND EXTRA_ID = #{id}
+				   	]]>
+				   	</when>
+				   	<when test="division=='gid'">
+				   	<![CDATA[
+				   		AND EXTRA_ID IN (SELECT X.MID FROM TB_MBS X WHERE X.GID = #{id})
+				   	]]>
+				   	</when>
+				   	<when test="division=='vid'">
+				   	<![CDATA[
+				   		AND EXTRA_ID IN (SELECT X.MID FROM TB_MBS X WHERE X.VID = #{id})
+				   	]]>
+				   	</when>
+				   	</choose>
+			   	</if>
+			   	<if test="selCD1 != 'ALL'">
+			   		<if test="selCD1 == '03' ">	
+				   	<![CDATA[
+				   		AND 1 = 2 
+				   	]]>
+				   	</if>
+			   	</if>
+			   	<if test="selCD2 != 'ALL'">
+			   	<![CDATA[
+			   		AND REASON = #{selCD2}
+			   	]]>
+			   	</if>
+			   <![CDATA[
+				   UNION ALL
+				   
+				   SELECT 
+					   EXTRA_DT RESR_DT, OFF_ID ID, '03' RESR_TYPE, SEQ, '별도가감' RESR_TYPE_NM
+					   , (SELECT DESC2 FROM TB_CODE WHERE COL_NM='RESR_CD' AND CODE1='03' AND CODE2=REASON  AND ROWNUM < 2) AS REASON
+					   , -1*AMT RESR_AMT, 0 REMAIN_AMT, MEMO
+				   FROM 
+				   	TB_EXTRA_HIST 
+				   WHERE 
+				   	EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+		   		   AND
+				   	DEL_FLG = '0'
+		   	   ]]>
+			   	<if test="division != 'ALL'">
+				   	<choose>
+				   	<when test="division=='mid'">
+				   	<![CDATA[
+				   		AND EXTRA_ID = #{id}
+				   	]]>
+				   	</when>
+				   	<when test="division=='gid'">
+				   	<![CDATA[
+				   		AND EXTRA_ID IN (SELECT X.MID FROM TB_MBS X WHERE X.GID = #{id})
+				   	]]>
+				   	</when>
+				   	<when test="division=='vid'">
+				   	<![CDATA[
+				   		AND EXTRA_ID IN (SELECT X.MID FROM TB_MBS X WHERE X.VID = #{id})
+				   	]]>
+				   	</when>
+				   	</choose>
+			   	</if>
+			   	<if test="selCD1 != 'ALL'">
+			   		<if test="selCD1 == '03' ">	
+				   	<![CDATA[
+				   		AND 1 = 2 
+				   	]]>
+				   	</if>
+			   	</if>
+			   	<if test="selCD2 != 'ALL'">
+			   	<![CDATA[
+			   		AND REASON = #{selCD2}
+			   	]]>
+			   	</if>
+			   <![CDATA[	
+				  ) A, TB_MBS B, TB_CO C
+				  WHERE 
+				  	A.ID = B.MID
+				  AND 
+				  	B.CO_NO = C.CO_NO
+				  ORDER BY
+				  	 A.RESR_DT, A.SEQ , A.ID, A.RESR_TYPE
+	  	 		) TBL	
+			WHERE SEQ BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectResrListTotal" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT
+			COUNT(1) 
+	  	FROM 
+	  	(
+		   SELECT 
+			   	RESR_DT, ID, RESR_TYPE, SEQ
+			   ,(SELECT DESC1 FROM TB_CODE WHERE COL_NM='RESR_CD' AND CODE1=RESR_TYPE  AND ROWNUM < 2) AS RESR_TYPE_NM
+			   ,(SELECT DESC2 FROM TB_CODE WHERE COL_NM='RESR_CD' AND CODE1=RESR_TYPE AND CODE2=RESR_REASON  AND ROWNUM < 2) AS RESR_REASON
+			   ,RESR_AMT, REMAIN_AMT, RESR_DESC  
+		   FROM 
+		   	TB_DFR_RELESE 
+		   WHERE 
+		   	RESR_DT BETWEEN #{frDt} AND #{toDt}
+		   AND	
+		   	DEL_FLG = '0'
+		   	]]>
+		   	<if test="division != 'ALL'">
+			   	<choose>
+			   	<when test="division=='mid'">
+			   	<![CDATA[
+			   		AND ID = #{id}
+			   	]]>
+			   	</when>
+			   	<when test="division=='gid'">
+			   	<![CDATA[
+			   		AND ID IN (SELECT X.MID FROM TB_MBS X WHERE X.GID = #{id})
+			   	]]>
+			   	</when>
+			   	<when test="division=='vid'">
+			   	<![CDATA[
+			   		AND ID IN (SELECT X.MID FROM TB_MBS X WHERE X.VID = #{id})
+			   	]]>
+			   	</when>
+			   	</choose>
+		   	</if>
+		   	<if test="selCD1 != 'ALL'">
+		   	<![CDATA[
+		   		AND RESR_TYPE = #{selCD1}
+		   	]]>
+		   	</if>
+		   	<if test="selCD2 != 'ALL'">
+		   	<![CDATA[
+		   		AND RESR_REASON = #{selCD2}
+		   	]]>
+		   	</if>
+		   <![CDATA[	
+			   UNION ALL
+			   
+			   SELECT 
+			   		EXTRA_DT RESR_DT, EXTRA_ID ID, '03' RESR_TYPE, SEQ, '별도가감' 
+				   ,(SELECT DESC2 FROM TB_CODE WHERE COL_NM='RESR_CD' AND CODE1='03' AND CODE2=REASON  AND ROWNUM < 2) AS REASON
+				   , AMT RESR_AMT, 0 REMAIN_AMT, MEMO
+			   FROM 
+			   	TB_EXTRA_HIST 
+			   WHERE 
+			   	EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+			   AND	
+			   	DEL_FLG = '0'
+	   	   ]]>
+		   	<if test="division != 'ALL'">
+			   	<choose>
+			   	<when test="division=='mid'">
+			   	<![CDATA[
+			   		AND EXTRA_ID = #{id}
+			   	]]>
+			   	</when>
+			   	<when test="division=='gid'">
+			   	<![CDATA[
+			   		AND EXTRA_ID IN (SELECT X.MID FROM TB_MBS X WHERE X.GID = #{id})
+			   	]]>
+			   	</when>
+			   	<when test="division=='vid'">
+			   	<![CDATA[
+			   		AND EXTRA_ID IN (SELECT X.MID FROM TB_MBS X WHERE X.VID = #{id})
+			   	]]>
+			   	</when>
+			   	</choose>
+		   	</if>
+		   	<if test="selCD1 != 'ALL'">
+		   		<if test="selCD1 == '03' ">	
+			   	<![CDATA[
+			   		AND 1 = 2 
+			   	]]>
+			   	</if>
+		   	</if>
+		   	<if test="selCD2 != 'ALL'">
+		   	<![CDATA[
+		   		AND REASON = #{selCD2}
+		   	]]>
+		   	</if>
+		   <![CDATA[
+			   UNION ALL
+			   
+			   SELECT 
+				   EXTRA_DT RESR_DT, OFF_ID ID, '03' RESR_TYPE, SEQ, '별도가감' RESR_TYPE_NM
+				   , (SELECT DESC2 FROM TB_CODE WHERE COL_NM='RESR_CD' AND CODE1='03' AND CODE2=REASON  AND ROWNUM < 2) AS REASON
+				   , -1*AMT RESR_AMT, 0 REMAIN_AMT, MEMO
+			   FROM 
+			   	TB_EXTRA_HIST 
+			   WHERE 
+			   	EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+			   AND
+			   	DEL_FLG = '0'
+	   	   ]]>
+		   	<if test="division != 'ALL'">
+			   	<choose>
+			   	<when test="division=='mid'">
+			   	<![CDATA[
+			   		AND EXTRA_ID = #{id}
+			   	]]>
+			   	</when>
+			   	<when test="division=='gid'">
+			   	<![CDATA[
+			   		AND EXTRA_ID IN (SELECT X.MID FROM TB_MBS X WHERE X.GID = #{id})
+			   	]]>
+			   	</when>
+			   	<when test="division=='vid'">
+			   	<![CDATA[
+			   		AND EXTRA_ID IN (SELECT X.MID FROM TB_MBS X WHERE X.VID = #{id})
+			   	]]>
+			   	</when>
+			   	</choose>
+		   	</if>
+		   	<if test="selCD1 != 'ALL'">
+		   		<if test="selCD1 == '03' ">	
+			   	<![CDATA[
+			   		AND 1 = 2 
+			   	]]>
+			   	</if>
+		   	</if>
+		   	<if test="selCD2 != 'ALL'">
+		   	<![CDATA[
+		   		AND REASON = #{selCD2}
+		   	]]>
+		   	</if>
+		   <![CDATA[	
+			  ) A, TB_MBS B, TB_CO C
+			  WHERE 
+			  	A.ID = B.MID
+			  AND 
+			  	B.CO_NO = C.CO_NO
+			  ORDER BY
+			  	 A.RESR_DT, A.SEQ , A.ID, A.RESR_TYPE
+	]]>
+	</select>
+	
+	<!-- 	보류/해제/별도가감 - 사업자별매출집계리스트(휴대폰) -->
+	<select id="selectConfSearCnt" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+			COUNT(1) AS CNT
+	   	FROM 
+	   		TB_STMT
+	   	WHERE 
+	   		STMT_DT = #{payDt}
+	   	AND 	
+	   		ST_TYPE != '0'
+	]]>
+	</select>
+	<!-- 	보류/해제/별도가감 - 보류지급등록  -->
+	<insert id="insertResrSet" parameterType="hashmap"> 
+    <selectKey keyProperty="seq"  resultType="integer" order="BEFORE">
+    <![CDATA[
+    		SELECT SEQ_DFR_SET.NEXTVAL FROM DUAL
+     ]]>
+    </selectKey>
+	<![CDATA[
+		INSERT INTO TB_DFR_SET 
+		(
+			SEQ, ID, RESR_REASON, RESR_SET_DT, RESR_START_DT, RESR_END_DT, RESR_SET_AMT, RESR_AMT, RESR_DESC, WORKER
+		)
+      	VALUES 
+      	(
+      		#{seq}, #{extraId}, #{selCD2}, #{payDt},#{payDt},#{payDt},${amt},${amt},#{desc}, #{worker}
+	     )
+	     ]]>
+	</insert>
+	<!-- 	보류/해제/별도가감 - 보류지급등록  -->
+	<update id="insertResr" parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO TB_DFR_RELESE 
+		(
+			SEQ, ID, RESR_TYPE, RESR_REASON, RESR_SET_SEQ, RESR_DT, RESR_AMT
+			, REMAIN_AMT
+			, RESR_DESC, WORKER
+		)
+	    SELECT  
+	    	#{seq},ID, '01', RESR_REASON, SEQ, RESR_SET_DT, RESR_AMT, 
+         	(
+         		SELECT COALESCE(SUM(RESR_AMT),0)-COALESCE(SUM(RESR_CC_AMT),0) 
+         		FROM TB_DFR_SET B 
+	          	WHERE 
+	          		B.ID = A.ID 
+          		AND 
+          			B.RESR_AMT !=0 
+      			AND 
+      				B.RESR_SET_DT <= #{payDt} 
+	          	AND 
+	          		COALESCE(B.DEL_FLG,'0') ='0' 
+          	)  AS REMAIN_AMT
+	        , RESR_DESC, #{worker}
+   		 FROM 
+   		 	TB_DFR_SET A
+   		 WHERE 
+   		 	SEQ = #{seq}
+	     AND 
+	     	COALESCE(DEL_FLG,'0') = '0'
+	]]>
+	</update>
+	<!-- 	보류/해제/별도가감 - 보류해제 id의 보류 금액 확인  -->
+	<select id="selectResrSumOfId" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT COALESCE((RESR_AMT - RESR_CC_AMT), 0) RESR_TOT
+	  	FROM 
+	  	(
+	  	 	SELECT SUM(COALESCE(RESR_AMT, 0)) RESR_AMT, SUM(COALESCE(RESR_CC_AMT, 0)) RESR_CC_AMT
+	   		FROM TB_DFR_SET
+		    WHERE ID = #{extraId}
+		    AND RESR_AMT != COALESCE(RESR_CC_AMT, 0)
+		    AND CC_END_DT = '99999999' 
+		    AND COALESCE(DEL_FLG,'0') = '0'
+	  	)  A
+	]]>
+	</select>
+	<!-- 	보류/해제/별도가감 - 보류 리스트 조회  -->
+	<select id="selectResrSearchOfId" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT 
+			SEQ, (COALESCE(RESR_AMT, 0) - COALESCE(RESR_CC_AMT, 0)) RESR_AMT
+	  	FROM 
+	  		TB_DFR_SET
+	  	WHERE 
+	  		ID = #{extraId}
+	  	AND 
+	  		RESR_AMT != COALESCE(RESR_CC_AMT, 0)
+	  	AND 
+	  		CC_END_DT = '99999999'
+	  	AND 
+	  		COALESCE(DEL_FLG,'0') = '0'
+	]]>
+	</select>
+	<!-- 	보류/해제/별도가감 - 보류 금액이 작거나 같은 경우 보류 금액만큼 해제  -->
+	<update id="updateResrCcPart" parameterType="hashmap">
+	<![CDATA[
+		UPDATE 
+			TB_DFR_SET
+	  	SET 
+	  		CC_START_DT = CASE WHEN COALESCE(CC_START_DT, '0') = '0' THEN #{payDt} ELSE CC_START_DT END
+	  		, CC_END_DT = #{payDt}
+	  		, RESR_CC_AMT = COALESCE(RESR_CC_AMT, 0) + ${setAmt}
+	  		, WORKER = #{worker}
+  		WHERE 
+  			SEQ = #{seq}
+	]]>
+	</update>
+	<insert id="insertResrCcPart" parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO TB_DFR_RELESE 
+		(
+			SEQ, ID, RESR_TYPE, RESR_SET_SEQ, RESR_DT, RESR_REASON, RESR_AMT
+			, REMAIN_AMT
+			, RESR_DESC, WORKER
+		)
+      	SELECT 
+      		SEQ_DFR_RELESE.NEXTVAL, ID, '02', SEQ, #{payDt}, #{selCD2}, ${setAmt}
+         	, (
+         		SELECT 
+         			COALESCE(SUM(RESR_AMT),0)-COALESCE(SUM(RESR_CC_AMT),0) 
+      			FROM 
+      				TB_DFR_SET B 
+          		WHERE 
+          			B.ID = A.ID 
+       			AND 
+       				B.RESR_AMT !=0 
+   				AND 
+   					COALESCE(B.DEL_FLG,'0') = '0' 
+          		) AS REMAIN_AMT 
+         	, #{desc}, #{worker}
+      FROM TB_DFR_SET A
+      WHERE SEQ = #{seq}
+         AND COALESCE(DEL_FLG,'0') = '0'
+	]]>
+	</insert>
+	<!-- 	보류/해제/별도가감 - 보류 금액이 클 경우 전체(해제금액 만큼) 해제  -->
+	<update id="updateResrCcAll" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_DFR_SET
+      	SET 
+      		CC_START_DT = CASE WHEN COALESCE(CC_START_DT, '0') = '0' THEN #{payDt} ELSE CC_START_DT END
+      		, RESR_CC_AMT = COALESCE(RESR_CC_AMT, 0) + COALESCE(#{setAmt}, 0)
+      		, WORKER = #{worker}
+      	WHERE SEQ = #{seq}
+	]]>
+	</update>
+	<insert id="insertResrCcAll" parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO 
+			TB_RESERVE 
+			(
+				ID, RESR_TYPE, RESR_SET_SEQ, RESR_DT, RESR_REASON, RESR_AMT, REMAIN_AMT, RESR_DESC, WORKER
+			)
+	      	SELECT 
+	      		ID, '02', SEQ, #{payDt}, #{selCD2}, ${setAmt}
+	      		, (
+      				SELECT 	COALESCE(SUM(RESR_AMT),0)-COALESCE(SUM(RESR_CC_AMT),0) 
+   					FROM 
+   						TB_DFR_SET B 
+	          		WHERE 
+	          			B.ID = A.ID 
+          			AND 
+          				B.RESR_AMT !=0 
+          			AND 
+          				COALESCE(B.STATUS,'0') = '0'
+	          		) AS REMAIN_AMT 
+	        	, #{desc}, #{worker}
+	      FROM TB_DFR_SET A
+	      WHERE SEQ = #{seq}
+	      AND COALESCE(DEL_FLG,'0') = '0'
+	]]>
+	</insert>
+	<insert id="insertExtra" parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO TB_EXTRA_HIST 
+		(
+			SEQ, EXTRA_ID, EXTRA_DT, OFF_ID, AMT, REASON, MEMO,WORKER
+		)
+      	VALUES 
+   		(
+   			SEQ_EXTRA_HIST.NEXTVAL, #{extraId},#{payDt},#{offId},${amt},#{selCD2},#{desc}, #{worker}
+		)
+	]]>
+	</insert>
+	<!-- 	 임의지급보류등록여부체크  -->
+	<select id="selectResrSetChk" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+			COUNT(1) AS CNT
+	 	FROM 
+	 		TB_DFR_SET A, TB_MBS B
+	 	WHERE 
+	 		A.ID = B.MID
+	 	AND 
+	 		A.ID = #{mid} 
+	 	AND 
+	 		DEL_FLG ='0'
+	 	AND 
+	 		A.RESR_END_DT ='99999999'
+	 	AND 
+	 		A.RESR_SET_CL = '1'
+	]]>
+	</select>
+	<!-- 	임의지급보류등록조회  -->
+	<select id="selectResrSet" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+			COUNT(1) AS CNT
+	 	FROM 
+	 		TB_DFR_SET A, TB_MBS B
+	 	WHERE 
+	 		A.ID = B.MID
+	 	AND 
+	 		A.ID = #{mid} 
+	 	AND 
+	 		DEL_FLG ='0'
+	 	AND 
+	 		A.RESR_START_DT =#{payDt}
+	 	AND 
+	 		A.RESR_SET_CL = '1'
+	]]>
+	</select>
+	<!-- 임의지급보류정산 등록 -->
+	<insert id="insertResrSetReg" parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO TB_DFR_SET
+	    (
+	     	SEQ,  ID, RESR_SET_DT, RESR_START_DT, RESR_END_DT, RESR_REASON, RESR_SET_AMT, RESR_AMT, RESR_DESC, WORKER, RESR_SET_CL, DEL_FLG
+	    )
+	    VALUES
+	    (
+	      	SEQ_DFR_SET.NEXTVAL, #{mid}, DATE_FORMAT(NOW(), "%Y%m%d"), #{startDt}, '99999999', '05',  ${setAmt}, 0, #{desc}, #{worker},'1','0' 
+	    )
+	]]>
+	</insert>
+	 <!-- 임의지급보류정산조회  -->
+	 <select id="selectResrSetList" parameterType="hashmap" resultType="hashmap">
+ 	<![CDATA[
+ 		SELECT * FROM 
+ 		(
+	 		SELECT  
+	 		   ROWNUM AS RNUM, A.SEQ, A.ID, C.CO_NM, A.RESR_START_DT, A.RESR_END_DT, A.RESR_SET_AMT, 
+			   A.RESR_AMT, A.RESR_SET_AMT - A.RESR_AMT RESR_CALC, A.RESR_DESC, 
+			   CASE WHEN A.RESR_END_DT = '99999999' THEN 'X' ELSE '0' END AS PROC_FLG
+			 FROM TB_DFR_SET A, TB_MBS B, TB_CO C
+			 WHERE A.ID = B.MID
+			 AND B.CO_NO = C.CO_NO
+			 AND A.RESR_SET_DT BETWEEN #{frDt} AND #{toDt}
+			 AND A.RESR_SET_CL ='1' AND A.DEL_FLG ='0'
+			 ]]>
+			 <if test="division!='ALL'">
+			 <choose>
+			<when test="division==2 ">
+			<![CDATA[
+				AND B.MID = #{id}
+			]]>
+			</when>
+			<when test="division==3 ">
+			<![CDATA[
+				AND B.GID = #{id}
+			]]>
+			</when>
+			<when test="division==4 ">
+			<![CDATA[
+				AND B.VID = #{id}
+			]]>
+			</when>
+			<otherwise></otherwise>
+			</choose>
+			</if>
+			<![CDATA[	 
+			 ORDER BY A.ID, A.RESR_START_DT  
+			 ) TBL
+			WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+ 	]]>
+	 </select>
+	 <select id="selectResrSetListTotal" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT  
+		   COUNT(1)
+	 FROM TB_DFR_SET A, TB_MBS B, TB_CO C
+	 WHERE A.ID = B.MID
+	 AND B.CO_NO = C.CO_NO
+	 AND A.RESR_SET_DT BETWEEN #{frDt} AND #{toDt}
+	 AND A.RESR_SET_CL ='1' AND A.DEL_FLG ='0'
+	 ]]>
+	 <if test="division!='ALL'">
+	 <choose>
+	<when test="division==2 ">
+	<![CDATA[
+		AND B.MID = #{id}
+	]]>
+	</when>
+	<when test="division==3 ">
+	<![CDATA[
+		AND B.GID = #{id}
+	]]>
+	</when>
+	<when test="division==4 ">
+	<![CDATA[
+		AND B.VID = #{id}
+	]]>
+	</when>
+	<otherwise></otherwise>
+	</choose>
+	</if>
+	 </select>
+	 <!-- 지급 데이터 검증  -->
+	 <select id="selectStmtInsList" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 	SELECT 
+	 		CASE WHEN A.STMT_CYCLE IS NULL THEN 'NONE SET'
+        			  WHEN A.STMT_CYCLE ='Z' THEN 'ESCROW'
+         			  ELSE 
+         			  (
+         			  	SELECT S.DESC1 
+         			  	FROM TB_CODE S 
+         			  	WHERE S.CODE_CL='0038' 
+         			  	AND S.CODE1 = A.STMT_CYCLE
+       			  	  )
+       			  	  END  AS STMT_CYCLE,
+		  	COALESCE(A.STMT_CYCLE,'X') AS STMT_CYCLE_CD,       
+		  	SUM(CARD_APP) CARD_APP , SUM(ACCT_APP) ACCT_APP, SUM(VACCT_APP) VACCT_APP, SUM(HPP_APP) HPP_APP,
+		  	SUM(CARD_STMT) CARD_STMT , SUM(ACCT_STMT) ACCT_STMT, SUM(VACCT_STMT) VACCT_STMT, SUM(HPP_STMT) HPP_STMT,
+		  	SUM(CARD_GAP) CARD_GAP , SUM(ACCT_GAP) ACCT_GAP, SUM(VACCT_GAP) VACCT_GAP, SUM(HPP_GAP) HPP_GAP
+		       
+		FROM 
+		(
+			
+		     SELECT  
+		     	 A.STMT_CYCLE,
+			 	 SUM(CASE WHEN PM_CD ='01' THEN COALESCE(A.APP_AMT,0) ELSE 0 END) AS CARD_APP,
+			 	 SUM(CASE WHEN PM_CD ='02' THEN COALESCE(A.APP_AMT,0) ELSE 0 END) AS ACCT_APP,
+			  	 SUM(CASE WHEN PM_CD ='03' THEN COALESCE(A.APP_AMT,0) ELSE 0 END) AS VACCT_APP,
+			  	 SUM(CASE WHEN PM_CD ='05' THEN COALESCE(A.APP_AMT,0) ELSE 0 END) AS HPP_APP,
+			  	 ]]>
+			  	 <if test="selType=='settlmnt'">
+			  	 <![CDATA[
+			  	 SUM(CASE WHEN PM_CD ='01' THEN COALESCE(A.STMT_AMT,0) ELSE 0 END) AS CARD_STMT,
+			   	 SUM(CASE WHEN PM_CD ='02' THEN COALESCE(A.STMT_AMT,0) ELSE 0 END) AS ACCT_STMT,
+			  	 SUM(CASE WHEN PM_CD ='03' THEN COALESCE(A.STMT_AMT,0) ELSE 0 END) AS VACCT_STMT,
+			  	 SUM(CASE WHEN PM_CD ='05' THEN COALESCE(A.STMT_AMT,0) ELSE 0 END) AS HPP_STMT,
+			  	 SUM(CASE WHEN PM_CD ='01' THEN COALESCE(A.APP_AMT,0) - COALESCE(A.STMT_AMT,0) ELSE 0 END) AS CARD_GAP,
+			  	 SUM(CASE WHEN PM_CD ='02' THEN COALESCE(A.APP_AMT,0) - COALESCE(A.STMT_AMT,0) ELSE 0 END) AS ACCT_GAP,
+			  	 SUM(CASE WHEN PM_CD ='03' THEN COALESCE(A.APP_AMT,0)-COALESCE(A.STMT_AMT,0) ELSE 0 END) AS VACCT_GAP,
+			  	 SUM(CASE WHEN PM_CD ='05' THEN COALESCE(A.APP_AMT,0)-COALESCE(A.STMT_AMT,0) ELSE 0 END) AS HPP_GAP
+		  		 ]]>
+		  		 </if>
+			  	 <if test="selType=='app'">
+			  	 <![CDATA[
+			  	  	CASE WHEN A.STMT_CYCLE = 'Z' THEN 0 ELSE SUM(CASE WHEN PM_CD ='01' THEN COALESCE(A.STMT_AMT,0) ELSE 0 END) END AS CARD_STMT,
+				  	CASE WHEN A.STMT_CYCLE = 'Z' THEN 0 ELSE SUM(CASE WHEN PM_CD ='02' THEN COALESCE(A.STMT_AMT,0) ELSE 0 END) END AS ACCT_STMT,
+				  	CASE WHEN A.STMT_CYCLE = 'Z' THEN 0 ELSE SUM(CASE WHEN PM_CD ='03' THEN COALESCE(A.STMT_AMT,0) ELSE 0 END) END AS VACCT_STMT,
+				  	CASE WHEN A.STMT_CYCLE = 'Z' THEN 0 ELSE SUM(CASE WHEN PM_CD ='05' THEN COALESCE(A.STMT_AMT,0) ELSE 0 END) END AS HPP_STMT,
+				  	CASE WHEN A.STMT_CYCLE = 'Z' THEN 0 ELSE SUM(CASE WHEN PM_CD ='01' THEN COALESCE(A.APP_AMT,0) - COALESCE(A.STMT_AMT,0) ELSE 0 END) END AS CARD_GAP,
+				  	CASE WHEN A.STMT_CYCLE = 'Z' THEN 0 ELSE SUM(CASE WHEN PM_CD ='02' THEN COALESCE(A.APP_AMT,0) - COALESCE(A.STMT_AMT,0) ELSE 0 END) END AS ACCT_GAP,
+				  	CASE WHEN A.STMT_CYCLE = 'Z' THEN 0 ELSE SUM(CASE WHEN PM_CD ='03' THEN COALESCE(A.APP_AMT,0)-COALESCE(A.STMT_AMT,0) ELSE 0 END) END AS VACCT_GAP,
+				  	CASE WHEN A.STMT_CYCLE = 'Z' THEN 0 ELSE SUM(CASE WHEN PM_CD ='05' THEN COALESCE(A.APP_AMT,0)-COALESCE(A.STMT_AMT,0) ELSE 0 END) END AS HPP_GAP
+			  	 ]]>
+			  	 </if>
+			  	 <![CDATA[
+		     FROM  
+		     (
+		     	SELECT  
+		     		CASE WHEN A.TRX_CD ='1' THEN 'Z' ELSE 
+		   			(
+		   				SELECT COALESCE(C.STMT_CYCLE_CD,'X') 
+	   					FROM TB_STMT_CYCLE C 
+		    			WHERE A.PM_CD = C.PM_CD
+		         		AND A.SPM_CD = C.SPM_CD
+		         		AND A.MID = C.MID AND A.TR_DT BETWEEN C.FR_DT AND C.TO_DT
+	         		)
+		   			END AS STMT_CYCLE, 
+		   			CASE WHEN B.CODE2 = 'CALC' THEN B.CODE1 
+		   			ELSE B.CODE2 
+		   			END AS PM_CD, 
+		   			0 APP_CNT, 0 APP_AMT, SUM(APP_CNT-CC_CNT) STMT_CNT,
+		   			SUM(APP_AMT+CC_AMT) STMT_AMT
+		       FROM TB_SUB_STMT A, TB_CODE B
+		       ]]>
+		  	  <if test="selType=='settlmnt'">
+		  	  <![CDATA[
+	  	  		WHERE A.STMT_DT = #{stmtDt}
+		  	  ]]>
+		  	  </if>
+		  	  <if test="selType=='app'">
+		  	  <![CDATA[
+	  	  		WHERE A.TR_DT BETWEEN #{stmtDt} AND #{toDt}
+		  	  ]]>
+		  	  </if>
+		  	  <![CDATA[
+		       AND A.PM_CD != '00'
+		       AND B.CODE_CL = '0022'
+		       AND B.CODE3 = '00'
+		       AND B.CODE1 = A.PM_CD
+		       
+		       GROUP BY A.TRX_CD, A.PM_CD  , A.SPM_CD , A.MID, APP_CNT, APP_AMT, A.TR_DT , B.CODE1, B.CODE2
+		
+		       UNION ALL
+		       
+		       SELECT  
+		       		CASE WHEN A.TRX_CD ='1' THEN 'Z' ELSE 
+		     		(
+		     			SELECT COALESCE(C.STMT_CYCLE_CD,'X') 
+		     			FROM TB_STMT_CYCLE C 
+		      			WHERE A.PM_CD = C.PM_CD
+			           	AND A.SPM_CD = C.SPM_CD
+			           	AND A.MID = C.MID 
+			           	AND A.APP_DT BETWEEN C.FR_DT AND C.TO_DT
+		           	)
+		     		END AS STMT_CYCLE, 
+		     		CASE WHEN B.CODE2 = 'CALC' 
+		     		THEN B.CODE1 ELSE B.CODE2 
+		     		END AS PM_CD,
+		     		COUNT(1) APP_CNT, SUM(A.GOODS_AMT) APP_AMT, 0 STMT_CNT, 0 STMT_AMT
+		       FROM TB_TRX_HIST A ,TB_CARD_MBS D , TB_CODE B
+		       ]]>
+		  	  <if test="selType=='settlmnt'">
+		  	  <![CDATA[
+	  	  		WHERE A.APP_STMT_DT = #{stmtDt}
+		  	  ]]>
+		  	  </if>
+		  	  <if test="selType=='app'">
+		  	  <![CDATA[
+	  	  		WHERE A.APP_DT BETWEEN #{stmtDt} AND #{toDt}
+		  	  ]]>
+		  	  </if>
+		  	  <![CDATA[
+		       AND B.CODE_CL = '0022'
+		       AND A.PM_CD = '01'
+		       AND A.MBS_NO = D.MBS_NO 
+		       AND A.APP_DT BETWEEN D.FR_DT AND D.TO_DT
+		       AND B.CODE1 = A.PM_CD
+		       AND B.CODE3 = '00'
+		       AND A.TRX_CD IN ('0','2')
+		       AND COALESCE(D.MBS_TYPE_CD,'1') !='0'
+		       ]]>
+		  	  <if test="selType=='app'">
+		  	  <![CDATA[
+	  	  		AND A.PM_CD != '03'
+	  	  		AND A.GID != 'tpaytest0g' AND A.GID != 'pgserviceg'
+	  	  		AND A.TID = A.OTID
+		  	  ]]>
+		  	  </if>
+		  	  <![CDATA[
+		       GROUP BY A.TRX_CD , A.PM_CD  , A.SPM_CD , A.MID, B.CODE1, B.CODE2, A.GOODS_AMT,A.APP_DT
+		       ]]>
+		       <if test="selType == 'app'">
+		       <![CDATA[
+		       UNION ALL
+		       
+		       SELECT  
+		       		CASE WHEN A.TRX_CD ='1' THEN 'Z' ELSE 
+		   			(
+		   				SELECT COALESCE(C.STMT_CYCLE_CD,'X') 
+		   				FROM TB_STMT_CYCLE C 
+		    			WHERE A.PM_CD = C.PM_CD
+		         		AND A.SPM_CD = C.SPM_CD
+		         		AND A.MID = C.MID 
+		         		AND A.APP_DT BETWEEN C.FR_DT AND C.TO_DT
+	         		)
+		   			END AS STMT_CYCLE, 
+		   			CASE WHEN B.CODE2 = 'CALC' THEN B.CODE1 
+		   			ELSE B.CODE2 
+		   			END AS PM_CD,
+		   			COUNT(1) APP_CNT, SUM(A.GOODS_AMT) APP_AMT, 0 STMT_CNT, 0 STMT_AMT
+		       FROM TB_TRX_HIST A, TB_VACCNT_TRX D, TB_CODE B
+		       WHERE D.INPUT_DT BETWEEN #{stmtDt} AND #{toDt}
+		       AND  A.TID = D.TID
+		       AND B.CODE_CL = '0022'
+		       AND B.CODE1 = A.PM_CD
+		       AND A.PM_CD = '03'
+		       AND B.CODE3 = '00'
+		       AND A.TRX_CD IN ('0','2')
+		       AND A.GID != 'TPAYTEST0G'
+		       AND A.GID != 'PGSERVICEG'
+		       GROUP BY A.TRX_CD , A.PM_CD  , A.SPM_CD , A.MID, B.CODE1, B.CODE2, A.GOODS_AMT,A.APP_DT
+		       ]]>
+		       </if>
+		       <![CDATA[
+		       UNION ALL
+		       
+		      SELECT  
+		      		CASE WHEN A.TRX_CD ='1' THEN 'Z' ELSE 
+		   			(
+		   				SELECT COALESCE(C.STMT_CYCLE_CD,'X') 
+		   				FROM TB_STMT_CYCLE C 
+		    			WHERE A.PM_CD = C.PM_CD
+		         		AND A.SPM_CD = C.SPM_CD
+		         		AND A.MID = C.MID 
+		         		AND A.CC_DT BETWEEN C.FR_DT AND C.TO_DT
+	         		)
+		   			END AS STMT_CYCLE, 
+		   			CASE WHEN B.CODE2 = 'CALC' 
+		   			THEN B.CODE1 
+		   			ELSE B.CODE2 
+		   			END AS PM_CD,
+		   			 1*COUNT(1) APP_CNT, -1*SUM(A.GOODS_AMT) APP_AMT, 0 STMT_CNT, 0 STMT_AMT
+		       FROM TB_TRX_HIST A , TB_CARD_MBS D , TB_CODE B
+		        ]]>
+		  	  <if test="selType=='settlmnt'">
+		  	  <![CDATA[
+	  	  		WHERE A.CC_STMT_DT = #{stmtDt}
+		  	  ]]>
+		  	  </if>
+		  	  <if test="selType=='app'">
+		  	  <![CDATA[
+	  	  		WHERE A.CC_DT BETWEEN #{stmtDt} AND #{toDt}
+		  	  ]]>
+		  	  </if>
+		  	  <![CDATA[
+		       AND A.PM_CD = '01' 
+		       AND A.MBS_NO = D.MBS_NO 
+		       AND A.APP_DT BETWEEN D.FR_DT AND D.TO_DT
+		       AND B.CODE_CL = '0022'
+		       AND B.CODE3 = '00'
+		       AND A.TRX_CD = '2'
+		       AND A.GID != 'TPAYTEST0G'
+		       AND A.GID != 'PGSERVICEG'
+		       AND B.CODE1 = A.PM_CD
+		       AND COALESCE(D.MBS_TYPE_CD,'1') !='0'
+		       GROUP BY A.TRX_CD , A.PM_CD  , A.SPM_CD , A.MID, B.CODE1, B.CODE2, A.GOODS_AMT,A.APP_DT,A.CC_DT
+		 ) A 
+		      GROUP BY A.STMT_CYCLE
+		      
+		      UNION ALL
+		      
+		      SELECT   
+		      	CODE1 AS STMT_CYCLE, 0 CARD_APP , 0 ACCT_APP, 0 VACCT_APP, 0 HPP_APP, 
+		  		0 CARD_STMT , 0 ACCT_STMT, 0 VACCT_STMT, 0 HPP_STMT,
+		  		0 CARD_GAP , 0 ACCT_GAP, 0 VACCT_GAP, 0 HPP_GAP
+		      FROM TB_CODE WHERE CODE_CL ='0038' AND CODE1 !='****'
+		      GROUP BY CODE1
+		      
+		      UNION ALL
+		      
+		      SELECT    
+		      	'Z' AS STMT_CYCLE, 0 CARD_APP , 0 ACCT_APP, 0 VACCT_APP, 0 HPP_APP,
+		  		0 CARD_STMT , 0 ACCT_STMT, 0 VACCT_STMT, 0 HPP_STMT,
+		  		0 CARD_GAP , 0 ACCT_GAP, 0 VACCT_GAP, 0 HPP_GAP
+		      FROM DUAL
+		     ) A 
+		     WHERE COALESCE(A.STMT_CYCLE,'X') NOT IN ('0', 'D0', 'D1')
+		     GROUP BY A.STMT_CYCLE
+		     ORDER BY A.STMT_CYCLE ASC
+	 ]]>
+	 </select>
+	 <!-- 지급데이터 검증 - 수수료 검증 -->
+	 <select id="selectStmtFeeInsList" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 	SELECT MID, 
+           SUM(CASE WHEN PM_CD = '01' THEN 1 ELSE 0 END) CARD,
+           SUM(CASE WHEN PM_CD = '02' THEN 1 ELSE 0 END) ACCT,
+           SUM(CASE WHEN PM_CD = '03' THEN 1 ELSE 0 END) VACCT,
+           SUM(CASE WHEN PM_CD IN ('05', '06') THEN 1 ELSE 0 END) CP, 
+           COUNT(*) CNT
+	    FROM TB_STMT_TID
+	    WHERE STMT_DT = #{stmtDt}
+	    AND FEE = 0
+	    AND TRX_ST_CD = '0'
+	    GROUP BY MID
+	 ]]>
+	 </select>
+	 <!-- 지급데이터 검증 - 채권상계 회원사 리스트 -->
+	 <select id="selectStmtOffInsList" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 	SELECT 
+	 		ROWNUM AS RNUM, EXTRA_ID, OFF_ID, AMT
+	    FROM 
+	    	TB_EXTRA_HIST
+	    WHERE 
+	    	EXTRA_DT = #{stmtDt}
+	    AND 
+	    	REASON = '04'
+	 ]]>
+	 </select>
+	 <!-- 지급보고서작성 리스트 -->
+	 <select id="selectStmtPayRepList" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 	SELECT * FROM 
+	 	(
+		 	SELECT ROWNUM AS RNUM, A.STMT_DT, A.ID, B.PAY_ID_CD,
+	           MAX(CASE WHEN B.PAY_ID_CD = '2' THEN B.CO_NM
+	                    WHEN B.PAY_ID_CD = '3' THEN (SELECT Z.G_NM FROM TB_GRP Z WHERE Z.GID = B.ID)
+	                    WHEN B.PAY_ID_CD = '4' THEN (SELECT Z.VGRP_NM FROM TB_VGRP Z WHERE Z.VID = B.ID)
+	                    ELSE B.CO_NM END) CO_NM,
+	           MAX(CASE WHEN B.PAY_ID_CD = '2' THEN 'MID'
+	                    WHEN B.PAY_ID_CD = '3' THEN 'GID'
+	                    WHEN B.PAY_ID_CD = '4' THEN 'VID'
+	                    ELSE 'MID' END) PAY_ID_NM, B.REP_NM,
+	           COALESCE(SUM(B.CARD_CNT), 0) CARD_CNT,
+	           COALESCE(SUM(B.CARD_AMT), 0) CARD_AMT,
+	           COALESCE(SUM(B.ACCNT_CNT), 0) ACCNT_CNT,
+	           COALESCE(SUM(B.ACCNT_AMT), 0) ACCNT_AMT,
+	           COALESCE(SUM(B.VACCT_CNT), 0) VACCT_CNT,
+	           COALESCE(SUM(B.VACCT_AMT), 0) VACCT_AMT,
+	           COALESCE(SUM(B.CP_CNT), 0) CP_CNT,
+	           COALESCE(SUM(B.CP_AMT), 0) CP_AMT,     
+	           COALESCE(SUM(A.RESR_AMT), 0) RESR_AMT,
+	           COALESCE(SUM(A.RESR_CC_AMT), 0) RESR_CC_AMT,
+	           COALESCE(SUM(A.EXTRA_AMT), 0) EXTRA_AMT,
+	           COALESCE(SUM(A.FEE), 0) FEE,
+	           COALESCE(SUM(A.VAT), 0) VAT,
+	           COALESCE(SUM(A.DPST_AMT), 0) DPST_AMT,
+	           MIN(CASE WHEN A.ST_TYPE = '1' THEN '담당자' WHEN A.ST_TYPE = '2' THEN '팀장' WHEN A.ST_TYPE = '3' THEN '송금' ELSE ' ' END) STATUS_NM,
+	           MIN(ST_TYPE) STATUS
+	           
+		    FROM TB_STMT A,  
+		        (
+			         SELECT  A.STMT_DT, A.ID, A.PAY_ID_CD, A.CO_NM, A.REP_NM,
+				      SUM(CARD_CNT) CARD_CNT, 
+				      SUM(CARD_AMT) CARD_AMT,
+				      SUM(ACCNT_CNT) ACCNT_CNT, 
+				      SUM(ACCNT_AMT) ACCNT_AMT,
+				      SUM(VACCT_CNT) VACCT_CNT, 
+				      SUM(VACCT_AMT) VACCT_AMT,
+				      SUM(CP_CNT) CP_CNT, 
+				      SUM(CP_AMT) CP_AMT
+		          	FROM (
+			          SELECT A.STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, REP_NM,
+			                 SUM(CASE WHEN A.PM_CD IN ('01', '07', '08', '09') THEN A.APP_CNT+A.CC_CNT ELSE 0 END) CARD_CNT,
+			                 SUM(CASE WHEN A.PM_CD IN ('01', '07', '08', '09') THEN A.APP_AMT+A.CC_AMT ELSE 0 END) CARD_AMT,
+			                 SUM(CASE WHEN A.PM_CD = '02' THEN A.APP_CNT+A.CC_CNT ELSE 0 END) ACCNT_CNT,
+			                 SUM(CASE WHEN A.PM_CD = '02' THEN A.APP_AMT+A.CC_AMT ELSE 0 END) ACCNT_AMT,
+			                 SUM(CASE WHEN A.PM_CD = '03' THEN A.APP_CNT+A.CC_CNT ELSE 0 END) VACCT_CNT,
+			                 SUM(CASE WHEN A.PM_CD = '03' THEN A.APP_AMT+A.CC_AMT ELSE 0 END) VACCT_AMT,
+			                 SUM(CASE WHEN A.PM_CD IN ('05', '06') THEN A.APP_CNT+A.CC_CNT ELSE 0 END) CP_CNT,
+			                 SUM(CASE WHEN A.PM_CD IN ('05', '06') THEN A.APP_AMT+A.CC_AMT ELSE 0 END) CP_AMT
+			          FROM TB_SUB_STMT A, TB_MBS B, TB_CO C
+			          WHERE A.MID = B.MID
+			          AND B.CO_NO = C.CO_NO
+			          AND A.STMT_DT BETWEEN #{frDt} AND #{toDt}
+			          AND A.DPST_AMT != 0
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.STMT_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          
+			          UNION ALL
+			          
+			          SELECT A.RESR_DT AS STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, C.REP_NM,
+			                 0 CARD_CNT, 0 CARD_AMT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 VACCT_CNT, 0 VACCT_AMT, 0 CP_CNT, 0 CP_AMT
+			          FROM TB_DFR_RELESE A, TB_MBS B, TB_CO C
+			          WHERE A.ID = B.MID 
+			          AND B.CO_NO = C.CO_NO
+			          AND A.RESR_DT  BETWEEN #{frDt} AND #{toDt}
+			          AND A.RESR_TYPE ='01' 
+			          AND A.DEL_FLG ='0'
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.RESR_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          
+			          UNION ALL
+			          
+			          SELECT A.RESR_DT AS STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, C.REP_NM,
+			                 0 CARD_CNT, 0 CARD_AMT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 VACCT_CNT, 0 VACCT_AMT, 0 CP_CNT, 0 CP_AMT
+			          FROM TB_DFR_RELESE A, TB_MBS B, TB_CO C
+			          WHERE A.ID = B.MID 
+			          AND B.CO_NO = C.CO_NO
+			          AND A.RESR_DT  BETWEEN #{frDt} AND #{toDt}
+			          AND A.RESR_TYPE ='02'
+			          AND A.DEL_FLG ='0'
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.RESR_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          
+			          UNION ALL
+			          
+			          SELECT A.EXTRA_DT AS STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, C.REP_NM,
+			                 0 CARD_CNT, 0 CARD_AMT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 VACCT_CNT, 0 VACCT_AMT, 0 CP_CNT, 0 CP_AMT
+			          FROM TB_EXTRA_HIST A, TB_MBS B, TB_CO C
+			          WHERE A.EXTRA_ID = B.MID 
+			          AND B.CO_NO = C.CO_NO
+			          AND A.EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+			          AND A.DEL_FLG ='0'
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.EXTRA_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          
+			          UNION ALL
+			          
+			          SELECT A.EXTRA_DT AS STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, C.REP_NM,
+			                 0 CARD_CNT, 0 CARD_AMT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 VACCT_CNT, 0 VACCT_AMT, 0 CP_CNT, 0 CP_AMT
+			          FROM TB_EXTRA_HIST A, TB_MBS B, TB_CO C
+			          WHERE A.OFF_ID = B.MID 
+			          AND B.CO_NO = C.CO_NO
+			          AND A.EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+			          AND A.DEL_FLG ='0'
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.EXTRA_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          ) A
+		          GROUP BY A.STMT_DT, A.ID, A.PAY_ID_CD, A.CO_NM, A.REP_NM
+		        ) B 
+		    WHERE A.STMT_DT BETWEEN #{frDt} AND #{toDt}
+		    AND B.STMT_DT = A.STMT_DT
+		    AND B.ID = A.ID 
+		    ]]>
+		    <if test="id == null and id == ''">
+		    <![CDATA[
+		    	AND A.ID = #{id}
+		    ]]>
+		    </if>
+		    <if test="selDecide!='ALL'">
+		    <![CDATA[
+		    	AND A.ST_TYPE = #{selDecide}
+		    ]]>
+		    </if>
+		    <if test="selType!='none'">
+			    <choose>
+			    <when test="selType=='resr'">
+			    <![CDATA[
+			    	AND COALESCE(A.RESR_AMT,0) != 0
+			    ]]>
+			    </when>
+			    <when test="selType=='cc'">
+			    <![CDATA[
+			    	AND COALESCE(A.RESR_CC_AMT,0) != 0
+			    ]]>
+			    </when>
+			    <when test="selType=='extra' ">
+			    <![CDATA[
+			    	AND COALESCE(A.EXTRA_AMT,0) != 0
+			    ]]>
+			    </when>
+			    <when test="selType=='ALL'">
+			    <![CDATA[
+			    	AND (COALESCE(A.RESR_AMT,0) != 0  OR COALESCE(A.RESR_CC_AMT, 0) != 0 OR COALESCE(A.EXTRA_AMT,0) != 0)
+			    ]]>
+			    </when>
+			    <otherwise></otherwise>
+			    </choose>
+		    </if>
+		    <if test="selPayType=='om'">
+		    <![CDATA[
+		    	AND B.PAY_ID_CD = '2'
+		    ]]>
+		    </if>
+		    <![CDATA[
+		    GROUP BY ROWNUM, A.STMT_DT, A.ID, B.PAY_ID_CD, B.REP_NM
+	    ) TBL	
+		WHERE RNUM
+		
+		
+		 BETWEEN  ${intPageStart} AND ${intPageEnd}
+	 ]]>
+	 </select>
+	 <select id="selectStmtPayRepListTotal" parameterType="hashmap" resultType="Integer">
+	 <![CDATA[
+		 	SELECT COUNT(1)
+		    FROM TB_STMT A,  
+		        (
+			         SELECT  A.STMT_DT, A.ID, A.PAY_ID_CD, A.CO_NM, A.REP_NM,
+				      SUM(CARD_CNT) CARD_CNT, 
+				      SUM(CARD_AMT) CARD_AMT,
+				      SUM(ACCNT_CNT) ACCNT_CNT, 
+				      SUM(ACCNT_AMT) ACCNT_AMT,
+				      SUM(VACCT_CNT) VACCT_CNT, 
+				      SUM(VACCT_AMT) VACCT_AMT,
+				      SUM(CP_CNT) CP_CNT, 
+				      SUM(CP_AMT) CP_AMT
+		          	FROM (
+			          SELECT A.STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, REP_NM,
+			                 SUM(CASE WHEN A.PM_CD IN ('01', '07', '08', '09') THEN A.APP_CNT+A.CC_CNT ELSE 0 END) CARD_CNT,
+			                 SUM(CASE WHEN A.PM_CD IN ('01', '07', '08', '09') THEN A.APP_AMT+A.CC_AMT ELSE 0 END) CARD_AMT,
+			                 SUM(CASE WHEN A.PM_CD = '02' THEN A.APP_CNT+A.CC_CNT ELSE 0 END) ACCNT_CNT,
+			                 SUM(CASE WHEN A.PM_CD = '02' THEN A.APP_AMT+A.CC_AMT ELSE 0 END) ACCNT_AMT,
+			                 SUM(CASE WHEN A.PM_CD = '03' THEN A.APP_CNT+A.CC_CNT ELSE 0 END) VACCT_CNT,
+			                 SUM(CASE WHEN A.PM_CD = '03' THEN A.APP_AMT+A.CC_AMT ELSE 0 END) VACCT_AMT,
+			                 SUM(CASE WHEN A.PM_CD IN ('05', '06') THEN A.APP_CNT+A.CC_CNT ELSE 0 END) CP_CNT,
+			                 SUM(CASE WHEN A.PM_CD IN ('05', '06') THEN A.APP_AMT+A.CC_AMT ELSE 0 END) CP_AMT
+			          FROM TB_SUB_STMT A, TB_MBS B, TB_CO C
+			          WHERE A.MID = B.MID
+			          AND B.CO_NO = C.CO_NO
+			          AND A.STMT_DT BETWEEN #{frDt} AND #{toDt}
+			          AND A.DPST_AMT != 0
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.STMT_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          
+			          UNION ALL
+			          
+			          SELECT A.RESR_DT AS STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, C.REP_NM,
+			                 0 CARD_CNT, 0 CARD_AMT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 VACCT_CNT, 0 VACCT_AMT, 0 CP_CNT, 0 CP_AMT
+			          FROM TB_DFR_RELESE A, TB_MBS B, TB_CO C
+			          WHERE A.ID = B.MID 
+			          AND B.CO_NO = C.CO_NO
+			          AND A.RESR_DT  BETWEEN #{frDt} AND #{toDt}
+			          AND A.RESR_TYPE ='01' 
+			          AND A.DEL_FLG ='0'
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.RESR_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          
+			          UNION ALL
+			          
+			          SELECT A.RESR_DT AS STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, C.REP_NM,
+			                 0 CARD_CNT, 0 CARD_AMT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 VACCT_CNT, 0 VACCT_AMT, 0 CP_CNT, 0 CP_AMT
+			          FROM TB_DFR_RELESE A, TB_MBS B, TB_CO C
+			          WHERE A.ID = B.MID 
+			          AND B.CO_NO = C.CO_NO
+			          AND A.RESR_DT  BETWEEN #{frDt} AND #{toDt}
+			          AND A.RESR_TYPE ='02'
+			          AND A.DEL_FLG ='0'
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.RESR_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          
+			          UNION ALL
+			          
+			          SELECT A.EXTRA_DT AS STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, C.REP_NM,
+			                 0 CARD_CNT, 0 CARD_AMT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 VACCT_CNT, 0 VACCT_AMT, 0 CP_CNT, 0 CP_AMT
+			          FROM TB_EXTRA_HIST A, TB_MBS B, TB_CO C
+			          WHERE A.EXTRA_ID = B.MID 
+			          AND B.CO_NO = C.CO_NO
+			          AND A.EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+			          AND A.DEL_FLG ='0'
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.EXTRA_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          
+			          UNION ALL
+			          
+			          SELECT A.EXTRA_DT AS STMT_DT,
+			                 CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+			                 B.PAY_ID_CD, MAX(C.CO_NM) CO_NM, C.REP_NM,
+			                 0 CARD_CNT, 0 CARD_AMT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 VACCT_CNT, 0 VACCT_AMT, 0 CP_CNT, 0 CP_AMT
+			          FROM TB_EXTRA_HIST A, TB_MBS B, TB_CO C
+			          WHERE A.OFF_ID = B.MID 
+			          AND B.CO_NO = C.CO_NO
+			          AND A.EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+			          AND A.DEL_FLG ='0'
+			          ]]>
+			          <choose>
+			          <when test="selPayType=='none'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL != '1'
+			          ]]>
+			          </when>
+			          <when test="selPayType=='om'">
+			          <![CDATA[
+			          	AND B.OM_SETT_CL = '1'
+			          ]]>
+			          </when>
+			          <otherwise></otherwise>
+			          </choose>
+			          <![CDATA[
+			          GROUP BY A.EXTRA_DT, B.PAY_ID_CD, B.MID, B.GID, B.VID, C.CO_NM, C.REP_NM
+			          ) A
+		          GROUP BY A.STMT_DT, A.ID, A.PAY_ID_CD, A.CO_NM, A.REP_NM
+		        ) B 
+		    WHERE A.STMT_DT BETWEEN #{frDt} AND #{toDt}
+		    AND B.STMT_DT = A.STMT_DT
+		    AND B.ID = A.ID 
+		    ]]>
+		    <if test="id!='ALL'">
+		    <![CDATA[
+		    	AND A.ID = #{id}
+		    ]]>
+		    </if>
+		    <if test="selDecide!='ALL'">
+		    <![CDATA[
+		    	AND A.ST_TYPE = #{selDecide}
+		    ]]>
+		    </if>
+		    <if test="selType!='none'">
+			    <choose>
+			    <when test="selType=='resr'">
+			    <![CDATA[
+			    	AND COALESCE(A.RESR_AMT,0) != 0
+			    ]]>
+			    </when>
+			    <when test="selType=='cc'">
+			    <![CDATA[
+			    	AND COALESCE(A.RESR_CC_AMT,0) != 0
+			    ]]>
+			    </when>
+			    <when test="selType=='extra' ">
+			    <![CDATA[
+			    	AND COALESCE(A.EXTRA_AMT,0) != 0
+			    ]]>
+			    </when>
+			    <when test="selType=='ALL'">
+			    <![CDATA[
+			    	AND (COALESCE(A.RESR_AMT,0) != 0  OR COALESCE(A.RESR_CC_AMT, 0) != 0 OR COALESCE(A.EXTRA_AMT,0) != 0)
+			    ]]>
+			    </when>
+			    <otherwise></otherwise>
+			    </choose>
+		    </if>
+		    <if test="selPayType=='om'">
+		    <![CDATA[
+		    	AND B.PAY_ID_CD = '2'
+		    ]]>
+		    </if>
+	 </select>
+	 <!-- 송금보고서 확정 - 지불수단별 내역  -->
+	 <select id="selectSendPmReport" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 		SELECT TO_CHAR(COALESCE(SUM(B.CARD_CNT), 0), '999,999,999,999') CARD_CNT,    
+	           TO_CHAR(COALESCE(SUM(B.CARD_AMT), 0), '999,999,999,999') CARD_AMT,
+	           TO_CHAR(COALESCE(SUM(B.CARD_FEE), 0), '999,999,999,999') CARD_FEE,
+	           TO_CHAR(COALESCE(SUM(B.CARD_VAT), 0), '999,999,999,999') CARD_VAT,
+	           TO_CHAR(COALESCE(SUM(B.ACCNT_CNT), 0), '999,999,999,999') ACCNT_CNT,  
+	           TO_CHAR(COALESCE(SUM(B.ACCNT_AMT), 0), '999,999,999,999') ACCNT_AMT,
+	           TO_CHAR(COALESCE(SUM(B.ACCNT_FEE), 0), '999,999,999,999') ACCNT_FEE,
+	           TO_CHAR(COALESCE(SUM(B.ACCNT_VAT), 0), '999,999,999,999') ACCNT_VAT,
+	           TO_CHAR(COALESCE(SUM(B.VACCT_CNT), 0), '999,999,999,999') VACCT_CNT,  
+	           TO_CHAR(COALESCE(SUM(B.VACCT_AMT), 0), '999,999,999,999') VACCT_AMT,
+	           TO_CHAR(COALESCE(SUM(B.VACCT_FEE), 0), '999,999,999,999') VACCT_FEE,
+	           TO_CHAR(COALESCE(SUM(B.VACCT_VAT), 0), '999,999,999,999') VACCT_VAT,
+	           TO_CHAR(COALESCE(SUM(B.CP_CNT), 0), '999,999,999,999') CP_CNT,  
+	           TO_CHAR(COALESCE(SUM(B.CP_AMT), 0), '999,999,999,999') CP_AMT,
+	           TO_CHAR(COALESCE(SUM(B.CP_FEE), 0), '999,999,999,999') CP_FEE,
+	           TO_CHAR(COALESCE(SUM(B.CP_VAT), 0), '999,999,999,999') CP_VAT,
+	           TO_CHAR(COALESCE(SUM(A.RESR_AMT), 0), 0) RESR_AMT,
+	           TO_CHAR(COALESCE(SUM(A.RESR_CC_AMT), 0), '999,999,999,999') RESR_CC_AMT,
+	           TO_CHAR(COALESCE(SUM(A.EXTRA_AMT), 0), '999,999,999,999') EXTRA_AMT,
+	           TO_CHAR(COALESCE(SUM(A.APP_CNT+A.CC_CNT), 0), '999,999,999,999') TOT_CNT,
+	           TO_CHAR(COALESCE(SUM(A.APP_AMT+A.CC_AMT), 0), '999,999,999,999') TOT_AMT,
+	           TO_CHAR(COALESCE(SUM(A.FEE), 0), '999,999,999,999') TOT_FEE,
+	           TO_CHAR(COALESCE(SUM(A.VAT), 0), '999,999,999,999') TOT_VAT,    
+	           TO_CHAR(COALESCE(SUM(A.DPST_AMT), 0), '999,999,999,999') DPST_AMT,
+	           TO_CHAR(COUNT(A.ID), 0) ID_CNT
+		   FROM TB_STMT A, 
+		   (
+			   SELECT A.STMT_DT, A.ID, 
+			     SUM(A.CARD_CNT) CARD_CNT, SUM(A.CARD_AMT) CARD_AMT, SUM(A.CARD_FEE) CARD_FEE, SUM(A.CARD_VAT) CARD_VAT,
+			     SUM(A.ACCNT_CNT) ACCNT_CNT, SUM(A.ACCNT_AMT) ACCNT_AMT, SUM(A.ACCNT_FEE) ACCNT_FEE, SUM(A.ACCNT_VAT) ACCNT_VAT, 
+			     SUM(A.VACCT_CNT) VACCT_CNT, SUM(A.VACCT_AMT) VACCT_AMT, SUM(A.VACCT_FEE) VACCT_FEE, SUM(A.VACCT_VAT) VACCT_VAT, 
+			     SUM(A.CP_CNT) CP_CNT, SUM(A.CP_AMT) CP_AMT, SUM(A.CP_FEE) CP_FEE, SUM(A.CP_VAT) CP_VAT
+			   FROM 
+			   (
+			     SELECT A.STMT_DT,
+			      CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID, 
+			      SUM(CASE WHEN PM_CD IN ('01', '07', '08', '09') THEN (APP_CNT+CC_CNT) ELSE 0 END) CARD_CNT,
+			      SUM(CASE WHEN PM_CD IN ('01', '07', '08', '09') THEN (APP_AMT+CC_AMT) ELSE 0 END) CARD_AMT,
+			      SUM(CASE WHEN PM_CD IN ('01', '07', '08', '09') THEN (FEE) ELSE 0 END) CARD_FEE,
+			      SUM(CASE WHEN PM_CD IN ('01', '07', '08', '09') THEN (VAT) ELSE 0 END) CARD_VAT,
+			      SUM(CASE WHEN PM_CD = '02' THEN (APP_CNT+CC_CNT) ELSE 0 END) ACCNT_CNT,
+			      SUM(CASE WHEN PM_CD = '02' THEN (APP_AMT+CC_AMT) ELSE 0 END) ACCNT_AMT,
+			      SUM(CASE WHEN PM_CD = '02' THEN (FEE) ELSE 0 END) ACCNT_FEE,
+			      SUM(CASE WHEN PM_CD = '02' THEN (VAT) ELSE 0 END) ACCNT_VAT,
+			      SUM(CASE WHEN PM_CD = '03' THEN (APP_CNT+CC_CNT) ELSE 0 END) VACCT_CNT,
+			      SUM(CASE WHEN PM_CD = '03' THEN (APP_AMT+CC_AMT) ELSE 0 END) VACCT_AMT,
+			      SUM(CASE WHEN PM_CD = '03' THEN (FEE) ELSE 0 END) VACCT_FEE,
+			      SUM(CASE WHEN PM_CD = '03' THEN (VAT) ELSE 0 END) VACCT_VAT,
+			      SUM(CASE WHEN PM_CD IN ('05', '06') THEN (APP_CNT+CC_CNT) ELSE 0 END) CP_CNT,
+			      SUM(CASE WHEN PM_CD IN ('05', '06') THEN (APP_AMT+CC_AMT) ELSE 0 END) CP_AMT,
+			      SUM(CASE WHEN PM_CD IN ('05', '06') THEN (FEE) ELSE 0 END) CP_FEE,
+			      SUM(CASE WHEN PM_CD IN ('05', '06') THEN (VAT) ELSE 0 END) CP_VAT
+			    FROM TB_SUB_STMT A, TB_MBS B
+			    WHERE A.STMT_DT = #{stmtDt}
+			    AND A.MID = B.MID
+			    AND A.DPST_AMT != 0
+			    ]]>
+			    <choose>
+			    <when test="payType=='none'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL != '1'
+			    ]]>
+			    </when>
+			    <when test="payType=='om'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL = '1'
+			    ]]>
+			    </when>
+			    <otherwise></otherwise>
+			    </choose>
+			    <![CDATA[
+			    GROUP BY A.STMT_DT,B.PAY_ID_CD,B.MID, B.GID, B.VID
+			    
+			    UNION ALL
+			    
+			    SELECT  
+			    	A.RESR_DT AS STMT_DT,
+				    CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+				    0 CARD_CNT, 0 CARD_AMT, 0 CARD_FEE, 0 CARD_VAT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 ACCNT_FEE, 0 ACCNT_VAT,
+				    0 VACCT_CNT, 0 VACCT_AMT, 0 VACCT_FEE, 0 VACCT_VAT, 0 CP_CNT, 0 CP_AMT, 0 CP_FEE, 0 CP_VAT
+			    FROM TB_DFR_RELESE A , TB_MBS B
+			    WHERE A.ID = B.MID AND A.DEL_FLG ='0' AND RESR_TYPE='01' 
+			    AND A.RESR_DT = #{stmtDt}
+			    ]]>
+			    <choose>
+			    <when test="payType=='none'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL != '1'
+			    ]]>
+			    </when>
+			    <when test="payType=='om'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL = '1'
+			    ]]>
+			    </when>
+			    <otherwise></otherwise>
+			    </choose>
+			    <![CDATA[
+			    GROUP BY A.RESR_DT,B.PAY_ID_CD,B.MID, B.GID, B.VID
+			    
+			    UNION ALL
+			    
+			    SELECT  
+			    	A.RESR_DT AS STMT_DT,
+				    CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+				    0 CARD_CNT, 0 CARD_AMT, 0 CARD_FEE, 0 CARD_VAT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 ACCNT_FEE, 0 ACCNT_VAT, 
+				    0 VACCT_CNT, 0 VACCT_AMT, 0 VACCT_FEE, 0 VACCT_VAT, 0 CP_CNT, 0 CP_AMT, 0 CP_FEE, 0 CP_VAT
+			    FROM TB_DFR_RELESE A , TB_MBS B
+			    WHERE A.ID = B.MID 
+			    AND A.DEL_FLG ='0'
+			    AND RESR_TYPE='02'
+			    AND A.RESR_DT = #{stmtDt}
+			    ]]>
+			    <choose>
+			    <when test="payType=='none'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL != '1'
+			    ]]>
+			    </when>
+			    <when test="payType=='om'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL = '1'
+			    ]]>
+			    </when>
+			    <otherwise></otherwise>
+			    </choose>
+			    <![CDATA[
+			    GROUP BY A.RESR_DT,B.PAY_ID_CD,B.MID, B.GID, B.VID
+			    
+			    UNION ALL
+			    
+			    SELECT  
+			    	A.EXTRA_DT AS STMT_DT,
+				    CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+				    0 CARD_CNT, 0 CARD_AMT, 0 CARD_FEE, 0 CARD_VAT,  0 ACCNT_CNT, 0 ACCNT_AMT, 0 ACCNT_FEE, 0 ACCNT_VAT,
+				    0 VACCT_CNT, 0 VACCT_AMT, 0 VACCT_FEE, 0 VACCT_VAT, 0 CP_CNT, 0 CP_AMT, 0 CP_FEE, 0 CP_VAT
+			    FROM TB_EXTRA_HIST A , TB_MBS B
+			    WHERE A.EXTRA_ID = B.MID 
+			    AND A.DEL_FLG ='0'
+			    AND A.EXTRA_DT =#{stmtDt}
+			    ]]>
+			    <choose>
+			    <when test="payType=='none'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL != '1'
+			    ]]>
+			    </when>
+			    <when test="payType=='om'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL = '1'
+			    ]]>
+			    </when>
+			    <otherwise></otherwise>
+			    </choose>
+			    <![CDATA[
+			    GROUP BY A.EXTRA_DT,B.PAY_ID_CD,B.MID, B.GID, B.VID
+			    
+			    UNION ALL
+			    
+			    SELECT  
+			    	A.EXTRA_DT AS STMT_DT,
+				    CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END ID,
+				    0 CARD_CNT, 0 CARD_AMT, 0 CARD_FEE, 0 CARD_VAT, 0 ACCNT_CNT, 0 ACCNT_AMT, 0 ACCNT_FEE, 0 ACCNT_VAT, 
+				    0 VACCT_CNT, 0 VACCT_AMT, 0 VACCT_FEE, 0 VACCT_VAT, 0 CP_CNT, 0 CP_AMT, 0 CP_FEE, 0 CP_VAT
+			    FROM TB_EXTRA_HIST A , TB_MBS B
+			    WHERE A.OFF_ID = B.MID 
+			    AND A.DEL_FLG ='0'
+			    AND A.EXTRA_DT = #{stmtDt}
+			    ]]>
+			    <choose>
+			    <when test="payType=='none'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL != '1'
+			    ]]>
+			    </when>
+			    <when test="payType=='om'">
+			    <![CDATA[
+			    	AND B.OM_SETT_CL = '1'
+			    ]]>
+			    </when>
+			    <otherwise></otherwise>
+			    </choose>
+			    <![CDATA[
+			    GROUP BY A.EXTRA_DT,B.PAY_ID_CD,B.MID, B.GID, B.VID
+			   	) A
+			   GROUP BY A.STMT_DT, A.ID
+		    ) B
+		    WHERE A.STMT_DT = B.STMT_DT
+		    AND A.ID = B.ID
+	 ]]>
+	 </select>
+	 <!-- 송금보고서 확정 - 확정 내역  -->
+	 <select id="selectSendReportConfData" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 	SELECT TO_CHAR(A.CONF1_CNT, '999,999,999,999') CONF1_CNT,
+           CASE WHEN (A.CNT - A.CONF1_CNT) > 0 THEN 'X' ELSE 'O' END CONF1_COMP,
+           TO_CHAR(A.CONF2_CNT, '999,999,999,999') CONF2_CNT,
+           CASE WHEN (A.CNT - A.CONF2_CNT) > 0 THEN 'X' ELSE 'O' END CONF2_COMP,
+           TO_CHAR(A.CONF3_CNT, '999,999,999,999') CONF3_CNT,
+           CASE WHEN (A.CNT - A.CONF3_CNT) > 0 THEN 'X' ELSE 'O' END CONF3_COMP,
+           (SELECT X.EMP_NM FROM TB_EMP X WHERE X.EMP_NO = A.CONF1_EMP_NO) CONF1_EMP_NO,
+           TO_CHAR(A.CONF1_DNT, 'YYYYMMDDHH24MISS') CONF1_DNT,
+           (SELECT X.EMP_NM FROM TB_EMP X WHERE X.EMP_NO = A.CONF2_EMP_NO) CONF2_EMP_NO,
+           TO_CHAR(A.CONF2_DNT, 'YYYYMMDDHH24MISS') CONF2_DNT,
+           (SELECT X.EMP_NM FROM TB_EMP X WHERE X.EMP_NO = A.CONF3_EMP_NO) CONF3_EMP_NO,      
+           TO_CHAR(A.CONF3_DNT, 'YYYYMMDDHH24MISS') CONF3_DNT
+	    FROM (
+	          SELECT COUNT(CASE WHEN A.ST_TYPE IN ('1', '2', '3') THEN 1 END) CONF1_CNT,
+	                 COUNT(CASE WHEN A.ST_TYPE IN ('2', '3') THEN 1 END) CONF2_CNT,
+	                 COUNT(CASE WHEN A.ST_TYPE = '3' THEN 1 END) CONF3_CNT,
+	                 COUNT(1) CNT,
+	                 MAX(A.CONF1_EMP_NO) CONF1_EMP_NO,
+	                 MAX(A.CONF1_DNT) CONF1_DNT,
+	                 MAX(A.CONF2_EMP_NO) CONF2_EMP_NO,
+	                 MAX(A.CONF2_DNT) CONF2_DNT,
+	                 MAX(A.CONF3_EMP_NO) CONF3_EMP_NO,
+	                 MAX(A.CONF3_DNT) CONF3_DNT
+	          FROM TB_STMT A, TB_MBS B
+	          WHERE A.STMT_DT = #{stmtDt}
+	          AND A.DPST_AMT >  0
+	          AND CASE WHEN B.PAY_ID_CD = '2' THEN B.MID WHEN B.PAY_ID_CD = '3' THEN B.GID WHEN B.PAY_ID_CD = '4' THEN B.VID ELSE B.MID END = A.ID
+	          ]]>
+	          <if test="payType != null and payType != '' ">
+				  <choose>
+				    <when test="payType=='none'">
+				    <![CDATA[
+				    	AND B.OM_SETT_CL != '1'
+				    ]]>
+				    </when>
+				    <when test="payType=='om'">
+				    <![CDATA[
+				    	AND B.OM_SETT_CL = '1'
+				    ]]>
+				    </when>
+				    <otherwise></otherwise>
+				    </choose>         
+	          </if>
+	          <![CDATA[
+	    ) A
+	 ]]>
+	 </select>
+	 <!-- 송금보고서 확정 - 환불내역 합계  -->
+	 <select id="selectTransRefundCnt" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 	 SELECT 
+	 	 	TO_CHAR(COALESCE(COUNT(1), 0), '999,999,999,999') TOT_CNT, TO_CHAR(COALESCE(SUM(A.GOODS_AMT), 0), '999,999,999,999') TOT_AMT
+		 FROM 
+		 (
+			  SELECT C.GOODS_AMT AS GOODS_AMT 
+			  FROM TB_ACCNT_TRX A, TB_MBS B , TB_MSTR_TRX C
+			  WHERE B.MID = A.MID 
+			  AND A.TID = C.TID
+			  AND REFUND_FLG='3' 
+			  AND A.REFUND_DT = #{stmtDt}
+			  UNION ALL
+			  SELECT A.INPUT_AMT AS GOODS_AMT 
+			  FROM TB_VACCNT_TRX  A, TB_MBS B , TB_MSTR_TRX C
+			  WHERE B.MID = C.MID 
+			  AND REFUND_FLG='3' 
+			  AND A.REFUND_DT = #{stmtDt}
+		 ) A
+	 ]]>
+	 </select>
+	 <!--  송금보고서 확정 - 송금 내역 전송 파일  -->
+	 <select id="selectSendList" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 	SELECT ROWNUM AS RNUM, A.STMT_DT, B.CO_NM, B.REP_NM, A.ID, A.DPST_AMT
+	      , (A.APP_AMT+CC_AMT) AS PAY_AMT
+	      , A.RESR_AMT
+	      , A.RESR_CC_AMT
+	      , A.EXTRA_AMT
+	      , A.FEE
+	      , A.VAT
+	      , B.ACCNT_NM
+	      , (SELECT DESC1 FROM TB_CODE WHERE COL_NM='BANK_CD' AND CODE1=B.BANK_CD) AS BANK_NM
+	      , B.ACCNT_NO, B.ACCNT_NO_ENC
+	    FROM TB_STMT A, 
+	      (SELECT MID ID, CO_NM CO_NM, ACCNT_NM, BANK_CD, ACCNT_NO, ACCNT_NO_ENC, OM_SETT_CL, C.REP_NM FROM TB_MBS A, TB_CO C WHERE A.CO_NO = C.CO_NO 
+	       UNION ALL
+	       SELECT GID ID, G_NM CO_NM, '0' ACCNT_NM , BANK_CD, '0' ACCNT_NO, '0' ACCNT_NO_ENC, '0' OM_SETT_CL, REP_NM FROM TB_GRP
+	       UNION ALL
+	       SELECT VID ID, VGRP_NM AS CO_NM, VGRP_NM AS ACCNT_NM, BANK_CD, ACCNT_NO, '0' ACCNT_NO_ENC, '0' OM_SETT_CL, REP_NM FROM TB_VGRP
+	      ) B 
+	    WHERE  B.ID = A.ID      
+	    AND A.STMT_DT = #{stmtDt}
+		 	
+	 ]]>
+	 </select>
+	 <!--  PG 정산 상세 내역 -->
+	 <select id="selectPgStmtDetail" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 		SELECT 
+	 			ROWNUM AS RNUM, CASE WHEN A.PM_CD = '03' THEN A.INPUT_DT ELSE A.APP_DT END APP_DT,
+			    A.CC_DT, C.CO_NM, A.MID, A.TID, A.GOODS_AMT, A.ORD_NM, A.ORD_NM_ENC, FN_NM_CODE1('PM_CD', A.PM_CD) AS PM_NM,
+			   CASE WHEN A.PM_CD = '01' THEN (SELECT QUOTA_MON FROM TB_CARD_TRX WHERE TID = A.TID) ELSE '' END QUOTA_MON, 
+			    CASE WHEN A.PM_CD = '01' THEN FN_NM_CODE1('CARD_CD', A.ORD_NO) WHEN A.PM_CD = '02'  THEN  FN_NM_CODE1('BANK_CD', A.BANK_CD)
+			   WHEN A.PM_CD = '03'  THEN  FN_NM_CODE1('BANK_CD', A.VACCT_CD) WHEN A.PM_CD = '05' THEN  A.CP_CO ELSE '' END AS CP_NM,   
+			   FN_NM_CODE1('SPM_CD', A.SVC_PRDT_NM) AS SPM_NM, A.TRX_CD, A.STATE_NM,
+			   A.MBS_USR_ID, A.ACQU_DT, A.DEPOSIT_DT, A.MBS_NO, A.ORG_FEE, A.ORG_AMT, A.STMT_DT, A.FEE, A.VAT, A.DPST_AMT,
+			   CASE WHEN (SELECT VAT_MARK_FLG FROM TB_MBS WHERE MID = A.MID) ='0' THEN A.DPST_AMT ELSE (A.FEE+A.VAT+A.DPST_AMT) END DEPOSIT_TOT_AMT 
+		    FROM 
+		    (
+			     SELECT A.MID, A.PM_CD, A.SPM_CD, A.APP_DT, B.APP_TM, A.CC_DT, A.TID, A.GOODS_AMT, A.ORD_NM, A.ORD_NM_ENC, 
+			      A.SPM_CD AS SVC_PRDT_NM, '승인' AS STATE_NM, A.TRX_CD,  B.MBS_USR_ID, A.ORD_NO, D.BANK_CD, E.BANK_CD AS VACCT_CD, F.CP_CO, E.INPUT_DT, E.INPUT_TM, A.APP_ACQ_DT AS ACQU_DT,
+			      CASE WHEN A.PM_CD = '01' THEN FN_DEPOSIT_DAY(A.MBS_NO, A.APP_ACQ_DT) 
+			      WHEN A.PM_CD = '02' THEN FN_ETC_DEPOSIT_DAY('KFTC', A.MBS_NO, D.INPUT_DT)
+			      WHEN A.PM_CD = '03' THEN FN_ETC_DEPOSIT_DAY(G.CP_CD, E.BANK_CD, E.INPUT_DT)
+			      WHEN A.PM_CD = '05' THEN F.RECEIPT_DT
+			      ELSE '' END DEPOSIT_DT
+			      , A.MBS_NO, A.ORG_FEE, (A.GOODS_AMT-A.ORG_FEE) AS ORG_AMT, A.APP_STMT_DT AS STMT_DT, A.FEE, A.VAT, A.DPST_AMT
+			     FROM TB_TRX_HIST A 
+			     LEFT OUTER JOIN TB_MSTR_TRX B ON A.TID = B.TID
+			     LEFT OUTER JOIN TB_CARD_TRX C ON A.TID = C.TID
+			     LEFT OUTER JOIN TB_ACCNT_TRX D ON A.TID = D.TID
+			     LEFT OUTER JOIN TB_VACCNT_TRX E ON A.TID = E.TID
+          		 LEFT OUTER JOIN TB_HP_TRX F ON A.TID = F.TID
+           		 LEFT OUTER JOIN TB_VACCNT_POOL G ON E.VACCNT_NO = G.ACCNT_NO AND E.BANK_CD = G.BANK_CD
+			     WHERE A.APP_STMT_DT = #{stmtDt}
+			     AND A.TRX_HIST_CD NOT IN ('1', '3')
+			     
+			     UNION
+			     
+			     SELECT A.MID, A.PM_CD, A.SPM_CD, A.APP_DT, B.APP_TM, A.CC_DT, A.TID, A.GOODS_AMT, A.ORD_NM, A.ORD_NM_ENC, 
+			     A.SPM_CD AS SVC_PRDT_NM, '취소' AS STATE_NM, A.TRX_CD, B.MBS_USR_ID, A.ORD_NO, D.BANK_CD, E.BANK_CD AS VACCT_CD, F.CP_CO, E.INPUT_DT, E.INPUT_TM, A.CC_ACQ_DT AS ACQU_DT,
+			     CASE WHEN A.PM_CD = '01' THEN FN_DEPOSIT_DAY(A.MBS_NO, A.CC_ACQ_DT) 
+			     WHEN A.PM_CD = '02' THEN FN_ETC_DEPOSIT_DAY('KFTC', A.MBS_NO, A.CC_DT) 
+			     ELSE '' END DEPOSIT_DT,
+			     A.MBS_NO, -1*A.ORG_FEE, -1*(A.GOODS_AMT-A.ORG_FEE) AS ORG_AMT, A.CC_STMT_DT AS STMT_DT, -1*A.FEE, -1*A.VAT, -1*A.DPST_AMT
+			     FROM TB_TRX_HIST A 
+			     LEFT OUTER JOIN TB_MSTR_TRX B ON A.TID = B.TID
+			     LEFT OUTER JOIN TB_CARD_TRX C ON A.TID = C.TID
+			     LEFT OUTER JOIN TB_ACCNT_TRX D ON A.TID = D.TID
+			     LEFT OUTER JOIN TB_VACCNT_TRX E ON A.TID = E.TID
+           		 LEFT OUTER JOIN TB_HP_TRX F ON A.TID = F.TID
+			     WHERE A.CC_STMT_DT = #{stmtDt}
+			     AND A.TRX_HIST_CD = '2'
+		    ) A , TB_CODE CD , TB_MBS B, TB_CO C
+		   WHERE A.MID = B.MID
+		   AND B.CO_NO = C.CO_NO
+		   -- AND CD.CODE3 = '00'
+		   AND A.PM_CD = CD.CODE1 
+		   AND CD.COL_NM = 'PM_CD'
+		   ORDER BY A.APP_DT, A.APP_TM
+	 ]]>
+	 </select>
+	 <!-- 송금보고서 확정 - 개인고객 직접 환불 내역 -->
+	 <select id="selectTransRefund" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 	SELECT 
+	 		ROWNUM AS RNUM, '계좌이체' TRANS_TYPE, A.REFUND_DT, C.CO_NM, A.MID, A.TID, D.GOODS_AMT AS INPUT_AMT, A.ACCNT_NM AS ORD_NM, A.REFUND_ACCNT_NM REFUND_ACCNT_NM
+		  	, (SELECT DESC1 FROM TB_CODE WHERE COL_NM='BANK_CD' AND CODE1=A.REFUND_ACCNT_CD) AS REFUND_BANK_CD
+		  	,  A.REFUND_ACCNT_NO REFUND_ACCNT_NO
+		 FROM TB_ACCNT_TRX A, TB_MBS B , TB_CO C , TB_MSTR_TRX D
+		 WHERE B.MID = A.MID 
+		 AND B.CO_NO = C.CO_NO
+		 AND A.TID = D.TID
+		 AND REFUND_FLG='3' 
+		 AND A.REFUND_DT = #{stmtDt}
+		 
+		 UNION ALL
+		 
+		 SELECT 
+		 	ROWNUM AS RNUM, '가상계좌' TRANS_TYPE, A.REFUND_DT, C.CO_NM, D.MID, A.TID, A.INPUT_AMT, A.INPUT_ACCT_NM AS ORD_NM, A.REFUND_ACCT_NM REFUND_ACCT_NM
+		 	, (SELECT DESC1 FROM TB_CODE WHERE COL_NM='BANK_CD' AND CODE1=A.REFUND_ACCNT_CD) AS REFUND_BANK_CD
+		 	, A.REFUND_ACCT_NO REFUND_ACCNT_NO
+		 FROM TB_VACCNT_TRX A, TB_MBS B , TB_CO C, TB_MSTR_TRX D
+		 WHERE B.MID = D.MID 
+		 AND B.CO_NO = C.CO_NO
+		 AND A.TID = D.TID
+		 AND REFUND_FLG='3' 
+		 AND A.REFUND_DT = #{stmtDt}
+	 ]]>
+	 </select>
+	 <!-- 미지급금금액  등록 -->
+	 <insert id="insertUnStmtReg" parameterType="hashmap">
+	 <![CDATA[
+	 	INSERT INTO TB_STMT_NOPAY
+      	(
+			ORG_STMT_DT, MID, NOPAY_AMT, NOPAY_REASON, RE_STMT_DT, ST_TYPE, REG_DT, WORKER, REG_DNT
+	    )
+	    VALUES
+	    (
+	    	#{orgStmtDt}, #{mid}, ${noPayAmt}, #{reason}, DATE_FORMAT(NOW(), "%Y%m%d"), '0', DATE_FORMAT(NOW(), "%Y%m%d"), #{worker}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	    )
+	 ]]>
+	 </insert>
+	 <!-- 미지급금금액  수정 -->
+	 <update id="updateUnStmtReg" parameterType="hashmap">
+	 <![CDATA[
+	 	    UPDATE 
+	 	    	TB_STMT_NOPAY 
+		    SET 
+		      RE_STMT_DT = #{reStmtDt}
+		      , ST_TYPE ='1'
+		      , WORKER = #{worker}
+		      , UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		    WHERE 
+		      ORG_STMT_DT = #{orgStmtDt}
+		    AND MID = #{orgMid}
+			 	
+	 ]]>
+	 </update>
+	 <!-- 미지급금 정산 조회 -->
+	 <select id="selectUnStmtRegList" parameterType="hashmap" resultType="hashmap">
+	 <![CDATA[
+	 	SELECT * FROM 
+	 	(
+	 	  SELECT  
+		 	ROWNUM AS RNUM, ORG_STMT_DT, MID AS MID, 
+			(SELECT C.CO_NM FROM TB_MBS S, TB_CO C WHERE S.MID = A.MID AND S.CO_NO = C.CO_NO) CO_NM,
+			A.NOPAY_AMT, A.NOPAY_REASON, RE_STMT_DT, A.ST_TYPE, A.REG_DT,
+		 	(SELECT S.EMP_NM FROM TB_EMP S WHERE S.EMP_NO = A.WORKER) WORKER  
+		 FROM TB_STMT_NOPAY A
+		 WHERE A.ORG_STMT_DT BETWEEN #{frDt} AND #{toDt}
+		 ]]>
+		 <if test="status!='ALL'">
+		 <![CDATA[
+		 	AND COALESCE(A.ST_TYPE, '0') = #{status}
+		 ]]>
+		 </if>
+		 <if test="mid!='ALL'">
+		 <![CDATA[
+		 	AND A.MID = #{id}
+		 ]]>
+		 </if>
+		 <![CDATA[
+		) TBL	 	
+		WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	 ]]>
+	 </select>
+	 <select id="selectUnStmtRegListTotal" parameterType="hashmap" resultType="Integer">
+	 <![CDATA[
+	 	 SELECT  
+		 	COUNT(1)  
+		 FROM TB_STMT_NOPAY A
+		 WHERE A.ORG_STMT_DT BETWEEN #{frDt} AND #{toDt}
+		 ]]>
+		 <if test="status!='ALL'">
+		 <![CDATA[
+		 	AND COALESCE(A.ST_TYPE, '0') = #{status}
+		 ]]>
+		 </if>
+		 <if test="mid!='ALL'">
+		 <![CDATA[
+		 	AND A.MID = #{id}
+		 ]]>
+		 </if>
+	 </select>
+</mapper>

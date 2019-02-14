@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="inquiryMgmt" >
+	<select id="selectInquiryMgmtList" parameterType="hashmap" resultType="hashmap">
+		SELECT *
+		FROM
+			(SELECT
+				SEQ
+				, ROW_NUMBER() OVER(ORDER BY SEQ DESC) AS RNUM
+				, QNA_TYPE
+				, COALESCE(REQ_SEQ, 0) AS REQ_SEQ
+				, MID
+				, CO_NM
+				-- 경로
+				, CASE QNA_CH_CD WHEN '1' THEN 'DDLB_0019'
+								 WHEN '2' THEN 'DDLB_0020'
+								 WHEN '3' THEN 'DDLB_0021'
+								 END QNA_CH_CD
+				-- 문의유형
+			    , CASE QNA_REQ_CD WHEN '1' THEN 'IMS_BM_IM_0001'
+								  WHEN '2' THEN 'IMS_BM_IM_0002'
+								  WHEN '3' THEN 'IMS_BM_IM_0003'
+								  WHEN '4' THEN 'IMS_BM_IM_0004'
+								  WHEN '5' THEN 'IMS_BM_IM_0005'
+								  END QNA_REQ_CD	
+				, HEAD
+				, BODY
+				, REQ_NM
+				, REQ_TEL
+				, REQ_EMAIL
+				, COALESCE(PASSWORD, ' ') AS PASSWORD
+				-- 답변유형
+				, CASE QNA_ST_TYPE WHEN '00' THEN 'IMS_BM_IM_0069'
+								   WHEN '01' THEN 'IMS_BM_IM_0070'
+								   WHEN '02' THEN 'IMS_BM_IM_0009'
+								   WHEN '03' THEN 'IMS_BM_IM_0010'
+								   END QNA_ST_TYPE
+				, TO_CHAR(TO_DATE(REQ_DT, 'YYYYMMDD'), 'DD-MM-YYYY') AS REQ_DT
+				, REQ_TM
+				, USRID
+				, COALESCE(RES_DT, ' ') AS RES_DT
+				, COALESCE(RES_TM, ' ') AS RES_TM
+				, COALESCE(RES_DT, ' ') || COALESCE(RES_TM, ' ') AS PROC_DTM
+				, COALESCE(RES_EMP_NO, ' ') AS RES_EMP_NO
+				, COALESCE(WORKER, ' ') AS WORKER
+				, REG_DNT
+				, UPD_DNT
+			FROM
+				TB_QNA
+			WHERE 
+				1=1
+			<if test="CO_NM != null and CO_NM != ''">
+				AND CO_NM LIKE '%' || #{CO_NM} || '%'
+			</if>
+			<if test="QNA_REQ_CD != null and QNA_REQ_CD != '' and QNA_REQ_CD != 'ALL'">
+	        	AND QNA_CH_CD = #{QNA_REQ_CD}
+			</if>
+			<if test="askStatus != null and askStatus != '' and askStatus != 'ALL'">
+	            AND QNA_ST_TYPE = #{askStatus}
+			</if>
+			<if test="REG_FROM_DT != null and REG_FROM_DT != '' and REG_TO_DT != null and REG_TO_DT != ''">
+	            AND REQ_DT BETWEEN #{REG_FROM_DT} AND #{REG_TO_DT}
+	        </if>
+        )TBL
+        WHERE RNUM BETWEEN #{intPageStart} AND #{intPageEnd}
+	</select>
+	
+	<select id="selectInquiryMgmtListTotal" parameterType="hashmap" resultType="Integer">
+		SELECT COUNT(*)
+		FROM TB_QNA
+		WHERE 1=1
+		<if test="CO_NM != null and CO_NM != ''">
+			AND CO_NM = #{CO_NM}
+		</if>
+		<if test="QNA_REQ_CD != null and QNA_REQ_CD != '' and QNA_REQ_CD != 'ALL'">
+        	AND QNA_CH_CD = #{QNA_REQ_CD}
+		</if>
+		<if test="askStatus != null and askStatus != '' and askStatus != 'ALL'">
+            AND QNA_ST_TYPE = #{askStatus}
+		</if>
+		<if test="REG_FROM_DT != null and REG_FROM_DT != '' and REG_TO_DT != null and REG_TO_DT != ''">
+            AND REQ_DT BETWEEN #{REG_FROM_DT} AND #{REG_TO_DT}
+        </if>
+	</select>
+	
+	<select id="selectInquiryMgmt" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT 
+            	TBBQ.SEQ
+                , TBBQ.MID
+                  -- 경로(게시위치 : BOARD_CHANNEL)
+				, CASE TBBQ.QNA_CH_CD WHEN '1' THEN 'DDLB_0019'
+								 WHEN '2' THEN 'DDLB_0020'
+								 WHEN '3' THEN 'DDLB_0021'
+								 END QNA_CH_CD
+				-- 문의유형(BOARD_TYPE)
+			    , CASE TBBQ.QNA_REQ_CD WHEN '1' THEN 'IMS_BM_IM_0001'
+								  WHEN '2' THEN 'IMS_BM_IM_0002'
+								  WHEN '3' THEN 'IMS_BM_IM_0003'
+								  WHEN '4' THEN 'IMS_BM_IM_0004'
+								  WHEN '5' THEN 'IMS_BM_IM_0005'
+								  END QNA_REQ_CD
+                , TBBQ.CO_NM
+                , TBBQ.HEAD
+                , TBBQ.BODY
+                , TBBQ.ANSWER_MEMO
+                , REQ_DT
+                -- 답변유형
+				, TBBQ.QNA_ST_TYPE AS STATUS
+                , TBBQ.USRID                   
+                , COALESCE(TBBQ.WORKER, ' ') AS WORKER
+            FROM  
+            	TB_QNA TBBQ 
+            LEFT OUTER JOIN 
+            	TB_MBS TBBMM 
+            ON 
+            	TBBQ.MID = TBBMM.MID 
+            WHERE 
+            	TBBQ.SEQ = #{SEQ}
+        ]]>
+    </select>
+    
+    <update id="updateInquiryMgmt" parameterType="hashmap">
+        <![CDATA[
+            UPDATE TB_QNA 
+            SET ANSWER_MEMO  = #{ANSWER_MEMO}
+               ,QNA_ST_TYPE  = #{STATUS}
+               ,RES_DT       = DATE_FORMAT(NOW(), "%Y%m%d")
+               ,RES_TM       = DATE_FORMAT(NOW(), "%H%i%s")
+               ,WORKER       = #{WORKER}
+            WHERE SEQ = #{SEQ}
+        ]]>
+    </update>
+</mapper>

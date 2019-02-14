@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pwdDel" >
+	<select id="selectPWDList" parameterType="hashmap" resultType="hashmap" >
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT B.CO_NO CO_NO, A.USRID U_ID, ROWNUM AS RNUM
+		]]>
+		<choose>
+			<when test="searchFlg==2"> /*  vid  */  
+				, B.VGRP_NM CO_NM, B.VID VID
+			</when>
+			<otherwise>
+				, C.CO_NM CO_NM, B.MID MID
+			</otherwise>
+		</choose>
+		<![CDATA[
+			FROM TB_USR A
+		]]>
+		<choose>
+			<when test="searchFlg==2"> /*  vid  */
+				, TB_VGRP B
+			</when>
+			<otherwise>
+				, TB_MBS B, TB_CO C
+			</otherwise>
+		</choose>
+		<![CDATA[
+			WHERE
+		]]>
+		<choose>
+			<when test="searchFlg==2"> /*  vid  */
+				B.VID = A.VID
+			</when>
+			<otherwise>
+				B.MID = A.MID
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="searchFlg==4"> /*  CO_NO  */
+				AND B.CO_NO
+			</when>
+			<when test="searchFlg==3"> /*  CO_NM  */
+				AND C.CO_NM
+			</when>
+			<when test="searchFlg==1"> /*  MID    */
+				AND A.MID
+			</when>
+			<when test="searchFlg==2"> /*  VID    */
+				AND A.VID
+			</when>
+			<otherwise></otherwise>
+		</choose>
+		<![CDATA[
+			LIKE '%'||#{txtSearch}||'%'
+		]]>
+		<if test="searchFlg==1">
+		<![CDATA[
+			AND A.MID LIKE '%'||#{txtSearch}||'%'	
+		]]>
+		</if>
+		<![CDATA[
+			ORDER BY RNUM ASC
+		) TBL
+		WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectPWDListTotal" parameterType="hashmap" resultType="integer">
+	<![CDATA[
+		SELECT COUNT(1)
+		FROM TB_USR A
+		]]>
+		<choose>
+			<when test="searchFlg==2"> /*  vid  */
+				, TB_VGRP B
+			</when>
+			<otherwise>
+				, TB_MBS B, TB_CO C
+			</otherwise>
+		</choose>
+		<![CDATA[
+			WHERE
+		]]>
+		<choose>
+			<when test="searchFlg==2"> /*  vid  */
+				B.VID = A.VID
+			</when>
+			<otherwise>
+				B.MID = A.MID
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="searchFlg==4"> /*  CO_NO  */
+				AND B.CO_NO
+			</when>
+			<when test="searchFlg==3"> /*  CO_NM  */
+				AND C.CO_NM
+			</when>
+			<when test="searchFlg==1"> /*  MID    */
+				AND A.MID
+			</when>
+			<when test="searchFlg==2"> /*  VID    */
+				AND A.VID
+			</when>
+			<otherwise></otherwise>
+		</choose>
+		<![CDATA[
+			LIKE '%'||#{txtSearch}||'%'
+		]]>
+		<if test="searchFlg==1">
+		<![CDATA[
+			AND A.MID LIKE '%'||#{txtSearch}||'%'	
+		]]>
+		</if>
+	</select>
+	<update id="updatePwdInit" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_USR 	
+		SET
+			PW =#{pw}
+			, UNSC_CNT=0
+			, CHG_DT=DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+			, REG_DNT =DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE  
+			USRID =#{uid}		
+	]]>
+	</update>
+	<update id="updateChangeCcPw" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_MBS
+	    SET CAN_PW_HIS2 = CAN_PW_HIS1,
+	        CAN_PW_HIS1 = CAN_PW,
+	        CAN_PW = null,
+	        CAN_PW_ID = #{worker},
+	        CAN_CHG_DT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	    WHERE MID = #{mid}	
+		]]>
+	</update>
+</mapper>
+    

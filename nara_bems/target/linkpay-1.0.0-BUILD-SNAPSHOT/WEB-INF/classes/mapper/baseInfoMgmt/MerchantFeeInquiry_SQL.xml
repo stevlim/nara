@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="merchantFeeInquiry">
+	<select id="selectMerFeeList" parameterType="hashmap" resultType="hashmap">  
+		<![CDATA[
+			SELECT * FROM 
+			(
+				SELECT C.CO_NO, C.CO_NM, B.MID, A.PM_CD, A.SPM_CD, COALESCE((SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0022' AND CODE1=A.PM_CD), A.PM_CD) SVC_NM,  A.FR_DT,
+					(SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0023' AND CODE1=A.SPM_CD) SVC_PRDT_NM, A.FEE_TYPE_CD, BEF.FEE_TYPE_CD AS BEFORE_FEE_TYPE, COALESCE(BEF.AVG_FEE, '0') BEFORE_AVG_FEE,  
+					CASE WHEN A.FEE_TYPE_CD = 3 THEN TRUNC(A.FEE,0) ELSE TRUNC(A.FEE,2) END AFTER_AVG_FEE, A.USE_ST_TYPE, A.FR_AMT, A.CP_CD, SUBSTR(A.REG_DNT,'0','8') REG_DT,  
+					CASE WHEN A.USE_ST_TYPE = '0' AND A.FR_DT < DATE_FORMAT(NOW(), "%Y%m%d") THEN '승인기간만료'   
+					WHEN A.USE_ST_TYPE = '0' AND A.FR_DT >= DATE_FORMAT(NOW(), "%Y%m%d") THEN  '승인대기중'   
+					WHEN A.USE_ST_TYPE = '1' THEN '승인완료'     WHEN A.USE_ST_TYPE = '2' THEN '반려'     ELSE '' END AS STATUS_NM,
+					ROWNUM AS RNUM
+				FROM TB_STMT_FEE A 
+					LEFT OUTER JOIN TB_CODE CD ON A.CP_CD = CD.CODE1 AND CD.CODE_CL = '0002' AND CD.USE_FLG = '0' 
+					LEFT OUTER JOIN TB_MBS B ON A.ID = B.MID AND B.MID = #{MID}   
+					LEFT OUTER JOIN TB_GRP G ON B.GID = G.GID
+					LEFT OUTER JOIN TB_CO C ON G.CO_NO = C.CO_NO
+					LEFT OUTER JOIN   (   
+						SELECT A.ID, A.PM_CD, A.SPM_CD, A.FEE_TYPE_CD, A.CP_CD,   
+						CASE WHEN A.FEE_TYPE_CD = 3 THEN TRUNC(A.FEE,0) ELSE TRUNC(A.FEE,2) END AVG_FEE, A.FR_AMT 
+						FROM (    
+						SELECT ID, PM_CD, SPM_CD, CP_CD, FEE_TYPE_CD, FEE, FR_AMT
+						FROM TB_STMT_FEE   
+						WHERE ID_CD = '1'     
+						AND USE_ST_TYPE = '1'   
+						AND DATE_FORMAT(NOW(), "%Y%m%d") BETWEEN FR_DT AND TO_DT 
+						AND ID = #{MID}
+						) A 
+					) BEF 
+					ON A.ID = BEF.ID   
+					AND A.PM_CD = BEF.PM_CD  
+					AND A.SPM_CD = BEF.SPM_CD    
+					AND A.FR_AMT = BEF.FR_AMT   
+					AND A.CP_CD = BEF.CP_CD  
+					AND CASE WHEN A.PM_CD = '02' THEN A.FEE_TYPE_CD ELSE '1' END = CASE WHEN A.PM_CD = '02' THEN BEF.FEE_TYPE_CD ELSE '1' END   
+				WHERE A.ID_CD = '1'  
+				AND A.ID = #{MID} 
+				]]> 
+				<if test="PAY_CD != 'ALL'">
+				<![CDATA[
+					AND A.SPM_CD = #{PAY_CD}   
+				]]>
+				</if>
+				<![CDATA[
+					ORDER BY FR_DT DESC
+				) TBL
+				WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+			]]>
+	</select>
+	<select id="selectMerFeeListTotal" parameterType="hashmap" resultType="Integer">  
+		<![CDATA[
+			SELECT 
+				COUNT(1)
+			FROM TB_STMT_FEE A 
+				LEFT OUTER JOIN TB_CODE CD ON A.CP_CD = CD.CODE1 AND CD.CODE_CL = '0002' AND CD.USE_FLG = '0' 
+				LEFT OUTER JOIN TB_MBS B ON A.ID = B.MID AND B.MID = #{MID}   
+				LEFT OUTER JOIN TB_GRP G ON B.GID = G.GID
+				LEFT OUTER JOIN TB_CO C ON G.CO_NO = C.CO_NO
+				LEFT OUTER JOIN   (   
+					SELECT A.ID, A.PM_CD, A.SPM_CD, A.FEE_TYPE_CD, A.CP_CD,   
+					CASE WHEN A.FEE_TYPE_CD = 3 THEN TRUNC(A.FEE,0) ELSE TRUNC(A.FEE,2) END AVG_FEE, A.FR_AMT 
+					FROM (    
+					SELECT ID, PM_CD, SPM_CD, CP_CD, FEE_TYPE_CD, FEE, FR_AMT
+					FROM TB_STMT_FEE   
+					WHERE ID_CD = '1'     
+					AND USE_ST_TYPE = '1'   
+					AND DATE_FORMAT(NOW(), "%Y%m%d") BETWEEN FR_DT AND TO_DT 
+					AND ID = #{MID}
+					) A 
+				) BEF 
+				ON A.ID = BEF.ID   
+				AND A.PM_CD = BEF.PM_CD  
+				AND A.SPM_CD = BEF.SPM_CD    
+				AND A.FR_AMT = BEF.FR_AMT   
+				AND A.CP_CD = BEF.CP_CD  
+				AND CASE WHEN A.PM_CD = '02' THEN A.FEE_TYPE_CD ELSE '1' END = CASE WHEN A.PM_CD = '02' THEN BEF.FEE_TYPE_CD ELSE '1' END   
+				WHERE A.ID_CD = '1'  
+				AND A.ID = #{MID} 
+			]]> 
+			<if test="PAY_CD != 'ALL'">
+			<![CDATA[
+				AND A.SPM_CD = #{PAY_CD}   
+			]]>
+			</if>
+	</select>
+</mapper>

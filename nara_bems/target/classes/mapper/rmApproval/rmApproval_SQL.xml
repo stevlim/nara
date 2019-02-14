@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rmApproval">
+	<select id="getContLimitList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT * 
+            FROM (      
+			SELECT ROWNUM AS RNUM,
+				   A.SEQ, 
+				   FR_DT, 
+				   TO_DT, 
+				   REG_DATE, 
+				   WORKER, 
+				   INSTMN_DT, 
+				   LMT_CD_NM, 
+				   LMT_CD,
+			       LMT_ID, 
+			       LMT_TYPE_CD_NM, 
+			       LMT_TYPE_CD, 
+			       CATE1, 
+			       CATE2, 
+			       BLOCK_NM, 
+			       BLOCK_FLG,
+			       LMT_CD_DESC, 
+			       PM_NM, 
+			       PM_CD, 
+			       SPM_NM, 
+			       SPM_CD, 
+			       TRX_ST_NM, 
+			       TRX_ST_CD,
+			       AMT_TYPE_NM, 
+			       AMT_TYPE, 
+			       AMT_LMT, 
+			       CNT_TYPE_NM, 
+			       CNT_TYPE,
+			       CNT_LMT, 
+			       NOTI_NM, 
+			       NOTI_FLG, 
+			       NOTI_PCT, 
+			       NOTI_TRG_TYPE_NM, 
+			       NOTI_TRG_TYPE,
+			       MEMO, 
+			       EMAIL_LIST, 
+			       SMS_LIST,
+			       CASE
+			          WHEN DATE_FORMAT(NOW(), "%Y%m%d") > TO_DT
+			             THEN 'N'
+			          ELSE 'Y'
+			       END MODIFY_YN
+			  FROM (SELECT   LM.SEQ, LM.FR_DT, LM.TO_DT, LM.REG_DATE, LM.WORKER,
+			                 LM.INSTMN_DT,
+			                 FN_NM_CODE1 ('LMT_TYPE_CD', LM.LMT_CD) LMT_CD_NM, LM.LMT_CD,
+			                 LM.LMT_ID,
+			                 FN_CARD_NM(LMT_TYPE_CD, NULL, NULL, NULL) LMT_TYPE_CD_NM,
+			                 LM.LMT_TYPE_CD,
+			                 CASE
+			                    WHEN LM.LMT_CD = '5'
+			                       THEN FN_NM_CODE1 ('bs_kind',
+			                                         SUBSTR (LMT_ID, 1, 4)
+			                                        )
+			                    ELSE ''
+			                 END CATE1,
+			                 CASE
+			                    WHEN LM.LMT_CD = '5'
+			                       THEN FN_NM_CODE2 ('bs_kind',
+			                                         SUBSTR (LMT_ID, 1, 4),
+			                                         SUBSTR (LMT_ID, 6, 4)
+			                                        )
+			                    ELSE ''
+			                 END CATE2,
+			                 CASE
+			                    WHEN LM.BLOCK_FLG = '0'
+			                       THEN '미차단'
+			                    ELSE '차단'
+			                 END BLOCK_NM, LM.BLOCK_FLG,
+			                 CASE
+			                    WHEN LM.LMT_TYPE_CD = '0001'
+			                     OR LM.LMT_TYPE_CD = '0021'
+			                       THEN FN_NM_CODE1 ('card_cd', LM.LMT_CD)
+			                    WHEN LM.LMT_TYPE_CD = '0002'
+			                       THEN FN_NM_CODE1 ('bank_cd', LM.LMT_CD)
+			                    WHEN LM.LMT_TYPE_CD = '0003'
+			                       THEN FN_NM_CODE1 ('mobile_co', LM.LMT_CD)
+			                    WHEN LM.LMT_TYPE_CD = '9999'
+			                       THEN '모두'
+			                    ELSE LM.LMT_CD
+			                 END LMT_CD_DESC,
+			                 CASE
+			                    WHEN LM.PM_CD = '99'
+			                       THEN '모두'
+			                    ELSE FN_NM_CODE1 ('PM_CD', LM.PM_CD)
+			                 END PM_NM,
+			                 LM.PM_CD,
+			                 CASE
+			                    WHEN LM.SPM_CD = '99'
+			                       THEN '모두'
+			                    ELSE FN_NM_CODE1 ('SPM_CD', LM.SPM_CD)
+			                 END SPM_NM,
+			                 LM.SPM_CD,
+			                 CASE
+			                    WHEN LM.TRX_ST_CD = '0'
+			                       THEN '승인'
+			                    WHEN LM.TRX_ST_CD = '1'
+			                       THEN '취소'
+			                    ELSE '모두'
+			                 END TRX_ST_NM,
+			                 LM.TRX_ST_CD,
+			                 CASE
+			                    WHEN LM.AMT_TYPE = '1'
+			                       THEN '한달'
+			                    WHEN LM.AMT_TYPE = '2'
+			                       THEN '1일'
+			                    WHEN LM.AMT_TYPE = '3'
+			                       THEN '1회'
+			                    ELSE '미적용'
+			                 END AMT_TYPE_NM,
+			                 LM.AMT_TYPE, LM.AMT_LMT,
+			                 CASE
+			                    WHEN LM.CNT_TYPE = '1'
+			                       THEN '한달'
+			                    WHEN LM.CNT_TYPE = '2'
+			                       THEN '1일'
+			                    ELSE '미적용'
+			                 END CNT_TYPE_NM,
+			                 LM.CNT_TYPE, LM.CNT_LMT,
+			                 CASE
+			                    WHEN LM.NOTI_FLG = '0'
+			                       THEN '미발송'
+			                    ELSE '발송'
+			                 END NOTI_NM, LM.NOTI_FLG, LM.NOTI_PCT,
+			                 CASE
+			                    WHEN LM.NOTI_TRG_TYPE = '0'
+			                       THEN '금액'
+			                    WHEN LM.NOTI_TRG_TYPE = '1'
+			                       THEN '횟수'
+			                    ELSE '전체'
+			                 END NOTI_TRG_TYPE_NM,
+			                 LM.NOTI_TRG_TYPE, LM.MEMO, LNC.EMAIL_LIST, LNC.SMS_LIST
+			            FROM TB_LMT LM, TB_LMT_NOTI_CONF LNC
+			           WHERE 1 = 1 AND LM.SEQ = LNC.LMT_SEQ
+		]]>
+		<!-- 한도등록,한도수정,안내문조회 -->
+		<if test='searchFlg != "ALL"'>
+			<![CDATA[
+						AND LM.ID_CD = #{searchFlg}
+			]]>
+			<if test='search != null and search != ""'>
+			<![CDATA[
+						AND LM.LMT_ID = #{search}
+			]]>
+			</if>
+		</if>	
+		<if test='statusCd != null and statusCd != "" and statusCd != "ALL"'>
+			<![CDATA[
+						AND LM.TRX_ST_CD = #{statusCd}
+			]]>
+		</if>
+		<if test='tranCutFlg != null and tranCutFlg != "" and tranCutFlg != "ALL"'>
+			<![CDATA[
+						AND LM.BLOCK_FLG = #{tranCutFlg}
+			]]>
+		</if>
+		<choose>
+			<when test='dateChk == "1"'>
+				<![CDATA[
+						AND #{frDt} BETWEEN SUBSTR(LM.FR_DT, 1, 8) and SUBSTR(LM.TO_DT, 1, 8)
+				]]>
+			</when>
+			<when test='dateChk == "2"'>
+				<![CDATA[
+						AND LM.REG_DATE BETWEEN #{frDt} and #{toDt}
+				]]>
+			</when>
+		</choose>
+		<if test='payType != null and payType != "" and payType != "ALL"'>
+			<![CDATA[
+						AND LM.PM_CD = #{payType}
+			]]>
+		</if>
+		<if test='exhRate != null and exhRate != "" and exhRate != "ALL"'>
+			<![CDATA[
+						AND LM.NOTI_TRG_TYPE = #{exhRate}
+			]]>
+		</if>
+		<if test='rate != null and rate != "" and rate != "ALL"'>
+			<![CDATA[
+						AND LM.NOTI_PCT = #{rate}
+			]]>
+		</if>
+		<![CDATA[
+		  ORDER BY LM.SEQ DESC) A
+			 WHERE 1 = 1
+		]]>
+		<![CDATA[
+            ) TBL
+            ]]>
+		<if test="intPageStart != null and intPageStart != ''">
+           <![CDATA[
+               WHERE RNUM BETWEEN ${intPageStart} AND ${intPageEnd}
+           ]]>
+       </if>
+       <if test="intPageStart == null or intPageStart == ''">
+           <![CDATA[
+               WHERE RNUM BETWEEN 1 AND 50000
+           ]]>
+       </if>
+	</select>
+	
+	<select id="getContLimitDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT A.SEQ, 
+				   FR_DT, 
+				   TO_DT, 
+				   REG_DATE, 
+				   WORKER, 
+				   INSTMN_DT, 
+				   LMT_CD_NM, 
+				   LMT_CD,
+			       LMT_ID, 
+			       LMT_TYPE_CD_NM, 
+			       LMT_TYPE_CD, 
+			       CATE1, 
+			       CATE2, 
+			       BLOCK_NM, 
+			       BLOCK_FLG,
+			       LMT_CD_DESC, 
+			       PM_NM, 
+			       PM_CD, 
+			       SPM_NM, 
+			       SPM_CD, 
+			       TRX_ST_NM, 
+			       TRX_ST_CD,
+			       AMT_TYPE_NM, 
+			       AMT_TYPE, 
+			       AMT_LMT, 
+			       CNT_TYPE_NM, 
+			       CNT_TYPE,
+			       CNT_LMT, 
+			       NOTI_NM, 
+			       NOTI_FLG, 
+			       NOTI_PCT, 
+			       NOTI_TRG_TYPE_NM, 
+			       NOTI_TRG_TYPE,
+			       MEMO, 
+			       EMAIL_LIST, 
+			       SMS_LIST,
+			       CASE
+			          WHEN DATE_FORMAT(NOW(), "%Y%m%d") > TO_DT
+			             THEN 'N'
+			          ELSE 'Y'
+			       END MODIFY_YN, 
+			       MAX_SND_CNT
+			  FROM (SELECT   LM.SEQ, LM.FR_DT, LM.TO_DT, LM.REG_DATE, LM.WORKER,
+			                 LM.INSTMN_DT,
+			                 FN_NM_CODE1 ('LMT_TYPE_CD', LM.LMT_CD) LMT_CD_NM, LM.LMT_CD,
+			                 LM.LMT_ID,
+			                 FN_CARD_NM(LMT_TYPE_CD, NULL, NULL, NULL) LMT_TYPE_CD_NM,
+			                 LM.LMT_TYPE_CD,
+			                 CASE
+			                    WHEN LM.LMT_CD = '5'
+			                       THEN FN_NM_CODE1 ('BS_KIND_CD',
+			                                         SUBSTR (LMT_ID, 1, 4)
+			                                        )
+			                    ELSE ''
+			                 END CATE1,
+			                 CASE
+			                    WHEN LM.LMT_CD = '5'
+			                       THEN FN_NM_CODE2 ('BS_KIND_CD',
+			                                         SUBSTR (LMT_ID, 1, 4),
+			                                         SUBSTR (LMT_ID, 6, 4)
+			                                        )
+			                    ELSE ''
+			                 END CATE2,
+			                 CASE
+			                    WHEN LM.BLOCK_FLG = '0'
+			                       THEN '미차단'
+			                    ELSE '차단'
+			                 END BLOCK_NM, LM.BLOCK_FLG,
+			                 CASE
+			                    WHEN LM.LMT_TYPE_CD = '0001'
+			                     OR LM.LMT_TYPE_CD = '0021'
+			                       THEN FN_NM_CODE1 ('CARD_CD', LM.LMT_CD)
+			                    WHEN LM.LMT_TYPE_CD = '0002'
+			                       THEN FN_NM_CODE1 ('BANK_CD', LM.LMT_CD)
+			                    WHEN LM.LMT_TYPE_CD = '0003'
+			                       THEN FN_NM_CODE1 ('mobile_co', LM.LMT_CD)
+			                    WHEN LM.LMT_TYPE_CD = '9999'
+			                       THEN '모두'
+			                    ELSE LM.LMT_CD
+			                 END LMT_CD_DESC,
+			                 CASE
+			                    WHEN LM.PM_CD = '99'
+			                       THEN '모두'
+			                    ELSE FN_NM_CODE1 ('PM_CD', LM.PM_CD)
+			                 END PM_NM,
+			                 LM.PM_CD,
+			                 CASE
+			                    WHEN LM.SPM_CD = '99'
+			                       THEN '모두'
+			                    ELSE FN_NM_CODE1 ('SPM_CD', LM.SPM_CD)
+			                 END SPM_NM,
+			                 LM.SPM_CD,
+			                 CASE
+			                    WHEN LM.TRX_ST_CD = '0'
+			                       THEN '승인'
+			                    WHEN LM.TRX_ST_CD = '1'
+			                       THEN '취소'
+			                    ELSE '모두'
+			                 END TRX_ST_NM,
+			                 LM.TRX_ST_CD,
+			                 CASE
+			                    WHEN LM.AMT_TYPE = '1'
+			                       THEN '한달'
+			                    WHEN LM.AMT_TYPE = '2'
+			                       THEN '1일'
+			                    WHEN LM.AMT_TYPE = '3'
+			                       THEN '1회'
+			                    ELSE '미적용'
+			                 END AMT_TYPE_NM,
+			                 LM.AMT_TYPE, LM.AMT_LMT,
+			                 CASE
+			                    WHEN LM.CNT_TYPE = '1'
+			                       THEN '한달'
+			                    WHEN LM.CNT_TYPE = '2'
+			                       THEN '1일'
+			                    ELSE '미적용'
+			                 END CNT_TYPE_NM,
+			                 LM.CNT_TYPE, LM.CNT_LMT,
+			                 CASE
+			                    WHEN LM.NOTI_FLG = '0'
+			                       THEN '미발송'
+			                    ELSE '발송'
+			                 END NOTI_NM, LM.NOTI_FLG, LM.NOTI_PCT,
+			                 CASE
+			                    WHEN LM.NOTI_TRG_TYPE = '0'
+			                       THEN '금액'
+			                    WHEN LM.NOTI_TRG_TYPE = '1'
+			                       THEN '횟수'
+			                    ELSE '전체'
+			                 END NOTI_TRG_TYPE_NM,
+			                 LM.NOTI_TRG_TYPE, LM.MEMO, LNC.EMAIL_LIST, LNC.SMS_LIST, LM.MAX_SND_CNT
+			            FROM TB_LMT LM, TB_LMT_NOTI_CONF LNC
+			           WHERE 1 = 1 
+			             AND LM.SEQ = LNC.LMT_SEQ
+			             AND LM.SEQ = #{seqNo}
+			           ) A
+		]]>
+	</select>
+	
+	<select id="getCateCodeList" parameterType="hashmap" resultType="hashmap">
+      	<![CDATA[
+    		SELECT CODE1, DESC1
+			  FROM TB_CODE
+			 WHERE 1 = 1 
+		]]>
+		<choose>
+			<when test='codeType == "0"'>
+			<![CDATA[
+			   AND CODE_CL = #{codeCl}
+			]]>
+			</when>
+			<when test='codeType == "1"'>
+			<![CDATA[
+			   AND COL_NM = #{codeCl}
+			]]>
+			</when>
+		</choose>
+		<if test='code1 != null and code1 != ""'>
+			<![CDATA[
+			   AND CODE1 = #{code1}
+			]]>
+		</if>
+		<if test='code2 != null and code2 != ""'>
+			<![CDATA[
+			   AND CODE2 = #{code2}
+			]]>
+		</if>
+		<![CDATA[
+			   AND USE_FLG = '0' AND CODE2 <> '*'
+			GROUP BY CODE1, DESC1
+			ORDER BY CODE1
+	    ]]>
+  	</select>
+	
+	<select id="getSubCateCodeList" parameterType="hashmap" resultType="hashmap">
+      	<![CDATA[
+    		SELECT CODE1, CODE2, DESC1, DESC2
+			  FROM TB_CODE
+			 WHERE 1 = 1 
+		]]>
+		<choose>
+			<when test='codeType == "0"'>
+			<![CDATA[
+			   AND CODE_CL = #{codeCl}
+			]]>
+			</when>
+			<when test='codeType == "1"'>
+			<![CDATA[
+			   AND COL_NM = #{codeCl}
+			]]>
+			</when>
+		</choose>
+		<if test='code1 != null and code1 != ""'>
+			<![CDATA[
+			   AND CODE1 = #{code1}
+			]]>
+		</if>
+		<if test='code2 != null and code2 != ""'>
+			<![CDATA[
+			   AND CODE2 = #{code2}
+			]]>
+		</if>
+		<![CDATA[
+			   AND USE_FLG = '0' AND CODE2 <> '*'
+			ORDER BY ORDER_NO, CODE1
+	    ]]>
+  	</select>
+  	
+  	<select id="getContLimitDulicateCnt" parameterType="hashmap" resultType="int">
+  		<![CDATA[
+  			SELECT COUNT (1)
+			  FROM TB_LMT
+			 WHERE ID_CD = #{idCd}
+			   AND LMT_ID = #{lmtId}
+			   AND PM_CD = #{pmCd}
+			   AND SPM_CD = #{spmCd}
+			   AND LMT_TYPE_CD = #{lmtTypeCd}
+			   AND LMT_CD = #{lmtCd}
+			   AND TRX_ST_CD = #{trxStCd}
+			   AND AMT_TYPE = #{amtType}
+			   AND CNT_TYPE = #{cntType}
+			   AND #{frDt} BETWEEN FR_DT AND TO_DT
+  		]]>
+	</select>
+	
+	<insert id="insContLimit" parameterType="hashmap">
+		<selectKey keyProperty="seqNo" resultType="int" order="BEFORE">
+			SELECT SEQ_LMT.NEXTVAL FROM DUAL
+		</selectKey>
+		<![CDATA[
+			INSERT INTO TB_LMT
+		            (SEQ,
+		            ID_CD, 
+		            LMT_ID, 
+		            PM_CD, 
+		            SPM_CD, 
+		            LMT_TYPE_CD, 
+		            LMT_CD, 
+		            TRX_ST_CD,
+		            FR_DT, 
+		            TO_DT, 
+		            BLOCK_FLG, 
+		            AMT_TYPE, 
+		            CNT_TYPE, 
+		            NOTI_FLG,
+		            NOTI_TRG_TYPE, 
+		            INSTMN_DT, 
+		            AMT_LMT, 
+		            CNT_LMT, 
+		            NOTI_PCT,
+		            MAX_SND_CNT, 
+		            MEMO, 
+		            REG_DATE,
+		            WORKER)
+            VALUES (#{seqNo},
+            		#{idCd},
+            		#{lmtId}, 
+            		#{pmCd}, 
+            		#{spmCd}, 
+            		#{lmtTypeCd}, 
+            		#{lmtCd}, 
+            		#{trxStCd}, 
+            		DATE_FORMAT(NOW(), "%Y%m%d"), 
+            		'99991231', 
+            		#{blockFlg}, 
+            		#{amtType}, 
+            		#{cntType}, 
+            		#{notiFlg}, 
+            		#{notiTrgType}, 
+            		#{instmnDt}, 
+            		#{amtLmt}, 
+            		#{cntLmt}, 
+            		#{notiPct}, 
+            		#{maxSndCnt}, 
+            		#{memo}, 
+            		DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"), 
+            		#{worker}
+            		)
+		]]>
+	</insert>
+	
+	<insert id="insLimitNotiConfig" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO TB_LMT_NOTI_CONF
+			        (LMT_SEQ, EMAIL_LIST, SMS_LIST, REG_DATE, WORKER)
+			        VALUES
+			        (	#{seqNo},
+			            #{emailList},
+						#{smsList},
+						DATE_FORMAT(NOW(), "%Y%m%d"),
+						#{worker}
+					)
+		]]>
+	</insert>
+	
+	<update id="updateContLimit" parameterType="hashmap">
+		<![CDATA[
+			UPDATE TB_LMT
+				SET
+					BLOCK_FLG = #{blockFlg},
+					FR_DT = #{frDt},
+					INSTMN_DT = #{instmnDt},
+					AMT_LMT = #{amtLmt},
+					CNT_LMT = #{cntLmt},
+					NOTI_FLG = #{notiFlg},
+					NOTI_TRG_TYPE = #{notiTrgType},
+					NOTI_PCT = #{notiPct},
+					MAX_SND_CNT = #{maxSndCnt},
+					WORKER = #{worker}
+				WHERE
+					SEQ = #{seqNo}
+					AND LMT_ID = #{lmtId}
+		]]>
+	</update>
+	
+	<update id="upLimitNotiConfig" parameterType="hashmap">
+		<![CDATA[
+			UPDATE TB_LMT_NOTI_CONF
+			SET
+				EMAIL_LIST = #{emailList},
+				SMS_LIST = #{smsList},
+				WORKER = #{worker}
+			WHERE
+				LMT_SEQ = #{seqNo}
+		]]>
+	</update>
+</mapper>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="qnaMgmt">
+        <select id="selectQnaMgmtList" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+			SELECT * 
+            FROM (
+                SELECT 
+                		@rownum := @rownum + 1 AS RNUM
+                      , SEQ AS SEQ_NO
+                      , QNA_TYPE
+                      , CO_NM
+                      , QNA_CH_CD
+                      , QNA_REQ_CD
+                      , HEAD
+                      , BODY
+                      , ANSWER_MEMO
+                      , DATE_FORMAT(REQ_DT, '%Y-%m-%d') AS REQ_DT 
+                      , DATE_FORMAT(UPD_DNT, '%Y-%m-%d %H:%i:%s') AS UPD_DNT 
+                      , WORKER
+                      , USRID
+ 	                  , REQ_NM
+	                  , REQ_TEL
+	                  , REQ_EMAIL                        
+                FROM  TB_QNA, (SELECT @rownum := 0)R
+                WHERE 1=1                       
+        ]]>
+        		AND MID = #{MID}
+        <if test="QNA_TYPE != null and QNA_TYPE != '' and QNA_TYPE != 'ALL'">
+            <![CDATA[
+               AND QNA_TYPE = #{QNA_TYPE}
+            ]]>
+        </if>
+        
+        <if test="TITLE != null and TITLE != ''">
+            <![CDATA[
+               AND HEAD LIKE '%'||#{TITLE}||'%'
+            ]]>
+        </if>        
+        	ORDER BY SEQ_NO DESC
+        <![CDATA[
+	        )TBL
+	        WHERE RNUM BETWEEN #{intPageStart} AND #{intPageEnd}
+        ]]>
+    </select>
+    
+    <select id="selectQnaMgmtListTotal" parameterType="hashmap" resultType="Integer">
+        <![CDATA[
+			SELECT 
+				COUNT(1) 
+            FROM (
+                SELECT 
+                		@rownum := @rownum + 1 AS RNUM
+                      , SEQ AS SEQ_NO
+                      , QNA_TYPE
+                      , CO_NM
+                      , QNA_CH_CD
+                      , QNA_REQ_CD
+                      , HEAD
+                      , BODY
+                      , ANSWER_MEMO
+                      , DATE_FORMAT(REQ_DT, '%Y-%m-%d %H:%i:%s') AS REQ_DT 
+                      , DATE_FORMAT(UPD_DNT, '%Y-%m-%d %H:%i:%s') AS UPD_DNT 
+                      , WORKER
+                      , USRID
+                FROM  TB_QNA, (SELECT @rownum := 0)R
+                WHERE 1=1                       
+        ]]>
+        		AND MID = #{MID}        
+        <if test="QNA_TYPE != null and QNA_TYPE != '' and QNA_TYPE != 'ALL'">
+            <![CDATA[
+               AND QNA_TYPE = #{QNA_TYPE}
+            ]]>
+        </if>
+        
+        <if test="TITLE != null and TITLE != ''">
+            <![CDATA[
+               AND HEAD LIKE '%'||#{TITLE}||'%'
+            ]]>
+        </if>        
+        	ORDER BY SEQ_NO DESC
+        <![CDATA[
+	        )TBL
+        ]]>   
+    </select>
+    
+    <select id="selectQnaMgmt" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT 
+                SEQ AS SEQ_NO
+                , QNA_TYPE
+                , CO_NM
+                , QNA_CH_CD
+                , QNA_REQ_CD
+                , HEAD
+                , BODY
+                , ANSWER_MEMO
+                , DATE_FORMAT(REQ_DT, '%Y-%m-%d %H:%i:%s') AS REQ_DT 
+                , DATE_FORMAT(UPD_DNT, '%Y-%m-%d %H:%i:%s') AS UPD_DNT 
+                , WORKER
+                , USRID
+                , REQ_NM
+                , REQ_TEL
+                , REQ_EMAIL                
+            FROM  
+            	  TB_QNA
+            WHERE 
+            	  SEQ = #{SEQ_NO}
+        ]]>
+    </select>
+    
+    <insert id="insertQnaMgmt" parameterType="hashmap">
+	    INSERT INTO TB_QNA
+		(HEAD, BODY
+		, QNA_TYPE
+		, QNA_CH_CD
+		, REQ_DT
+		, WORKER
+		, USRID
+		, UPD_DNT
+		, CO_NM
+        , REQ_NM
+        , REQ_TEL
+        , REQ_EMAIL
+        , REQ_TEL_ENC
+        , REQ_EMAIL_ENC        
+        , MID  		
+		)
+		VALUES
+		( 
+		 #{EDIT_TITLE}, #{MEMO_EDITOR}
+		 ,'0'
+		 ,'0'
+		 , DATE_FORMAT(NOW(), "%Y%m%d")
+		 , #{WORKER}
+		 , #{WORKER}
+		 , DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		 , (SELECT CO_NM FROM TB_MBS WHERE MID =#{MID})
+		 , #{USR_NM}
+		 , #{USR_TEL}
+		 , #{USR_EMAIL}
+		 , #{USR_TEL_ENC}
+		 , #{USR_EMAIL_ENC}		 
+		 , #{MID}
+		 )
+    </insert>
+    
+    <update id="updateQnaMgmt" parameterType="hashmap">
+        <![CDATA[
+            UPDATE TB_QNA 
+            SET  HEAD 	   = #{EDIT_TITLE}
+               , BODY      = #{MEMO_EDITOR}
+               , UPD_DNT   = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+               , REQ_NM    = #{USR_NM}
+               , REQ_TEL   = #{USR_TEL}
+               , REQ_EMAIL = #{USR_EMAIL}               
+               , REQ_TEL_ENC   = #{USR_TEL_ENC}
+               , REQ_EMAIL_ENC = #{USR_EMAIL_ENC}               
+            WHERE SEQ = #{SEQ_NO}
+        ]]>
+    </update>
+</mapper>

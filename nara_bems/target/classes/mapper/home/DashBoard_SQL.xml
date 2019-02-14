@@ -1,0 +1,982 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="home">
+	<!-- RANK() OVER (ORDER BY APP_DT ASC) AS RK -->
+    <select id="selectDashBoardChart" parameterType="hashmap" resultType="hashmap">
+        <choose>
+            <when test="CHART_TYPE == 1">
+                <![CDATA[
+                    SELECT
+                    DATE_FORMAT(TRANS, '%d-%m-%Y') AS TR_DT
+                    , COALESCE(SUM(CARD_AMT), 0) AS CREDIT_CARD
+                    , COALESCE(SUM(ACCNT_AMT), 0) AS ACCNT
+                    , COALESCE(SUM(VACCNT_AMT), 0) AS TRANSFER
+                    , COALESCE(SUM(CSHRCPT_AMT), 0) AS CSHR
+                    , COALESCE(SUM(HP_AMT), 0) AS HP
+                    , COALESCE(SUM(HP_BILL_AMT), 0) AS HP_BILL
+                    , COALESCE(SUM(CARD_BILL_AMT), 0) AS CARD_BILL
+               FROM
+               (
+                   SELECT
+                       
+                       APP_DT AS TRANS
+                       , PM_CD
+                       , IF(PM_CD= '01', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS CARD_AMT
+                       , IF(PM_CD= '02', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS ACCNT_AMT
+                       , IF(PM_CD= '03', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS VACCNT_AMT
+                       , IF(PM_CD= '04', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS CSHRCPT_AMT
+                       , IF(PM_CD= '05', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS HP_AMT
+                       , IF(PM_CD= '06', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS HP_BILL_AMT
+                       , IF(PM_CD= '07', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS CARD_BILL_AMT
+                   FROM
+                       TB_TRX_HIST
+                   WHERE
+                       APP_DT BETWEEN '20180501' AND '20180601'
+                   GROUP BY
+                       APP_DT, PM_CD, MID
+                   ORDER BY
+                       APP_DT
+               ) TBL
+               GROUP BY
+                   TRANS
+              ]]>
+            </when>
+            <when test="CHART_TYPE == 2">
+                <![CDATA[
+                    SELECT
+                  DATE_FORMAT(FAIL_DT, '%d-%m-%Y') AS FAIL_DT
+                        , COALESCE(SUM(CARD_AMT), 0) AS CREDIT_CARD
+                        , COALESCE(SUM(ACCNT_AMT), 0) AS ACCNT
+                        , COALESCE(SUM(VACCNT_AMT), 0) AS TRANSFER
+                        , COALESCE(SUM(CSHRCPT_AMT), 0) AS CSHR
+                        , COALESCE(SUM(HP_AMT), 0) AS HP
+                        , COALESCE(SUM(HP_BILL_AMT), 0) AS HP_BILL
+                        , COALESCE(SUM(CARD_BILL_AMT), 0) AS CARD_BILL
+                    FROM
+                      (
+                  SELECT
+                     RANK() OVER (ORDER BY TR_DT ASC) AS RK
+                     , APP_REQ_DT AS FAIL_DT
+                     , PM_CD
+                     , IF(PM_CD= '01', SUM(GOODS_AMT), 0) AS CARD_AMT
+                            , IF(PM_CD= '02', SUM(GOODS_AMT), 0) AS ACCNT_AMT
+                            , IF(PM_CD= '03', SUM(GOODS_AMT), 0) AS VACCNT_AMT
+                            , IF(PM_CD= '04', SUM(GOODS_AMT), 0) AS CSHRCPT_AMT
+                            , IF(PM_CD= '05', SUM(GOODS_AMT), 0) AS HP_AMT
+                            , IF(PM_CD= '06', SUM(GOODS_AMT), 0) AS HP_BILL_AMT
+                            , IF(PM_CD= '07', SUM(GOODS_AMT), 0) AS CARD_BILL_AMT
+                            -- , SPM_CD
+                  FROM
+                     TB_UNSC_TRX
+                  WHERE
+                            APP_REQ_DT BETWEEN DATE_FORMAT(DATE_ADD(NOW(), interval -1 month), "%Y%m%d") AND DATE_FORMAT(NOW(), "%Y%m%d")
+                         GROUP BY
+                            APP_REQ_DT, PM_CD
+                         ORDER BY
+                       APP_REQ_DT
+                      ) TBL
+                      GROUP BY
+                         FAIL_DT
+                ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+               SELECT
+               			DATE_FORMAT(CANCEL_DT, '%d-%m-%Y') AS CANCEL_DT
+                        , COALESCE(SUM(CARD_AMT), 0) AS CREDIT_CARD
+                        , COALESCE(SUM(ACCNT_AMT), 0) AS ACCNT
+                        , COALESCE(SUM(VACCNT_AMT), 0) AS TRANSFER
+                        , COALESCE(SUM(CSHRCPT_AMT), 0) AS CSHR
+                        , COALESCE(SUM(HP_AMT), 0) AS HP
+                        , COALESCE(SUM(HP_BILL_AMT), 0) AS HP_BILL
+                        , COALESCE(SUM(CARD_BILL_AMT), 0) AS CARD_BILL
+                    FROM
+                      (
+                         SELECT
+                            RANK() OVER (ORDER BY TR_DT ASC) AS RK
+                            , B.CC_REQ_DT AS CANCEL_DT
+                            , A.PM_CD
+                            , IF(PM_CD= '01', SUM(B.CC_REQ_AMT), 0) AS CARD_AMT
+                            , IF(PM_CD= '02', SUM(B.CC_REQ_AMT), 0) AS ACCNT_AMT
+                            , IF(PM_CD= '03', SUM(B.CC_REQ_AMT), 0) AS VACCNT_AMT
+                            , IF(PM_CD= '04', SUM(B.CC_REQ_AMT), 0) AS CSHRCPT_AMT
+                            , IF(PM_CD= '05', SUM(B.CC_REQ_AMT), 0) AS HP_AMT
+                            , IF(PM_CD= '06', SUM(B.CC_REQ_AMT), 0) AS HP_BILL_AMT
+                            , IF(PM_CD= '07', SUM(B.CC_REQ_AMT), 0) AS CARD_BILL_AMT
+                         FROM
+                            TB_MSTR_TRX A, TB_REFUND_REQ B
+                         WHERE
+                            A.TID = B.TID
+                            AND B.CC_REQ_DT BETWEEN DATE_FORMAT(DATE_ADD(NOW(), interval -1 month), "%Y%m%d") AND DATE_FORMAT(NOW(), "%Y%m%d")
+                         GROUP BY
+                            B.CC_REQ_DT, A.PM_CD
+                         ORDER BY
+                       B.CC_REQ_DT
+                      ) TBL
+                    GROUP BY
+                       CANCEL_DT
+                ]]>
+            </otherwise>
+        </choose>
+    </select>
+
+   <select id="selectTrxDashBoardChart" parameterType="hashmap" resultType="hashmap">
+        <choose>
+            <when test="CHART_TYPE == 1">
+                <![CDATA[
+                    SELECT
+                    TO_CHAR(TO_DATE(TRANS, 'YYYYMMDD'), 'DD-MM-YYYY') AS TR_DT
+                    , COALESCE(SUM(CARD_CNT+CC_CARD_CNT), 0) AS CREDIT_CARD
+                    , COALESCE(SUM(ACCNT_CNT+CC_ACCNT_CNT), 0) AS ACCNT
+                    , COALESCE(SUM(VACCNT_CNT+CC_VACCNT_CNT), 0) AS TRANSFER
+                    , COALESCE(SUM(CSHRCPT_CNT+CC_CSHRCPT_CNT), 0) AS CSHR
+                    , COALESCE(SUM(HP_CNT+CC_HP_CNT), 0) AS HP
+                    , COALESCE(SUM(HP_BILL_CNT+CC_HP_BILL_CNT), 0) AS HP_BILL
+                    , COALESCE(SUM(CARD_BILL_CNT+CC_CARD_BILL_CNT), 0) AS CARD_BILL
+               FROM
+               (
+                   SELECT
+                       RANK() OVER (ORDER BY APP_DT ASC) AS RK
+                       , APP_DT AS TRANS
+                       , PM_CD
+                       , DECODE(PM_CD, '01', COUNT(*), 0) AS CARD_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180501' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='01'
+                           ) AS CC_CARD_CNT
+                       , DECODE(PM_CD, '02', COUNT(*), 0) AS ACCNT_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180501' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='02'
+                           ) AS CC_ACCNT_CNT
+                       , DECODE(PM_CD, '03', COUNT(*), 0) AS VACCNT_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180501' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='03'
+                           ) AS CC_VACCNT_CNT
+                       , DECODE(PM_CD, '04', COUNT(*), 0) AS CSHRCPT_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180501' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='04'
+                           ) AS CC_CSHRCPT_CNT
+                       , DECODE(PM_CD, '05', COUNT(*), 0) AS HP_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180501' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='05'
+                           ) AS CC_HP_CNT
+                       , DECODE(PM_CD, '06', COUNT(*), 0) AS HP_BILL_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180501' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='06'
+                           ) AS CC_HP_BILL_CNT
+                       , DECODE(PM_CD, '07', COUNT(*), 0) AS CARD_BILL_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180501' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='07'
+                           ) AS CC_CARD_BILL_CNT
+                   FROM
+                       TB_TRX_HIST
+                   WHERE
+                       APP_DT BETWEEN DATE_FORMAT(DATE_ADD(NOW(), interval -1 month), "%Y%m%d") AND DATE_FORMAT(NOW(), "%Y%m%d")
+                   GROUP BY
+                       APP_DT, PM_CD
+                   ORDER BY
+                       APP_DT
+               ) TBL
+               GROUP BY
+                   TRANS
+              ]]>
+            </when>
+            <when test="CHART_TYPE == 2">
+                <![CDATA[
+                    SELECT
+                  TO_CHAR(TO_DATE(FAIL_DT, 'YYYYMMDD'), 'DD-MM-YYYY') AS FAIL_DT
+                        , COALESCE(SUM(CARD_CNT), 0) AS CREDIT_CARD
+                        , COALESCE(SUM(ACCNT_CNT), 0) AS ACCNT
+                        , COALESCE(SUM(VACCNT_CNT), 0) AS TRANSFER
+                        , COALESCE(SUM(CSHRCPT_CNT), 0) AS CSHR
+                        , COALESCE(SUM(HP_CNT), 0) AS HP
+                        , COALESCE(SUM(HP_BILL_CNT), 0) AS HP_BILL
+                        , COALESCE(SUM(CARD_BILL_CNT), 0) AS CARD_BILL
+                    FROM
+                      (
+                  SELECT
+                     RANK() OVER (ORDER BY APP_REQ_DT ASC) AS RK
+                       , APP_REQ_DT AS FAIL_DT
+                       , PM_CD
+                       , DECODE(PM_CD, '01', COUNT(*), 0) AS CARD_CNT
+                       , DECODE(PM_CD, '02', COUNT(*), 0) AS ACCNT_CNT
+                       , DECODE(PM_CD, '03', COUNT(*), 0) AS VACCNT_CNT
+                       , DECODE(PM_CD, '04', COUNT(*), 0) AS CSHRCPT_CNT
+                       , DECODE(PM_CD, '05', COUNT(*), 0) AS HP_CNT
+                       , DECODE(PM_CD, '06', COUNT(*), 0) AS HP_BILL_CNT
+                       , DECODE(PM_CD, '07', COUNT(*), 0) AS CARD_BILL_CNT
+                   FROM
+                       TB_UNSC_TRX
+                   WHERE
+                       APP_REQ_DT BETWEEN DATE_FORMAT(DATE_ADD(NOW(), interval -1 month), "%Y%m%d") AND DATE_FORMAT(NOW(), "%Y%m%d")
+                   GROUP BY
+                       APP_REQ_DT, PM_CD
+                   ORDER BY
+                       APP_REQ_DT
+                      ) TBL
+                      GROUP BY
+                         FAIL_DT
+                ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+               SELECT
+                        TO_CHAR(TO_DATE(CANCEL_DT, 'YYYYMMDD'), 'DD-MM-YYYY') AS CANCEL_DT
+                        , COALESCE(SUM(CARD_CNT), 0) AS CREDIT_CARD
+                        , COALESCE(SUM(ACCNT_CNT), 0) AS ACCNT
+                        , COALESCE(SUM(VACCNT_CNT), 0) AS TRANSFER
+                        , COALESCE(SUM(CSHRCPT_CNT), 0) AS CSHR
+                        , COALESCE(SUM(HP_CNT), 0) AS HP
+                        , COALESCE(SUM(HP_BILL_CNT), 0) AS HP_BILL
+                        , COALESCE(SUM(CARD_BILL_CNT), 0) AS CARD_BILL
+                    FROM
+                      (
+                         SELECT
+                            RANK() OVER (ORDER BY B.CC_REQ_DT ASC) AS RK
+                      , B.CC_REQ_DT AS CANCEL_DT
+                      , A.PM_CD
+                      , DECODE(PM_CD, '01', COUNT(*), 0) AS CARD_CNT
+                      , DECODE(PM_CD, '02', COUNT(*), 0) AS ACCNT_CNT
+                      , DECODE(PM_CD, '03', COUNT(*), 0) AS VACCNT_CNT
+                      , DECODE(PM_CD, '04', COUNT(*), 0) AS CSHRCPT_CNT
+                      , DECODE(PM_CD, '05', COUNT(*), 0) AS HP_CNT
+                      , DECODE(PM_CD, '06', COUNT(*), 0) AS HP_BILL_CNT
+                      , DECODE(PM_CD, '07', COUNT(*), 0) AS CARD_BILL_CNT
+                  FROM
+                      TB_MSTR_TRX A, TB_REFUND_REQ B
+                  WHERE
+                      A.TID = B.TID
+                      AND B.CC_REQ_DT BETWEEN DATE_FORMAT(DATE_ADD(NOW(), interval -1 month), "%Y%m%d") AND DATE_FORMAT(NOW(), "%Y%m%d")
+                  GROUP BY
+                      B.CC_REQ_DT, A.PM_CD
+                  ORDER BY
+                       B.CC_REQ_DT
+                      ) TBL
+                    GROUP BY
+                       CANCEL_DT
+                ]]>
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectDashBoardTopMerchantList" parameterType="hashmap" resultType="hashmap">
+        <choose>
+           <!-- 금액 -->
+            <when test="CHART_TYPE == 1">
+                <![CDATA[
+               SELECT
+                   RK
+                   , MID
+                   , BRAND_NM
+                   , APP_AMT
+               FROM
+               (
+                   SELECT
+                       RANK() OVER (ORDER BY SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)) DESC) AS RK
+                       , MID
+                       , (SELECT SIGN_NM FROM TB_MBS WHERE MID=S.MID) AS BRAND_NM
+                       , COALESCE(SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS APP_AMT
+                   FROM
+                       TB_TRX_HIST S
+                   WHERE
+                       APP_DT BETWEEN '20180523' AND '20180601'
+                   GROUP BY
+                       MID
+               ) TBL
+               WHERE
+                   RK <= 5
+              ]]>
+            </when>
+            <!-- TR -->
+            <otherwise>
+                <![CDATA[
+               SELECT
+                   RK
+                   , MID
+                   , BRAND_NM
+                   , APP_CNT+CC_CNT AS TRX_CNT
+               FROM
+               (
+                   SELECT
+                       RANK() OVER (ORDER BY COUNT(*)) AS RK
+                       , MID
+                       , (SELECT SIGN_NM FROM TB_MBS WHERE MID=S.MID) AS BRAND_NM
+                       , COUNT(*) AS APP_CNT
+                       , (
+                           SELECT
+                               COUNT(*)
+                           FROM
+                               TB_TRX_HIST
+                           WHERE
+                               APP_DT BETWEEN DATE_FORMAT(DATE_ADD(NOW(), interval -7 day), "%Y%m%d") AND DATE_FORMAT(NOW(), "%Y%m%d")
+                               AND CC_DT IS NOT NULL
+                       ) AS CC_CNT
+                   FROM
+                       TB_TRX_HIST S
+                   WHERE
+                       APP_DT BETWEEN '20180523' AND '20180601'
+                   GROUP BY
+                       MID
+               ) TBL
+               WHERE
+                   RK <= 5
+                ]]>
+            </otherwise>
+        </choose>
+
+    </select>
+
+<!-- SELECT    p.APP_DT,
+          
+          case
+          when @prev_value = p.APP_DT then @vRank
+          when @prev_value := p.APP_DT then @vRank := @vRank + 1
+          end as rank
+FROM      (
+
+				SELECT
+                       APP_DT
+                       , PM_CD
+                   FROM
+                       TB_TRX_HIST
+                   WHERE
+                       APP_DT BETWEEN '20180523' AND '20180601'
+                     
+                   GROUP BY
+                       APP_DT, PM_CD, MID
+                   ORDER BY
+                       APP_DT
+
+
+) p, (SELECT @vRank := 0, @prev_value := null) r
+ORDER BY  p.APP_DT; -->
+    <select id="selectDashBoardTopMerchantChart" parameterType="hashmap" resultType="hashmap">
+        <choose>
+            <when test="CHART_TYPE == 1">
+                <![CDATA[
+               SELECT
+               		DATE_FORMAT(TRANS, '%Y%m%d') AS TR_DT
+                    , COALESCE(SUM(CARD_AMT), 0) AS CREDIT_CARD
+                    , COALESCE(SUM(ACCNT_AMT), 0) AS ACCNT
+                    , COALESCE(SUM(VACCNT_AMT), 0) AS TRANSFER
+                    , COALESCE(SUM(CSHRCPT_AMT), 0) AS CSHR
+                    , COALESCE(SUM(HP_AMT), 0) AS HP
+                    , COALESCE(SUM(HP_BILL_AMT), 0) AS HP_BILL
+                    , COALESCE(SUM(CARD_BILL_AMT), 0) AS CARD_BILL
+               FROM
+               (
+                   SELECT
+                       APP_DT AS TRANS
+                       , PM_CD
+                       , IF(PM_CD= '01', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS CARD_AMT
+                       , IF(PM_CD= '02', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS ACCNT_AMT
+                       , IF(PM_CD= '03', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS VACCNT_AMT
+                       , IF(PM_CD= '04', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS CSHRCPT_AMT
+                       , IF(PM_CD= '05', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS HP_AMT
+                       , IF(PM_CD= '06', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS HP_BILL_AMT
+                       , IF(PM_CD= '07', SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS CARD_BILL_AMT
+                   FROM
+                       TB_TRX_HIST
+                   WHERE
+                       APP_DT BETWEEN '20180523' AND '20180601'
+                     ]]>
+                         <if test="MID != null and MID != ''">
+                            AND MID=#{MID}
+                         </if>
+                         <![CDATA[
+                   GROUP BY
+                       APP_DT, PM_CD, MID
+                   ORDER BY
+                       APP_DT
+               ) TBL
+               GROUP BY
+                   TRANS
+              ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+               SELECT
+                    TO_CHAR(TO_DATE(TRANS, 'YYYYMMDD'), 'DD-MM-YYYY') AS TR_DT
+                    , COALESCE(SUM(CARD_CNT+CC_CARD_CNT), 0) AS CREDIT_CARD
+                    , COALESCE(SUM(ACCNT_CNT+CC_ACCNT_CNT), 0) AS ACCNT
+                    , COALESCE(SUM(VACCNT_CNT+CC_VACCNT_CNT), 0) AS TRANSFER
+                    , COALESCE(SUM(CSHRCPT_CNT+CC_CSHRCPT_CNT), 0) AS CSHR
+                    , COALESCE(SUM(HP_CNT+CC_HP_CNT), 0) AS HP
+                    , COALESCE(SUM(HP_BILL_CNT+CC_HP_BILL_CNT), 0) AS HP_BILL
+                    , COALESCE(SUM(CARD_BILL_CNT+CC_CARD_BILL_CNT), 0) AS CARD_BILL
+               FROM
+               (
+                   SELECT
+                       RANK() OVER (ORDER BY APP_DT ASC) AS RK
+                       , APP_DT AS TRANS
+                       , PM_CD
+                       , DECODE(PM_CD, '01', COUNT(*), 0) AS CARD_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180523' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='01'
+                           ) AS CC_CARD_CNT
+                       , DECODE(PM_CD, '02', COUNT(*), 0) AS ACCNT_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180523' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='02'
+                           ) AS CC_ACCNT_CNT
+                       , DECODE(PM_CD, '03', COUNT(*), 0) AS VACCNT_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180523' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='03'
+                           ) AS CC_VACCNT_CNT
+                       , DECODE(PM_CD, '04', COUNT(*), 0) AS CSHRCPT_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180523' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='04'
+                           ) AS CC_CSHRCPT_CNT
+                       , DECODE(PM_CD, '05', COUNT(*), 0) AS HP_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180523' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='05'
+                           ) AS CC_HP_CNT
+                       , DECODE(PM_CD, '06', COUNT(*), 0) AS HP_BILL_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180523' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='06'
+                           ) AS CC_HP_BILL_CNT
+                       , DECODE(PM_CD, '07', COUNT(*), 0) AS CARD_BILL_CNT
+                       , (
+                           SELECT COUNT(*)
+                           FROM TB_TRX_HIST
+                           WHERE  APP_DT BETWEEN '20180523' AND '20180601'
+                           AND CC_DT IS NOT NULL
+                           AND PM_CD='07'
+                           ) AS CC_CARD_BILL_CNT
+                   FROM
+                       TB_TRX_HIST
+                   WHERE
+                       APP_DT BETWEEN '20180523' AND '20180601'
+                    ]]>
+                         <if test="MID != null and MID != ''">
+                            AND MID=#{MID}
+                         </if>
+                         <![CDATA[
+                   GROUP BY
+                       APP_DT, PM_CD
+                   ORDER BY
+                       APP_DT
+               ) TBL
+               GROUP BY
+                   TRANS
+                ]]>
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectDashBoardTopPieChart" parameterType="hashmap" resultType="hashmap">
+        <choose>
+            <when test="CHART_TYPE == 'PaymentType'">
+                <![CDATA[
+                    SELECT DECODE(PAY_METHOD,'01','Credit Card','02','Transfer Pay','-') AS PAY_METHOD
+                ]]>
+                <choose>
+                    <when test="SUMMARY_TYPE == 1">
+                        <![CDATA[
+                            ,COALESCE(SUM(APP_AMT)-SUM(CC_AMT),0) AS TRANSACTION_AMT
+                        ]]>
+                    </when>
+                    <otherwise>
+                        <![CDATA[
+                          ,COALESCE(SUM(APP_CNT)+SUM(CC_CNT),0) AS TRANSACTION_CNT
+                      ]]>
+                    </otherwise>
+                </choose>
+                <![CDATA[
+                    FROM TB_BO_STAT_REVENUE
+                    WHERE TRANS_DT = #{TRANS_DT}
+                    GROUP BY PAY_METHOD
+                ]]>
+            </when>
+            <when test="CHART_TYPE == 'CreditCard'">
+                <![CDATA[
+                    SELECT RK
+                          ,BANK_NAME
+                ]]>
+                <choose>
+                    <when test="SUMMARY_TYPE == 1">
+                        <![CDATA[
+                           ,TRANSACTION_AMT
+                     FROM (
+                         SELECT RANK() OVER(ORDER BY SUM(APP_AMT-CC_AMT) DESC) AS RK
+                               ,UF_GET_BANK_NAME(BANK_CD) AS BANK_NAME
+                               ,COALESCE(SUM(APP_AMT)-SUM(CC_AMT),0) AS TRANSACTION_AMT
+                      ]]>
+                    </when>
+                    <otherwise>
+                        <![CDATA[
+                                  ,TRANSACTION_CNT
+                            FROM (
+                                SELECT RANK() OVER(ORDER BY SUM(APP_AMT-CC_AMT) DESC) AS RK
+                                      ,UF_GET_BANK_NAME(BANK_CD) AS BANK_NAME
+                                      ,COALESCE(SUM(APP_CNT)+SUM(CC_CNT),0) AS TRANSACTION_CNT
+                        ]]>
+                    </otherwise>
+                </choose>
+                <![CDATA[
+                      FROM TB_BO_STAT_REVENUE A
+                       WHERE TRANS_DT = #{TRANS_DT}
+                       AND NOT EXISTS (SELECT 1 FROM TB_BO_MER_MGMT B WHERE B.I_MID = A.I_MID AND B.TAX_NO = 'NICEPAY')
+                       AND   PAY_METHOD = '01'
+                       GROUP BY BANK_CD
+                       ORDER BY RK
+                    )TBL
+                    WHERE RK <= 10
+                ]]>
+            </when>
+            <when test="CHART_TYPE == 'Transfer'">
+                <![CDATA[
+                    SELECT RK
+                          ,BANK_NAME
+                ]]>
+                <choose>
+                    <when test="SUMMARY_TYPE == 1">
+                        <![CDATA[
+                                  ,TRANSACTION_AMT
+                            FROM (
+                                SELECT RANK() OVER(ORDER BY SUM(REVENUE_AMT) DESC) AS RK
+                                      ,UF_GET_BANK_NAME(BANK_CD) AS BANK_NAME
+                                      ,COALESCE(SUM(APP_AMT)-SUM(CC_AMT),0) AS TRANSACTION_AMT
+                        ]]>
+                    </when>
+                    <otherwise>
+                        <![CDATA[
+                                  ,TRANSACTION_CNT
+                            FROM (
+                                SELECT RANK() OVER(ORDER BY SUM(REVENUE_AMT) DESC) AS RK
+                                      ,UF_GET_BANK_NAME(BANK_CD) AS BANK_NAME
+                                      ,COALESCE(SUM(APP_CNT)+SUM(CC_CNT),0) AS TRANSACTION_CNT
+                        ]]>
+                    </otherwise>
+                </choose>
+                <![CDATA[
+                        FROM TB_BO_STAT_REVENUE A
+                        WHERE TRANS_DT = #{TRANS_DT}
+                        AND NOT EXISTS (SELECT 1 FROM TB_BO_MER_MGMT B WHERE B.I_MID = A.I_MID AND B.TAX_NO = 'NICEPAY')
+                        AND   PAY_METHOD = '02'
+                        GROUP BY BANK_CD
+                        ORDER BY RK
+                    )TBL
+                    WHERE RK <= 10
+                ]]>
+            </when>
+        </choose>
+    </select>
+
+
+	<select id="selectTodayInput" parameterType="hashmap" resultType="hashmap">
+		SELECT format(ifnull(sum(DPST_AMT), 0), ',') DPST_AMT
+		FROM TB_STMT a, TB_MBS b 
+		WHERE a.ID = b.MID 
+		AND a.STMT_DT = date_format(CurDate(), '%Y%m%d')
+		<if test="MERID_TYPE != null and MERID_TYPE == 'm'.toString()"> AND b.MID = #{MER_ID}</if>
+		<if test="MERID_TYPE != null and MERID_TYPE == 'g'.toString()"> AND b.GID = #{MER_ID}</if>
+		<if test="MERID_TYPE != null and MERID_TYPE == 'v'.toString()"> AND b.VID = #{MER_ID}</if>
+		and a.ST_TYPE in ('1', '2', '3')
+	</select>
+	
+	
+    <select id="selectDashBoardSummaryList" parameterType="hashmap" resultType="hashmap">
+        <choose>
+            <when test="LIST_TYPE == 'EromMoney'">
+                <choose>
+                    <when test="SUMMARY_TYPE == 1">
+                        <![CDATA[
+                          SELECT
+							    SUM(today_amt) AS FIRST_NUM,
+							    SUM(monthly_amt) AS SECOND_NUM
+							FROM
+							    (
+							        SELECT coalesce(SUM(goods_amt),0) AS today_amt, 0 AS monthly_amt
+							          FROM TB_TRX_HIST
+							         WHERE app_dt = DATE_FORMAT(CURDATE(), '%Y%m%d')
+							           AND pm_cd = '01'
+							           AND MID = #{MER_ID}
+									  
+							        UNION ALL
+									
+							        SELECT 0 AS today_amt, coalesce(SUM(goods_amt),0) AS monthly_amt
+							          FROM TB_TRX_HIST
+							         WHERE SUBSTRING(app_dt, 1, 6) = DATE_FORMAT(CURDATE(), '%Y%m')
+							           AND pm_cd = '01'
+							           AND MID = #{MER_ID}
+							    ) tbl
+                      ]]>
+                    </when>
+                    <when test="SUMMARY_TYPE == 2">
+                        <![CDATA[
+                            SELECT
+                         SUM(APP_TODAY_CNT) AS FIRST_NUM,
+                         SUM(APP_MONTHLY_CNT) AS SECOND_NUM
+                     FROM (
+                         SELECT
+                             ifnull(COUNT(*), 0) AS APP_TODAY_CNT
+                             , ifnull(( SELECT COUNT(*)
+                                   FROM TB_TRX_HIST
+                                  WHERE APP_DT=DATE_FORMAT(NOW(), "%Y%m%d")
+                                    AND CC_DT IS NOT NULL
+                                    AND PM_CD='01'
+                                    AND MID = #{MER_ID}
+                             ),0) AS CC_TODAY_CNT
+                             , 0 AS APP_MONTHLY_CNT
+                             , 0 AS CC_MONTHLY_CNT
+                         FROM
+                             TB_TRX_HIST
+                         WHERE
+                             APP_DT = DATE_FORMAT(CURDATE(), '%Y%m%d')
+                         AND
+                             PM_CD = '01'
+                         
+                         AND MID = #{MER_ID}    
+                             
+                         GROUP BY
+                             APP_DT
+
+                         UNION ALL
+
+                         SELECT
+                             0 AS APP_TODAY_CNT
+                             , 0 AS CC_TODAY_CNT
+                             , COUNT(*) AS APP_MONTHLY_CNT
+                             , ( SELECT COUNT(*)
+                                   FROM TB_TRX_HIST
+                                  WHERE APP_DT=DATE_FORMAT(CURDATE(), '%Y%m%d')
+                                    AND CC_DT IS NOT NULL
+                                    AND PM_CD='01'
+                                    AND MID = #{MER_ID}
+                             ) AS CC_MONTHLY_CNT
+                         FROM
+                             TB_TRX_HIST
+                         WHERE
+                             SUBSTRING(APP_DT, 1, 6) = DATE_FORMAT(CURDATE(), '%Y%m')
+                         AND
+                             PM_CD='01'
+                         
+                         AND MID = #{MER_ID}    
+                             
+                         GROUP BY
+                             APP_DT
+                     ) TBL
+                        ]]>
+                    </when>
+                </choose>
+            </when>
+            <when test="LIST_TYPE == 'Cancel'">
+               <choose>
+                  <when test="SUMMARY_TYPE == 1">
+                     <![CDATA[
+                     SELECT
+                         SUM(TODAY_AMT) AS FIRST_NUM,
+                         SUM(MONTHLY_AMT) AS SECOND_NUM
+                     FROM (
+                         SELECT
+                             COALESCE(SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS TODAY_AMT
+                             , 0 AS MONTHLY_AMT
+                         FROM
+                             TB_TRX_HIST
+                         WHERE
+                             APP_DT=DATE_FORMAT(NOW(), "%Y%m%d")
+                         AND PM_CD='01'
+                         AND TRX_STAT_CD in ('1', '2') 
+                         AND MID = #{MER_ID}
+
+                         UNION ALL
+
+                         SELECT
+                             0 AS TODAY_AMT
+                             , COALESCE(SUM(GOODS_AMT-COALESCE(CC_DPST_AMT, 0)), 0) AS MONTHLY_AMT
+                         FROM
+                             TB_TRX_HIST
+                         WHERE
+                             SUBSTRING(APP_DT, 1, 6) = DATE_FORMAT(CURDATE(), '%Y%m')
+                         AND PM_CD='01'
+                         AND TRX_STAT_CD in ('1', '2')
+                         AND MID = #{MER_ID}
+                     ) TBL
+                     ]]>
+                  </when>
+                  <when test="SUMMARY_TYPE == 2">
+                     <![CDATA[
+                     SELECT
+                         SUM(APP_TODAY_CNT+CC_TODAY_CNT) AS FIRST_NUM,
+                         SUM(APP_MONTHLY_CNT+CC_MONTHLY_CNT) AS SECOND_NUM
+                     FROM (
+                         SELECT
+                             COUNT(*) AS APP_TODAY_CNT
+                             , ( SELECT COUNT(*)
+                                FROM TB_TRX_HIST
+                                WHERE APP_DT=DATE_FORMAT(NOW(), "%Y%m%d")
+                                AND CC_DT IS NOT NULL
+                                AND TRX_STAT_CD in ('1', '2')
+                                AND MID = #{MER_ID} 
+                             ) AS CC_TODAY_CNT
+                             , 0 AS APP_MONTHLY_CNT
+                             , 0 AS CC_MONTHLY_CNT
+                         FROM
+                             TB_TRX_HIST
+                         WHERE
+                             APP_DT=DATE_FORMAT(NOW(), "%Y%m%d")
+                         AND
+                             PM_CD='01'
+                         GROUP BY
+                             APP_DT
+
+                         UNION ALL
+
+                         SELECT
+                             0 AS APP_TODAY_CNT
+                             , 0 AS CC_TODAY_CNT
+                             , COUNT(*) AS APP_MONTHLY_CNT
+                             , ( SELECT COUNT(*)
+                                FROM TB_TRX_HIST
+                                WHERE APP_DT=DATE_FORMAT(NOW(), "%Y%m%d")
+                                AND CC_DT IS NOT NULL
+                                AND PM_CD='01'
+                                AND MID = #{MER_ID}
+                             ) AS CC_MONTHLY_CNT
+                         FROM
+                             TB_TRX_HIST
+                         WHERE
+                             SUBSTRING(APP_DT, 1, 6) = DATE_FORMAT(CURDATE(), '%Y%m')
+                         AND
+                             PM_CD='01'
+                         GROUP BY
+                             APP_DT
+                     ) TBL
+                     ]]>
+                  </when>
+               </choose>
+            </when>
+            <when test="LIST_TYPE == 'Settle'">
+               <choose>
+                    <when test="SUMMARY_TYPE == 1">
+                        <![CDATA[
+                          SELECT
+							    SUM(today_amt-today_cc_amt) AS FIRST_NUM,
+							    SUM(monthly_amt-monthly_cc_amt) AS SECOND_NUM
+							FROM
+							    (
+							        SELECT coalesce(SUM(APP_AMT),0) AS today_amt,
+							               coalesce(SUM(CC_AMT),0) AS today_cc_amt,
+							               0 AS monthly_amt,
+							               0 AS monthly_cc_amt
+							          FROM TB_STMT
+							         WHERE DATE_FORMAT(STMT_DT,'%Y%m%d') = DATE_FORMAT(CURDATE(), '%Y%m%d')
+							           AND ST_TYPE = '20'
+							           AND MID = #{MER_ID}
+									  
+							        UNION ALL
+									
+							        SELECT 0 AS today_amt, 
+							               0 AS today_cc_amt,
+							               coalesce(SUM(APP_AMT),0) AS monthly_amt,
+							               coalesce(SUM(CC_AMT),0) AS monthly_cc_amt
+							          FROM TB_STMT							          
+							         WHERE DATE_FORMAT(STMT_DT,'%Y%m') = DATE_FORMAT(CURDATE(), '%Y%m')
+							           AND ST_TYPE = '20'
+							           AND MID = #{MER_ID}
+							    ) tbl
+                      ]]>
+                    </when>
+                    <when test="SUMMARY_TYPE == 2">
+                        <![CDATA[
+			                SELECT
+			                	SUM(APP_TODAY_CNT) AS FIRST_NUM,
+			                	SUM(APP_MONTHLY_CNT) AS SECOND_NUM
+			                     FROM (
+			                         SELECT
+			                             ifnull(SUM(APP_CNT+CC_CNT), 0) AS APP_TODAY_CNT,			                             
+			                             0 AS APP_MONTHLY_CNT
+			                          FROM TB_STMT
+			                         WHERE DATE_FORMAT(STMT_DT,'%Y%m%d') = DATE_FORMAT(CURDATE(), '%Y%m%d')
+			                           AND ST_TYPE = '20'
+			                           AND MID = #{MER_ID}
+			                         GROUP BY DATE_FORMAT(STMT_DT,'%Y%m%d')
+			
+			                         UNION ALL
+			
+			                         SELECT
+			                             0 AS APP_TODAY_CNT,
+			                             ifnull(SUM(APP_CNT+CC_CNT), 0) AS APP_MONTHLY_CNT
+			                         FROM TB_STMT
+			                         WHERE DATE_FORMAT(STMT_DT,'%Y%m') = DATE_FORMAT(CURDATE(), '%Y%m')
+			                           AND ST_TYPE = '20'
+			                           AND MID = #{MER_ID}
+			                         GROUP BY DATE_FORMAT(STMT_DT,'%Y%m')
+			                    ) TBL
+                        ]]>
+                    </when>
+                </choose>
+            </when>
+        </choose>
+    </select>
+
+    <select id="selectDashBoardInDecreaseList" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+         SELECT
+             ROW_NUMBER()OVER(ORDER BY VARIATION_AMT ASC) RNUM
+             , MER_NAME
+             , MID
+             , NVL2(VARIATION_AMT, TO_CHAR(VARIATION_AMT), '0') VARIATION_AMT
+             , NVL2(VARIATION_RATE, TO_CHAR(VARIATION_RATE), '-') VARIATION_RATE
+             , CONT_EMP_NM
+             , BRAND_NM
+         FROM(
+         SELECT
+             ROW_NUMBER() OVER(ORDER BY (SELECT SIGN_NM FROM TB_MBS WHERE MID=TBL.MID)) RNUM
+             , (SELECT SIGN_NM FROM TB_MBS A WHERE A.MID=TBL.MID) AS MER_NAME
+             , TBL.MID
+             , SUM(STAN_NORMAL_AMT-STAN_CANCEL_AMT)-SUM(COMP_NORMAL_AMT-COMP_CANCEL_AMT) AS VARIATION_AMT
+             , ROUND(((SUM(STAN_NORMAL_AMT-STAN_CANCEL_AMT)-SUM(COMP_NORMAL_AMT-COMP_CANCEL_AMT))/DECODE(SUM(COMP_NORMAL_AMT-COMP_CANCEL_AMT),0,1,SUM(COMP_NORMAL_AMT-COMP_CANCEL_AMT)))*100,2) AS VARIATION_RATE
+             , (SELECT CONT_EMP_NM FROM TB_MBS A WHERE A.MID=TBL.MID) AS CONT_EMP_NM
+             , (SELECT SIGN_NM FROM TB_MBS A WHERE A.MID=TBL.MID) AS BRAND_NM
+         FROM
+             (SELECT
+                 MID
+                ,SUM(GOODS_AMT) AS STAN_NORMAL_AMT
+                ,0 AS STAN_CANCEL_AMT
+                ,0 AS COMP_NORMAL_AMT
+                ,0 AS COMP_CANCEL_AMT
+             FROM
+                 TB_TRX_HIST
+             WHERE
+                 REG_DNT = '18/05/28'
+                 AND   TRX_CC_HIST_CD IS NULL
+             GROUP BY MID
+
+             UNION ALL
+
+             SELECT
+                 MID
+                 , 0 AS STAN_NORMAL_AMT
+                 , SUM(GOODS_AMT) AS STAN_CANCEL_AMT
+                 , 0 AS COMP_NORMAL_AMT
+                 , 0 AS COMP_CANCEL_AMT
+             FROM
+                 TB_TRX_HIST
+             WHERE
+                 CC_DT = '18/05/20'
+                 AND   TRX_CC_HIST_CD  IS NOT NULL
+             GROUP BY
+                 MID
+
+             UNION ALL
+
+             SELECT
+                 MID
+                 , 0 AS STAN_NORMAL_AMT
+                 , 0 AS STAN_CANCEL_AMT
+                 , SUM(GOODS_AMT) AS COMP_NORMAL_AMT
+                 , 0 AS COMP_CANCEL_AMT
+             FROM
+                 TB_TRX_HIST
+             WHERE
+                 REG_DNT = '2018/05/20'
+                 AND   TRX_CC_HIST_CD IS NULL
+             GROUP BY
+                 MID
+
+             UNION ALL
+
+             SELECT
+                 MID
+                 , 0 AS STAN_NORMAL_AMT
+                 , 0 AS STAN_CANCEL_AMT
+                 , 0 AS COMP_NORMAL_AMT
+                 , SUM(GOODS_AMT) AS COMP_CANCEL_AMT
+             FROM
+                 TB_TRX_HIST
+             WHERE
+                 CC_DT = '2018/05/20'
+                 AND   TRX_CC_HIST_CD IS NOT NULL
+             GROUP BY
+                 MID
+             ) TBL
+         GROUP BY
+             MID
+         )  TBL2
+        ]]>
+    </select>
+    
+    <select id="selectDashBoardInformList" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+         	select RNUM, NOTI_CD, b.DESC1 as NOTI_NM, TITLE, DATE_FORMAT(TBL.REG_DNT, '%Y-%m-%d') AS REG_DT, SEQ
+			  from (
+			        SELECT CAST(@rnum := @rnum + 1 as UNSIGNED) as RNUM, NOTI_CD, TITLE, REG_DNT, SEQ
+			        FROM TB_NOTICE, (select @rnum := 0) a
+			        WHERE INFO_TYPE = '01'
+			          AND NOTI_ST_CD = '1'
+			        ORDER BY seq DESC
+			  )TBL, TB_CODE b  
+			WHERE RNUM <= 5
+			  and TBL.NOTI_CD = b.CODE1
+			  and CODE_CL = '0027'
+			  AND NOTI_CD !='10'
+        ]]>
+    </select>
+    
+    <select id="selectDashBoardQnaList" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+         	select RNUM, HEAD, REQ_DT, RES_DT, if(QNA_TYPE = '0', '문의', '답변완료') as QNA_TYPE, SEQ
+			  from (
+			        SELECT CAST(@rnum := @rnum + 1 as UNSIGNED) as RNUM, QNA_TYPE, HEAD, REQ_DT, RES_DT, SEQ
+			        FROM TB_QNA, (select @rnum := 0) a
+			        WHERE MID = #{MER_ID}
+			        ORDER BY seq DESC
+			  )TBL  
+			WHERE RNUM <= 5
+			  
+        ]]>
+    </select>
+</mapper>

@@ -1,0 +1,113 @@
+@charset "UTF-8";
+.page-sidebar i{
+	font-size: 22px !important;
+}
+.page-sidebar ul li a{
+	text-align: center;
+}
+.sidenav:hover{
+	border-right: 5px solid #f26c4f !important;
+}
+.menu-active{
+	color: #f26c4f !important;
+}
+.clicked{
+	font-weight: 600;
+}
+.select-menu{
+	float: right !important;
+	color: #000 !important;
+}
+.menu-hidden{
+	display: none;
+}
+.opened{
+	display: none;
+}
+.fa-dashboard.special:before,
+.fa-tachometer.special:before,
+.fa-exchange.special:before,
+.fa-calendar.special:before,
+.fa-credit-card.special:before,
+.fa-money.special:before,
+.fa-desktop.special:before,
+.fa-group.special:before,
+.fa-users.special:before,
+.fa-shield.special:before,
+.fa-bar-chart-o.special:before,
+.fa-bar-chart.special:before,
+.fa-clone.special:before,
+.fa-address-book-o.special:before,
+.fa-user.special:before{
+	color: #f26c4f;
+}
+#user-menu>a{
+	background-color: #a49988;
+}
+#user-menu *{
+	color: #000 !important;
+}
+#user, #authority, #calcu, #oper, #business, #payment
+, #baseinfo, #rm-approval, #total, #message{
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	visibility: hidden;
+	opacity: 0;
+	transition: all 0.3s;
+	position: fixed;
+	left: 100px;
+	z-index: 10000;
+}
+#authority{
+	top: 195px;
+}
+#user>li, #authority>li, #calcu>li, #oper>li, #business>li, #payment>li
+, #baseinfo>li, #rm-approval>li, #total>li, #message>li{
+	position: relative;
+	width: 150px;
+	padding: 10px 10px 10px 15px;
+	background-color: #a49988;
+}
+#user li a, #authority li a, #calcu li a, #oper li a, #business li a, #payment li a
+, #baseinfo li a, #rm-approval li a, #total li a, #message li a{
+	color: #000;
+}
+ul[id^='MENU_NO']{
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	visibility: hidden;
+	opacity: 0;
+	transition: all 0.3s;
+	position: fixed;
+	left: 250px !important;
+	z-index: 10000;
+}
+ul[id^='MENU_NO'] li{
+	position: relative;
+	width: 200x !important;
+	padding: 10px 10px 10px 15px;
+	background-color: #2b2b2b !important;
+}
+ul[id^='MENU_NO'] li a{
+	color: #fff !important;
+}
+ul[id^='MENU_NO'] li a:hover{
+	color: #f26c4f !important;
+}
+.page-sidebar ul li:last-child{
+	padding-bottom: 20px;
+}
+.sub-menu{
+	display: none !important;
+}
+@media (max-width: 1024px) and (min-width: 768px){
+	#linkpay-logo>img{
+		width: 30px;
+	}
+}
+
+
+
+

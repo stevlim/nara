@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="logInOut">
+    <select id="selectIMSNotice" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+	        SELECT * FROM 
+			(
+			    SELECT ROW_NUMBER() OVER(ORDER BY SEQ_NO DESC) AS RNUM
+			          ,TITLE
+			          ,MEMO
+			    FROM  TB_BO_BOARD_NOTICE
+			    WHERE BOARD_CHANNEL = 1
+			    AND   STATUS        = 1
+			) TBL 
+			WHERE RNUM = 1
+        ]]>
+    </select>
+    
+    <select id="selectAdminInfo" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT USR_ID
+			      ,PSWD
+			      ,USR_NM
+			      ,USR_TYPE
+			      ,AUTH_NO
+			      ,TEL_NO
+			      ,EMAIL
+			      ,STATUS
+			      ,REG_DT
+			      ,UPD_DT
+			      ,STATUS
+			      ,WORKER
+			      ,WORKER_IP
+			FROM  TB_BO_USR_ACCT	
+			WHERE USR_ID   = #{USR_ID}
+			AND   PSWD     = #{PSWD}
+			AND   USR_TYPE = '2'
+        ]]>
+    </select>
+    
+    <select id="selectAdminInfo2" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT USR_ID
+			      ,PSWD
+			      ,USR_NM
+			      ,USR_TYPE
+			      ,AUTH_NO
+			      ,TEL_NO
+			      ,EMAIL
+			      ,STATUS
+			      ,REG_DT
+			      ,UPD_DT
+			      ,STATUS
+			      ,WORKER
+			      ,WORKER_IP
+			      ,FAIL_CNT
+			FROM  TB_BO_USR_ACCT	
+			WHERE USR_ID   = #{USR_ID}
+			  AND USR_TYPE = '2'
+        ]]>
+    </select>
+    
+    <select id="selectPswdHistory" parameterType="hashmap" resultType="hashmap">
+	    <![CDATA[
+	    	SELECT CONCAT(COALESCE(OLD_PW1, '-'),',',COALESCE(OLD_PW2, '-'),',',COALESCE(OLD_PW3, '-'),',',COALESCE(OLD_PW4, '-'),',',COALESCE(OLD_PW5, '-')) AS OLD_PW
+			FROM TB_BO_USR_ACCT
+			WHERE USR_ID   = #{USR_ID}
+			  AND USR_TYPE = '2'
+	    ]]>
+    </select>
+    
+    <update id="updateAdminPSWD" parameterType="hashmap">
+        <![CDATA[
+            UPDATE TB_BO_USR_ACCT 
+            SET PSWD = #{NEWPSWD}
+               ,UPD_DT = (SELECT DATE_FORMAT(NOW(), "%Y%m%d%H%i%s") FROM DUAL)
+               ,OLD_PW1 = #{PSWD}
+               ,OLD_PW2 = #{OLD_PW1}
+			   ,OLD_PW3 = #{OLD_PW2}
+			   ,OLD_PW4 = #{OLD_PW3}
+			   ,OLD_PW5 = #{OLD_PW4}
+            WHERE  USR_ID = #{USR_ID}
+            AND    PSWD   = #{PSWD}
+        ]]>
+    </update>
+    
+    <update id="updateFailCnt" parameterType="hashmap">
+        <![CDATA[
+            UPDATE TB_BO_USR_ACCT 
+			SET FAIL_CNT = (SELECT FAIL_CNT FROM TB_BO_USR_ACCT WHERE USR_ID = #{USR_ID})+1
+			WHERE USR_ID = #{USR_ID}
+        ]]>
+    </update>
+    
+    <update id="updateFailCntInit" parameterType="hashmap">
+        <![CDATA[
+            UPDATE TB_BO_USR_ACCT 
+			SET FAIL_CNT = 0
+			WHERE USR_ID = #{USR_ID}
+        ]]>
+    </update>
+    
+    <insert id="insertLoginLog" parameterType="hashmap">
+    	<![CDATA[
+    		INSERT INTO TB_BO_USR_WORK_LOG(
+			   SEQ_NO 
+			  ,USR_ID 
+			  ,MENU_NO 
+			  ,MENU_LINK 
+			  ,METHOD_NM
+			  ,LOG_DESC
+			  ,WORKER_IP
+			) VALUES (
+			   (SELECT IF(COUNT(A.SEQ_NO)=0, 1, MAX(COALESCE(A.SEQ_NO, 0))+1) FROM TB_BO_USR_WORK_LOG A)
+			  ,#{USR_ID}
+			  ,0                                -- LOGIN
+			  ,'/home/dashboard/dashboard.do'   -- DASHBORD
+			  ,'dashboard'
+			  ,#{LOG_DESC}
+			  ,#{WORKER_IP}
+			)
+    	]]>
+    </insert>
+    
+    <insert id="insertLogoutLog" parameterType="hashmap">
+    	<![CDATA[
+    		INSERT INTO TB_BO_USR_WORK_LOG(
+			   SEQ_NO 
+			  ,USR_ID 
+			  ,MENU_NO 
+			  ,MENU_LINK 
+			  ,METHOD_NM
+			  ,LOG_DESC
+			  ,WORKER_IP
+			) VALUES (
+			   (SELECT IF(COUNT(A.SEQ_NO)=0, 1, MAX(COALESCE(A.SEQ_NO, 0))+1) FROM TB_BO_USR_WORK_LOG A)
+			  ,#{USR_ID}
+			  ,0             -- Logout
+			  ,'/logIn.do'   -- login page
+			  ,'logIn'
+			  ,'Logout'
+			  ,#{WORKER_IP}
+			)
+    	]]>
+    </insert>
+    
+    <select id="selectLoginMidInfo" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+        	SELECT USE_CL 
+        	FROM TB_MBS
+			WHERE 1=1
+			AND USE_CL = '0'
+		]]>
+			
+		<choose>
+            <when test="MER_TYPE == 'm'.toString()">
+                <![CDATA[
+		            AND MID = #{MER_ID}
+		        ]]>
+            </when>
+            <when test="MER_TYPE == 'g'.toString()">
+                <![CDATA[
+		            AND GID = #{MER_ID}
+		        ]]>
+            </when>
+            <when test="MER_TYPE == 'v'.toString()">
+                <![CDATA[
+		            AND VID = #{MER_ID}
+		        ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+                    AND 1=0
+                ]]>
+            </otherwise>
+        </choose>	
+        
+    </select>
+    
+    <insert id="insertMerchantApply" parameterType="hashmap">
+    	<![CDATA[
+    		INSERT INTO TB_CO(
+			   CONT_NM
+         	  ,CONT_TEL
+         	  ,CONT_CP
+         	  ,CONT_EMAIL
+         	  ,CO_NO
+         	  ,CO_NM
+         	  ,REP_NM
+			) VALUES (
+			  #{CONT_NM}
+         	  ,#{CONT_TEL}
+         	  ,#{CONT_CP}
+         	  ,#{CONT_EMAIL}
+         	  ,#{CO_NO}
+         	  ,#{CO_NM}
+         	  ,#{REP_NM}
+			)
+    	]]>
+    </insert>
+    
+    <select id="selectCoNoDupChk" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+	        SELECT CO_NO 
+	        FROM TB_CO
+			WHERE CO_NO = #{CO_NO}
+        ]]>
+    </select>
+</mapper>

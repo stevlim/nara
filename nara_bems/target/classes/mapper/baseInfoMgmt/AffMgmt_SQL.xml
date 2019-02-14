@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="affMgmt">
+	<select id="selectCreditCardList" parameterType="hashmap"
+		resultType="hashmap">
+		<![CDATA[
+			SELECT * FROM 
+			(	
+				SELECT 
+					MBS_TYPE_CD,
+		          FN_MBS_TYPE(MBS_TYPE_CD) AS MBS_TYPE_NM,
+		          A.CARD_CD, 
+		          FN_CARD_NM(A.CARD_CD, NULL, NULL, NULL) AS CARD_NM,	
+		          MBS_NO,
+		          MEMBER_CL,
+		          FN_MEMBER_NM(MEMBER_CL) AS MEMBER_NM,
+		          NOINT_FLG,
+		          FN_NOINT_FLG(NOINT_FLG) AS NOINT_NM,
+				  COALESCE(TRUNC(DPST_CYCLE, 0),0) DPST_CYCLE, 
+				  COALESCE(TRUNC(CP_FEE, 2),0) CP_FEE, 
+				  COALESCE(TRUNC(POINT_FEE, 2),0) POINT_FEE, 
+				  COALESCE(TRUNC(CHK_FEE, 2),0) CHK_FEE, MEMO, 
+				  COALESCE(TRUNC(MB_LMT,0),0) AS MB_LMT,
+		          AUTH_TYPE_CD,
+				  FN_NM_CODE1('AUTH_TYPE_CD', A.AUTH_TYPE_CD) AS AUTH_TYPE_NM,
+		          POINT_FLG,
+		          FN_POINT_FLG(POINT_FLG) AS POINT_NM,
+				  (SELECT COUNT(*) CNT FROM TB_LNK_INFO B, TB_TERM C WHERE A.MBS_NO = B.MBS_NO AND B.FT_DT BETWEEN A.FR_DT AND A.TO_DT AND B.CP_CD = A.MEMBER_CL AND B.TERM_NO = C.TERM_NO AND B.CP_CD = C.CARD_CD AND B.MBS_NO = C.MBS_NO AND B.FT_DT BETWEEN C.FR_DT AND C.TO_DT) AS CNT,
+				  ROW_NUMBER()OVER(ORDER BY A.MBS_NO ASC) NO,
+		          LIMIT_APP_ACQU,
+				  FN_LIMIT_APP_FLG(LIMIT_APP_ACQU, LIMIT_CONO_FNNO, MBS_NO) AS LIMIT_DIV_NM, 	 
+				  A.FR_DT 	
+			    FROM 
+			    	TB_CARD_MBS A
+			    WHERE 
+			    ]]>
+		<if test="MER_TYPE!=null and MER_TYPE!=''">
+		    	<![CDATA[
+			    	MBS_TYPE_CD = #{MER_TYPE}
+		    	]]>
+		</if>
+		<if test="CardCompanyList!='ALL'">
+		    	<![CDATA[
+		    		AND CARD_CD = #{CardCompanyList}
+		    	]]>
+		</if>
+		<if test="MerTypeChk!='ALL'">
+		    	<![CDATA[
+		    		AND NOINT_FLG = #{MerTypeChk}
+		    	]]>
+		</if>
+		<if test="merNo!=null and merNo!=''">
+		    	<![CDATA[
+		    		AND MBS_NO = #{merNo}
+		    	]]>
+		</if>
+		<if test="CardCertList!='ALL'">
+		    	<![CDATA[
+		    		AND AUTH_TYPE_CD = #{CardCertList}
+		    	]]>
+		</if>
+		<if test="DepositCycle!='ALL'">
+		    	<![CDATA[
+		    		AND DPST_CYCLE = #{DepositCycle}
+		    	]]>
+		</if>
+		<if test="PointType!='ALL'">
+		    	<![CDATA[
+		    		AND POINT_FLG = #{PointType}
+		    	]]>
+		</if>
+		<if test="LimitChk!='ALL'">
+		    	<![CDATA[
+		    		AND LIMIT_APP_ACQU = #{LimitChk}
+		    	]]>
+		</if>
+		    	<![CDATA[
+		    		AND TO_DT= '99991231'
+	    			ORDER BY A.FR_DT DESC
+    			) TBL
+    			WHERE NO BETWEEN  ${intPageStart} AND ${intPageEnd}
+	    	]]>
+	</select>
+	<select id="selectCreditCardListTotal" parameterType="hashmap"
+		resultType="Integer">
+		<![CDATA[
+			SELECT 
+				COUNT(1)
+		    FROM 
+		    	TB_CARD_MBS A
+		    WHERE 
+		    ]]>
+		<if test="MER_TYPE!=null and MER_TYPE!=''">
+	    	<![CDATA[
+		    	MBS_TYPE_CD = #{MER_TYPE}
+	    	]]>
+		</if>
+		<if test="CardCompanyList!='ALL'">
+	    	<![CDATA[
+	    		AND CARD_CD = #{CardCompanyList}
+	    	]]>
+		</if>
+		<if test="MerTypeChk!='ALL'">
+	    	<![CDATA[
+	    		AND NOINT_FLG = #{MerTypeChk}
+	    	]]>
+		</if>
+		<if test="merNo!=null and merNo!=''">
+	    	<![CDATA[
+	    		AND MBS_NO = #{merNo}
+	    	]]>
+		</if>
+		<if test="CardCertList!='ALL'">
+	    	<![CDATA[
+	    		AND AUTH_TYPE_CD = #{CardCertList}
+	    	]]>
+		</if>
+		<if test="DepositCycle!='ALL'">
+	    	<![CDATA[
+	    		AND DPST_CYCLE = #{DepositCycle}
+	    	]]>
+		</if>
+		<if test="PointType!='ALL'">
+	    	<![CDATA[
+	    		AND POINT_FLG = #{PointType}
+	    	]]>
+		</if>
+		<if test="LimitChk!='ALL'">
+	    	<![CDATA[
+	    		AND LIMIT_APP_ACQU = #{LimitChk}
+	    	]]>
+		</if>
+	    	<![CDATA[
+	    		AND TO_DT= '99991231'
+    			ORDER BY MBS_NO
+	    	]]>
+	</select>
+	<insert id="insertCreditCardInfo" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO 
+			  TB_CARD_MBS
+			  (
+			    MBS_NO
+			    ,CARD_CD
+			    ,MBS_TYPE_CD
+			    ,DPST_CYCLE
+			    ,LIMIT_APP_ACQU
+			    ,CP_FEE
+			    ,OVER_FEE
+			    ,CHK_FEE
+			    ,POINT_FEE
+			    ,MB_LMT
+			    ,NOINT_FLG
+			    ,POINT_FLG
+			    ,AUTH_TYPE_CD
+			    ,MEMO
+			    ,FR_DT
+			    ,TO_DT
+			    ,REG_DT
+			    ,WORKER
+			    ,REG_DNT
+			  )
+			  VALUES
+			  (
+			    #{merNo}
+			    ,#{CardCompanyList}
+			    ,#{MER_TYPE}
+			    ,#{DepositCycle}
+			    ,#{LimitChk}
+			    ,#{fee}
+			    ,#{abroadFee} 
+			    ,#{chkFee}
+			    ,#{pointFee}
+			    ,#{approLimit}
+			    ,#{MerTypeChk}
+			    ,#{PointType}
+			    ,#{CardCertList}
+			    ,#{memo}
+			    ,DATE_FORMAT(NOW(), "%Y%m%d")
+			    ,'99991231'
+			    ,DATE_FORMAT(NOW(), "%Y%m%d")
+			    ,#{WORKER}
+			    ,DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+			  )
+		]]>
+	</insert>
+	<select id="cardInfoSettingCnt" parameterType="hashmap"
+		resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				A.MBS_NO
+		       , A.CARD_CD
+		       , A.NOINT_FLG
+		       , (SELECT COUNT(*) CNT FROM TB_LNK_INFO B WHERE A.MBS_NO = B.MBS_NO AND B.CP_CD = A.CARD_CD AND B.TO_DT = '99991231') AS CNT
+		       , (SELECT COUNT(*) ACQU_CNT FROM TB_ACQ_STMT_ID B WHERE B.MBS_NO = A.MBS_NO AND B.CP_CD = A.CARD_CD) AS ACQU_CNT
+		       , (SELECT COUNT(*) CNT FROM TB_TERM B WHERE B.MBS_NO = A.MBS_NO AND B.CARD_CD = A.CARD_CD) AS TERMINAL_CNT
+		   FROM TB_CARD_MBS A
+		   WHERE MBS_NO = #{mbsNo}
+		     AND CARD_CD = #{cardCd}
+		     AND A.TO_DT = '99991231'
+		]]>
+	</select>
+	<!-- 한번에 몰기 -->
+	<select id="selectCardInfo" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				TBL.CARD_CD, TBL.CARD_NM, TBL.NOINT_FLG, TBL.NOINT_NM, TBL.DPST_CYCLE, TBL.CP_FEE, TBL.POINT_FEE, TBL.CHK_FEE, TBL.OVER_FEE, TBL.MB_LMT, 
+			    TBL.MEMBER_CL, TBL.MEMBER_NM , TBL.AUTH_TYPE_NM , TBL.KEYIN_CL_CD , TBL.KEYIN_CL_NM , TBL.MEMO , TBL.LAST_APP_DT ,
+			    TBL.RNUM , TBL.POINT_FLG, TBL.POINT_NM, TBL.MBS_NO, TBL.MBS_TYPE
+			FROM 
+			(	
+				SELECT 
+					CARD_CD,
+					FN_CARD_NM(CARD_CD, NULL, NULL, NULL) AS CARD_NM,	
+					NOINT_FLG,
+					FN_NOINT_FLG(NOINT_FLG) AS NOINT_NM,
+					TRUNC(DPST_CYCLE, 0) DPST_CYCLE, TRUNC(CP_FEE, 2) CP_FEE, TRUNC(POINT_FEE, 2) POINT_FEE, TRUNC(CHK_FEE, 2) CHK_FEE, TRUNC(OVER_FEE, 2) OVER_FEE , TRUNC(MB_LMT,0) AS MB_LMT,
+					MEMBER_CL,
+					FN_MEMBER_NM(MEMBER_CL) AS MEMBER_NM, 
+					FN_NM_CODE1('AUTH_TYPE_CD', A.AUTH_TYPE_CD) AS AUTH_TYPE_NM,
+					KEYIN_CL_CD,
+					FN_NM_CODE1('KEYIN_CL_CD',KEYIN_CL_CD) AS KEYIN_CL_NM,
+					MEMO,
+					COALESCE((SELECT MAX(APP_DT) FROM TB_ACQ B WHERE  B.APP_DT BETWEEN A.FR_DT AND A.TO_DT AND A.MBS_NO = B.MBS_NO AND A.AUTH_TYPE_CD = B.AUTH_TYPE_CD ) ,'') AS LAST_APP_DT,
+					ROWNUM AS RNUM ,
+					POINT_FLG ,
+					FN_POINT_FLG(POINT_FLG) AS POINT_NM, MBS_NO,
+					FN_MBS_TYPE(MBS_TYPE_CD) AS MBS_TYPE
+		        FROM TB_CARD_MBS A
+			    WHERE MBS_NO = #{MBS_NO}
+			    AND TO_DT = '99991231'
+		    ) TBL
+		    WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+		]]>
+	</select>
+	<select id="selectCardInfoTotal" parameterType="hashmap"
+		resultType="Integer">
+		<![CDATA[
+			SELECT COUNT(1)
+	        FROM TB_CARD_MBS A
+		    WHERE MBS_NO = #{MBS_NO}
+		    AND TO_DT = '99991231'
+		]]>
+	</select>
+	<!-- <select id="selectCardHistory" parameterType="hashmap" resultType="hashmap"> 
+		<![CDATA[ SELECT A.FR_DT, A.TO_DT,ROW_NUMBER()OVER(ORDER BY A.FR_DT DESC) 
+		NO, TRUNC(A.DPST_CYCLE, 0) DPST_CYCLE, TRUNC(A.MB_LMT, 0) MB_LMT, TRUNC(A.CP_FEE, 
+		2) CP_FEE, TRUNC(POINT_FEE, 2) POINT_FEE, TRUNC(A.CHK_FEE, 2) CHK_FEE, TRUNC(A.OVER_FEE, 
+		2) OVER_FEE, A.MEMO, A.REG_DT, A.POINT_FLG, (SELECT MAX(X.EMP_NM) FROM TB_EMP 
+		X WHERE X.EMP_NM = A.WORKER) WORKER FROM TB_CARD_MBS A WHERE A.MBS_NO = #{MBS_NO} 
+		ORDER BY A.FR_DT ]]> </select> -->
+	<select id="selectCardHistory" parameterType="hashmap"
+		resultType="hashmap">
+		<![CDATA[
+			SELECT * FROM 
+			(
+				SELECT 
+		           A.FR_DT, A.TO_DT, ROWNUM AS RNUM ,
+		           TRUNC(A.DPST_CYCLE, 0) DPST_CYCLE, TRUNC(A.MB_LMT, 0) MB_LMT,
+		           TRUNC(A.CP_FEE, 2) CP_FEE, TRUNC(POINT_FEE, 2) POINT_FEE, TRUNC(A.CHK_FEE, 2) CHK_FEE, TRUNC(A.OVER_FEE, 2) OVER_FEE,
+		           A.MEMO, A.REG_DT, A.POINT_FLG, A.MBS_NO,
+		           FN_POINT_FLG(A.POINT_FLG) AS POINT_NM,
+		           (SELECT MAX(X.EMP_NM) FROM TB_EMP X WHERE X.EMP_NM = A.WORKER) WORKER,
+		           FN_MBS_TYPE(MBS_TYPE_CD) AS MBS_TYPE_NM,MBS_TYPE_CD, 
+              	   FN_CARD_NM(A.CARD_CD, NULL, NULL, NULL) AS CARD_NM, CARD_CD,
+		           NOINT_FLG, FN_NOINT_FLG(NOINT_FLG) AS NOINT_NM, 
+		           MEMBER_CL, FN_MEMBER_NM(MEMBER_CL) AS MEMBER_NM, 
+               	   FN_NM_CODE1('AUTH_TYPE_CD', AUTH_TYPE_CD) AUTH_TYPE_NM,
+		           FN_NM_CODE1('KEYIN_CL_CD', KEYIN_CL_CD) KEYIN_CL_NM,COALESCE((SELECT MAX(APP_DT) FROM TB_ACQ B WHERE  B.APP_DT BETWEEN A.FR_DT AND A.TO_DT AND A.MBS_NO = B.MBS_NO AND A.AUTH_TYPE_CD = B.AUTH_TYPE_CD ) ,'') AS LAST_APP_DT
+		      	FROM TB_CARD_MBS A	
+		      	WHERE MBS_NO = #{MBS_NO}
+		      	AND TO_DT = '99991231'
+		      ) TBL
+		      WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}			
+		]]>
+	</select>
+	<select id="selectCardHistoryTotal" parameterType="hashmap"
+		resultType="Integer">
+		<![CDATA[
+			SELECT COUNT(1)
+	      	FROM TB_CARD_MBS A
+	      	WHERE MBS_NO = #{MBS_NO}
+	      	AND TO_DT = '99991231'
+		]]>
+	</select>
+	<select id="mbsNoMatchChk" parameterType="hashmap" resultType="integer">
+		<![CDATA[
+			SELECT 
+				COUNT(1)
+	        FROM 
+	        	TB_CARD_MBS
+	        WHERE 
+	        	MBS_NO = #{MBS_NO}
+	        AND 
+	        	CARD_CD= #{CardCompanyList}
+		]]>
+	</select>
+	<insert id="insertVanTer" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO TB_TERM 
+	        (
+	          VAN_CD
+	          , TERM_NO
+	          , CARD_CD
+	          , MBS_NO
+	          , MEMO
+	          , FR_DT
+	          , TO_DT
+	          , REG_DT
+	          , WORKER
+	          , REG_DNT
+	        )
+	        VALUES
+	        (
+	          #{VanType}
+	          , #{TERM_NO}
+	          , #{CardCompanyList}
+	          , #{MBS_NO}
+	          , #{memo}
+	          , #{frDt}
+	          , '99991231'
+	          , DATE_FORMAT(NOW(), "%Y%m%d")
+	          , #{WORKER}
+	          , DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	        )
+		]]>
+	</insert>
+	<select id="selectVanTerInfo" parameterType="hashmap"
+		resultType="hashmap">
+		<![CDATA[
+			SELECT * FROM 
+			(
+				SELECT
+					 A.VAN_CD, (SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0003' AND CODE1=A.VAN_CD) VAN_NM, A.TERM_NO,
+					 B.CARD_CD, FN_CARD_NM(B.CARD_CD, NULL, NULL, NULL) AS CARD_NM, A.MBS_NO, A.FR_DT, A.TO_DT, A.MEMO, 
+					 B.MBS_TYPE_CD, FN_MBS_TYPE(B.MBS_TYPE_CD) AS MBS_TYPE_NM,
+		        	 ROWNUM AS RNUM 
+			        /*   B.OVER_FLG, CASE WHEN B.OVER_FLG = '1' THEN '해외' ELSE '일반' END OVER_FLG_NM   */
+			    FROM 
+			    	TB_TERM A, TB_CARD_MBS B
+			    WHERE 
+			    	DATE_FORMAT(NOW(), "%Y%m%d") BETWEEN A.FR_DT AND A.TO_DT   
+			    AND A.MBS_NO = B.MBS_NO
+			    AND DATE_FORMAT(NOW(), "%Y%m%d") BETWEEN B.FR_DT AND B.TO_DT 
+			    AND B.MBS_TYPE_CD = #{MER_TYPE}
+			]]>
+		<if test="vanType!='ALL'">
+			<![CDATA[
+				AND A.VAN_CD = #{vanType}
+			]]>
+		</if>
+		<if test="termNo!=null and termNo!=''">
+			<![CDATA[
+				AND A.TERM_NO = #{termNo}
+			]]>
+		</if>
+		<if test="mbsNo!=null and mbsNo!='' ">
+			<![CDATA[
+				AND A.MBS_NO = #{mbsNo}
+			]]>
+		</if>
+		<if test="CardCompanyList!='ALL'">
+			<![CDATA[
+				AND A.CARD_CD = #{CardCompanyList}
+			]]>
+		</if>
+			<![CDATA[
+			) TBL
+			WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+			]]>
+	</select>
+	<select id="selectVanTerInfoTotal" parameterType="hashmap"
+		resultType="Integer">
+		<![CDATA[
+			SELECT
+				 COUNT(1)
+		    FROM 
+		    	TB_TERM A, TB_CARD_MBS B
+		    WHERE 
+		    	DATE_FORMAT(NOW(), "%Y%m%d") BETWEEN A.FR_DT AND A.TO_DT   
+		    AND A.MBS_NO = B.MBS_NO
+		    AND DATE_FORMAT(NOW(), "%Y%m%d") BETWEEN B.FR_DT AND B.TO_DT 
+		    AND B.MBS_TYPE_CD = #{MER_TYPE}
+		]]>
+		<if test="vanType!='ALL'">
+		<![CDATA[
+			AND A.VAN_CD = #{vanType}
+		]]>
+		</if>
+		<if test="termNo!=null and termNo!=''">
+		<![CDATA[
+			AND A.TERM_NO = #{termNo}
+		]]>
+		</if>
+		<if test="mbsNo!=null and mbsNo!='' ">
+		<![CDATA[
+			AND A.MBS_NO = #{mbsNo}
+		]]>
+		</if>
+		<if test="CardCompanyList!='ALL'">
+		<![CDATA[
+			AND A.CARD_CD = #{CardCompanyList}
+		]]>
+		</if>
+	</select>
+	<insert id="insertDeleteCardFeeInfo" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO TB_NOINT_FEE_DEL
+			  (MBS_NO, SALES_CL, MON_ID, CP_FEE, SALES_FEE, MEMO, FR_DT, TO_DT, REG_DT, WORKER, DEL_DT, DEL_TM)
+			  SELECT MBS_NO, SALES_CL, MON_ID, CP_FEE, SALES_FEE, MEMO, FR_DT, TO_DT, REG_DNT, #{worker}, DATE_FORMAT(NOW(), "%Y%m%d"), DATE_FORMAT(NOW(), "%H%i%s")
+			    FROM TB_NOINT_FEE
+			   WHERE MBS_NO = #{mbsNo}
+		]]>
+	</insert>
+	<delete id="deleteNoneUseCardFee" parameterType="hashmap">
+	<![CDATA[
+		DELETE 
+			FROM TB_NOINT_FEE
+      	WHERE 
+      		MBS_NO = #{mbsNo}
+	]]>
+	</delete>
+	<insert id="insertDelCardInfo" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO 
+				TB_CARD_MBS_DEL
+			  (MBS_NO, CARD_CD, CARD_CO_NO, MBS_TYPE_CD, DPST_CYCLE, CP_FEE, BANK_CD, 
+			  ACCNT_NO, MB_LMT, MEMO, FR_DT, TO_DT, REG_DT, WORKER, CP_ETC_FEE, MEMBER_CL, CHK_FEE, 
+			  POINT_FEE, AUTH_TYPE_CD, KEYIN_CL_CD, OVER_FEE, POINT_FLG, OVER_FLG, DEL_DT, DEL_TM)
+	          SELECT MBS_NO, CARD_CD, CARD_CO_NO, MBS_TYPE_CD, DPST_CYCLE, CP_FEE, BANK_CD, 
+	          ACCNT_NO, MB_LMT, MEMO, FR_DT, TO_DT, REG_DT, #{worker}, CP_ETC_FEE, MEMBER_CL, CHK_FEE, 
+	          POINT_FEE, AUTH_TYPE_CD, KEYIN_CL_CD, OVER_FEE, POINT_FLG, OVER_FLG, DATE_FORMAT(NOW(), "%Y%m%d"), DATE_FORMAT(NOW(), "%H%i%s")
+	          FROM TB_CARD_MBS
+			   WHERE MBS_NO = #{mbsNo}
+			     AND CARD_CD = #{cardCd}
+		]]>
+	</insert>
+	<delete id="deleteNoneUseCardInfo" parameterType="hashmap">
+	<![CDATA[
+		DELETE 
+			FROM TB_CARD_MBS
+		WHERE 
+			MBS_NO = #{mbsNo}
+     	AND 
+     		CARD_CD = #{cardCd}
+	]]>
+	</delete>
+	<select id="selectCardSetData" parameterType="hashmap"
+		resultType="hashmap">
+		<![CDATA[
+			SELECT * 
+			FROM 
+			(
+				SELECT
+							MBS_NO, 
+							CASE WHEN DATA_CL = '0' THEN 'IMS_BIM_BM_0696'
+		                    WHEN DATA_CL = '1' THEN 'IMS_BIM_BM_0697'
+		                    WHEN DATA_CL = '2' THEN 'IMS_BIM_BM_0698'
+			                END AS DATA_CL_NM, DATA_CL, MID, ACQU_DT, TERM_NO,
+			                ROW_NUMBER()OVER(ORDER BY A.MBS_NO ASC) NO
+			   FROM 
+			   (
+				     SELECT 
+				     	'0' AS DATA_CL, B.MID, '' AS ACQU_DT, '' AS TERM_NO, A.MBS_NO            
+				     FROM 
+				     	TB_CARD_MBS A, TB_LNK_INFO B, TB_TERM C
+				     WHERE 
+				     	A.MBS_NO = B.MBS_NO 
+				     AND 
+				     	B.CP_CD = A.CARD_CD 
+				     AND 
+				     	B.TERM_NO = C.TERM_NO 
+				     AND 
+				     	B.CP_CD = C.CARD_CD 
+				     AND 
+				     	B.MBS_NO = C.MBS_NO
+				     AND 
+				     	A.MBS_NO = #{mbsNo}
+				     AND 
+				     	A.CARD_CD = #{cardCd}
+				     AND 
+				     	B.FT_DT BETWEEN C.FR_DT AND C.TO_DT
+				     GROUP BY B.MID, A.MBS_NO
+				     
+				     UNION ALL
+				     
+				     SELECT 
+				     	'1' AS DATA_CL, '' AS MID, MAX(B.ACQ_DT) AS ACQU_DT, '' AS TERM_NO, A.MBS_NO
+				     FROM 
+				     	TB_CARD_MBS A, TB_ACQ_STMT_ID B
+				     WHERE 
+				     	A.MBS_NO = B.MBS_NO
+				     AND 
+				     	A.CARD_CD = B.CP_CD
+				     AND 
+				     	A.TO_DT = '99991231'
+				     AND 
+				     	A.MBS_NO = #{mbsNo}
+				     AND
+				     	 A.CARD_CD = #{cardCd}
+				     GROUP BY A.MBS_NO
+				  
+				     UNION ALL
+				     
+				     SELECT 
+				     	'2' AS DATA_CL, '' AS MID, '' AS ACQU_DT, TERM_NO, MBS_NO
+				     FROM 
+				     	TB_TERM
+				     WHERE
+				     	MBS_NO = #{mbsNo}
+				     AND 
+				     	CARD_CD = #{cardCd}
+				  )A
+			  ) TBL
+			  WHERE NO BETWEEN  ${intPageStart} AND ${intPageEnd} 
+		]]>
+	</select>
+	<select id="selectCardSetDataTotal" parameterType="hashmap"
+		resultType="Integer">
+		<![CDATA[
+			SELECT
+						COUNT(1)
+		   FROM (
+		     SELECT 
+		     	'0' AS DATA_CL, B.MID, '' AS ACQU_DT, '' AS TERM_NO, A.MBS_NO            
+		     FROM 
+		     	TB_CARD_MBS A, TB_LNK_INFO B, TB_TERM C
+		     WHERE 
+		     	A.MBS_NO = B.MBS_NO 
+		     AND 
+		     	B.CP_CD = A.CARD_CD 
+		     AND 
+		     	B.TERM_NO = C.TERM_NO 
+		     AND 
+		     	B.CP_CD = C.CARD_CD 
+		     AND 
+		     	B.MBS_NO = C.MBS_NO
+		     AND 
+		     	A.MBS_NO = #{mbsNo}
+		     AND 
+		     	A.CARD_CD = #{cardCd}
+		     AND 
+		     	B.FT_DT BETWEEN C.FR_DT AND C.TO_DT
+		     GROUP BY B.MID, A.MBS_NO
+		     
+		     UNION ALL
+		     
+		     SELECT 
+		     	'1' AS DATA_CL, '' AS MID, MAX(B.ACQ_DT) AS ACQU_DT, '' AS TERM_NO, A.MBS_NO
+		     FROM 
+		     	TB_CARD_MBS A, TB_ACQ_STMT_ID B
+		     WHERE 
+		     	A.MBS_NO = B.MBS_NO
+		     AND 
+		     	A.CARD_CD = B.CP_CD
+		     AND 
+		     	A.TO_DT = '99991231'
+		     AND 
+		     	A.MBS_NO = #{mbsNo}
+		     AND
+		     	 A.CARD_CD = #{cardCd}
+		     GROUP BY A.MBS_NO
+		  
+		     UNION ALL
+		     
+		     SELECT 
+		     	'2' AS DATA_CL, '' AS MID, '' AS ACQU_DT, TERM_NO, MBS_NO
+		     FROM 
+		     	TB_TERM
+		     WHERE
+		     	MBS_NO = #{mbsNo}
+		     AND 
+		     	CARD_CD = #{cardCd}
+		     
+		  )A
+		]]>
+	</select>
+</mapper>

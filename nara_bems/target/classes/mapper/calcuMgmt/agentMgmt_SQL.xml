@@ -1,0 +1,1432 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="agentMgmt">
+	<!--  기 대리점 정산 처리건 수 확인  -->
+	<select id="selectAgentStmtCnt" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT 
+	    	COUNT(1) AS CNT
+	    	, SUM(CASE WHEN CONFIRM_FLG > 0 OR CARRY_CL = 1 THEN 1 ELSE 0 END) AS CONF_CNT
+	  	FROM TB_AGENT_STMT
+	  	WHERE SUBSTR(STMT_DT, 1, 6) = TO_CHAR(SYSDATE, 'YYYYMM')
+	]]>
+	<if test="division!='ALL'">
+	<![CDATA[
+		AND VID = #{id}
+	]]>
+	</if>
+	</select>
+	<!-- 기 생성 대리점 정산데이터 삭제  -->
+	<delete id="deleteAgentStmt"  parameterType="hashmap">
+	<![CDATA[
+		DELETE FROM TB_AGENT_STMT
+   		WHERE SUBSTR(STMT_DT, 1, 6) = TO_CHAR(SYSDATE, 'YYYYMM')
+	]]>
+	<if test="division!='ALL'">
+	<![CDATA[
+		AND VID = #{id}
+	]]>
+	</if>
+	</delete>
+	<!-- 대리점 정산 데이터 재생성 -->
+	<insert id="insertReAgentStmt" parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO TB_AGENT_STMT 
+		  (
+		    VID, STMT_DT, ST_TYPE, APP_CNT, APP_AMT, CC_CNT, CC_AMT, ORG_FEE, SALES_FEE, SALES_ORG_FEE, FEE, VAT, PAY_AMT, 
+		    PAY_VAT, RESR_AMT, RESR_CC_AMT, EXTRA_AMT, SMS_FEE, DPST_AMT, CARRY_APP_CNT, CARRY_APP_AMT, CARRY_CC_CNT, CARRY_CC_AMT, CARRY_ORG_FEE, 
+		    CARRY_SALES_FEE, CARRY_SALES_ORG_FEE, CARRY_FEE, CARRY_VAT, CARRY_DPST_AMT, CARRY_RESR_AMT, CARRY_RESR_CC_AMT, CARRY_EXTRA_AMT, CARRY_PAY_AMT, CARRY_PAY_VAT)
+		    SELECT
+		      A.VID, A.STMT_DT, STATUS, APP_CNT, APP_AMT, CC_CNT, CC_AMT, ORG_FEE, SALES_FEE, SALES_ORG_FEE, FEE, VAT, PAY_AMT, PAY_VAT, 
+		      RESR_AMT, RESR_CC_AMT, EXTRA_AMT, SMS_FEE, (FEE+VAT+SMS_FEE+PAY_AMT+PAY_VAT-RESR_AMT+RESR_CC_AMT+EXTRA_AMT) AS DPST_AMT, 
+		      CARRY_APP_CNT, CARRY_APP_AMT, CARRY_CC_CNT, CARRY_CC_AMT, CARRY_ORG_FEE, CARRY_SALES_FEE, CARRY_SALES_ORG_FEE, CARRY_FEE, CARRY_VAT, CARRY_DPST_AMT, 
+		      CARRY_RESR_AMT, CARRY_RESR_CC_AMT, CARRY_EXTRA_AMT, CARRY_PAY_AMT, CARRY_PAY_VAT
+		    FROM 
+		    (  
+		      SELECT 
+		        A.VID, A.STMT_DT, 0 STATUS, SUM(A.APP_CNT) AS APP_CNT, SUM(A.APP_AMT) AS APP_AMT, SUM(A.CC_CNT) AS CC_CNT, SUM(A.CC_AMT) AS CC_AMT
+		        , SUM(A.ORG_FEE) AS ORG_FEE, SUM(A.SALES_FEE) AS SALES_FEE, SUM(A.SALES_ORG_FEE) AS SALES_ORG_FEE, SUM(A.FEE) AS FEE, SUM(TRUNC(A.FEE/10,0)) AS VAT
+		        , SUM(A.PAY_AMT) AS PAY_AMT, SUM(PAY_VAT) AS PAY_VAT, SUM(RESR_AMT) AS RESR_AMT, SUM(RESR_CC_AMT) AS RESR_CC_AMT, SUM(EXTRA_AMT) AS EXTRA_AMT
+		        , SUM(A.SMS_FEE) AS SMS_FEE, SUM(A.CARRY_APP_CNT) CARRY_APP_CNT, SUM(A.CARRY_APP_AMT) AS CARRY_APP_AMT, SUM(A.CARRY_CC_CNT) AS CARRY_CC_CNT
+		        , SUM(A.CARRY_CC_AMT) AS CARRY_CC_AMT, SUM(A.CARRY_ORG_FEE) AS CARRY_ORG_FEE, SUM(A.CARRY_SALES_FEE) AS CARRY_SALES_FEE, SUM(A.CARRY_SALES_ORG_FEE) AS CARRY_SALES_ORG_FEE 
+		        , SUM(A.CARRY_FEE) AS CARRY_FEE, SUM(A.CARRY_VAT) AS CARRY_VAT, SUM(A.CARRY_DPST_AMT) AS CARRY_DPST_AMT
+		        , SUM(A.CARRY_RESR_AMT) AS CARRY_RESR_AMT, SUM(A.CARRY_RESR_CC_AMT) AS CARRY_RESR_CC_AMT, SUM(A.CARRY_EXTRA_AMT) AS CARRY_EXTRA_AMT
+		        , SUM(A.CARRY_PAY_AMT) AS CARRY_PAY_AMT, SUM(A.CARRY_PAY_VAT) AS CARRY_PAY_VAT
+		     FROM 
+		     (
+		       SELECT 
+		          A.VID, A.STMT_DT, 
+		          SUM(A.APP_CNT) AS APP_CNT , SUM(A.APP_AMT) APP_AMT, 
+		          SUM(A.CC_CNT) CC_CNT, SUM(A.CC_AMT) CC_AMT,
+		          SUM(A.ORG_FEE) ORG_FEE, SUM(A.SALES_FEE) SALES_FEE, SUM(A.SALES_ORG_FEE) SALES_ORG_FEE, 
+		          SUM(A.FEE) FEE, 0 PAY_AMT, 0 PAY_VAT, 0 RESR_AMT, 0 RESR_CC_AMT, 0 EXTRA_AMT,
+		          0 SMS_FEE, 0 CARRY_APP_CNT, 0 CARRY_APP_AMT, 0 CARRY_CC_CNT, 0 CARRY_CC_AMT, 0 CARRY_ORG_FEE, 0 CARRY_SALES_FEE, 0 CARRY_SALES_ORG_FEE, 
+		          0 CARRY_FEE, 0 CARRY_VAT, 0 CARRY_DPST_AMT, 0 CARRY_RESR_AMT, 0 CARRY_RESR_CC_AMT, 0 CARRY_EXTRA_AMT, 0 CARRY_PAY_AMT, 0 CARRY_PAY_VAT
+		        FROM TB_AGENT_SUB_STMT A, TB_VGRP B
+		        WHERE A.TR_DT BETWEEN CONCAT(DATE_FORMAT(DATE_ADD(NOW(), interval -1 month), "%Y%m"), '01') AND CONCAT(DATE_FORMAT(DATE_ADD(NOW(), interval -1 month), "%Y%m"),'31')
+		        AND A.VID = B.VID
+		        AND A.VID != '000000000V'
+		        AND B.AGENT_CL_CD != '00'
+		        ]]>
+		        <if test="division!='ALL'">
+		        <![CDATA[
+		        	AND B.VID = #{id}
+		        ]]>
+		        </if>
+		        <![CDATA[
+		        GROUP BY A.VID, A.STMT_DT
+		    
+		        UNION ALL
+		    
+		        SELECT 
+		          B.VID, FN_SETTLMNT_DAY(B.STMT_CYCLE_CD, DATE_FORMAT(NOW(), "%Y%m%d"), '0') AS STMT_DT,
+		          0 APP_CNT, 0 APP_AMT, 0 CC_CNT, 0 CC_AMT, 
+		          0 ORG_FEE, 0 SALES_FEE, 0 SALES_ORG_FEE, 
+		          0 FEE, 0 PAY_AMT, 0 PAY_VAT, SUM(RESR_AMT) AS RESR_AMT, 0 RESR_CC_AMT, 0 EXTRA_AMT,
+		          0 SMS_FEE, 0 CARRY_APP_CNT, 0 CARRY_APP_AMT, 0 CARRY_CC_CNT, 0 CARRY_CC_AMT, 0 CARRY_ORG_FEE, 0 CARRY_SALES_FEE, 0 CARRY_SALES_ORG_FEE, 
+		          0 CARRY_FEE, 0 CARRY_VAT, 0 CARRY_DPST_AMT, 0 CARRY_RESR_AMT, 0 CARRY_RESR_CC_AMT, 0 CARRY_EXTRA_AMT, 0 CARRY_PAY_AMT, 0 CARRY_PAY_VAT      
+		        FROM TB_AGENT_DFR_RELESE A, TB_VGRP B
+		        WHERE A.RESR_DT = TO_CHAR(SYSDATE, 'YYYYMM')
+		        AND A.ID = B.VID
+		        AND B.VID != '000000000V'
+		        AND B.AGENT_CL_CD != '00'
+		        AND A.RESR_TYPE = '01'
+		        AND A.DEL_FLG = '0'
+		         ]]>
+		        <if test="division!='ALL'">
+		        <![CDATA[
+		        	AND B.VID = #{id}
+		        ]]>
+		        </if>
+		        <![CDATA[
+		        GROUP BY B.VID, B.STMT_CYCLE_CD
+		    
+		        UNION ALL
+		      
+		        SELECT 
+		          B.VID, FN_SETTLMNT_DAY(B.STMT_CYCLE_CD, DATE_FORMAT(NOW(), "%Y%m%d"), '0') AS STMT_DT,
+		          0 APP_CNT, 0 APP_AMT, 0 CC_CNT, 0 CC_AMT, 
+		          0 ORG_FEE, 0 SALES_FEE, 0 SALES_ORG_FEE, 
+		          0 FEE, 0 PAY_AMT, 0 PAY_VAT, SUM(RESR_AMT) AS RESR_AMT, 0 RESR_CC_AMT, 0 EXTRA_AMT,
+		          0 SMS_FEE, 0 CARRY_APP_CNT, 0 CARRY_APP_AMT, 0 CARRY_CC_CNT, 0 CARRY_CC_AMT, 0 CARRY_ORG_FEE, 0 CARRY_SALES_FEE, 0 CARRY_SALES_ORG_FEE, 
+		          0 CARRY_FEE, 0 CARRY_VAT, 0 CARRY_DPST_AMT, 0 CARRY_RESR_AMT, 0 CARRY_RESR_CC_AMT, 0 CARRY_EXTRA_AMT, 0 CARRY_PAY_AMT, 0 CARRY_PAY_VAT      
+		        FROM TB_AGENT_DFR_RELESE A, TB_VGRP B
+		        WHERE A.RESR_DT = TO_CHAR(SYSDATE, 'YYYYMM')
+		        AND A.ID = B.VID
+		        AND B.VID != '000000000V'
+		        AND B.AGENT_CL_CD != '00'
+		        AND A.RESR_TYPE = '01'
+		        AND A.DEL_FLG = '0'
+		    	 ]]>
+		        <if test="division!='ALL'">
+		        <![CDATA[
+		        	AND B.VID = #{id}
+		        ]]>
+		        </if>
+		        <![CDATA[
+		        GROUP BY VID, B.STMT_CYCLE_CD
+		        
+		        UNION ALL
+		      
+		        SELECT 
+		          B.VID, FN_SETTLMNT_DAY(B.STMT_CYCLE_CD, DATE_FORMAT(NOW(), "%Y%m%d"), '0') AS STMT_DT, 
+		          0 APP_CNT, 0 APP_AMT, 0 CC_CNT, 0 CC_AMT, 
+		          0 ORG_FEE, 0 SALES_FEE, 0 SALES_ORG_FEE, 
+		          0 FEE, 0 PAY_AMT, 0 PAY_VAT, 0 RESR_AMT, 0 AS RESR_CC_AMT, SUM(A.AMT) AS EXTRA_AMT,
+		          0 SMS_FEE, 0 CARRAY_APP_CNT, 0 CARRAY_APP_AMT, 0 CARRY_CC_CNT, 0 CARRY_CC_AMT, 0 CARRY_ORG_FEE, 0 CARRY_SALES_FEE, 0 CARRY_SALES_ORG_FEE, 
+		          0 CARRY_FEE, 0 CARRY_VAT, 0 CARRY_DPST_AMT, 0 CARRY_RESR_AMT, 0 CARRY_RESR_CC_AMT, 0 CARRY_EXTRA_AMT, 0 CARRY_PAY_AMT, 0 CARRY_PAY_VAT         
+		        FROM TB_AGENT_EXTRA_HIST A, TB_VGRP B
+		        WHERE A.EXTRA_DT = TO_CHAR(SYSDATE, 'YYYYMM')
+		        AND A.EXTRA_ID = B.VID
+		        AND B.VID != '000000000V'
+		        AND B.AGENT_CL_CD != '00'
+		        AND A.DEL_FLG = '0'
+		     	]]>
+		        <if test="division!='ALL'">
+		        <![CDATA[
+		        	AND B.VID = #{id}
+		        ]]>
+		        </if>
+		        <![CDATA[
+		        GROUP BY B.VID, B.STMT_CYCLE_CD
+		  
+		        UNION ALL
+		      
+		        SELECT 
+		          A.VID, FN_SETTLMNT_DAY(B.STMT_CYCLE_CD, DATE_FORMAT(NOW(), "%Y%m%d"), '0') AS STMT_DT, 
+		          0 APP_CNT, 0 APP_AMT, 0 CC_CNT, 0 CC_AMT, ORG_FEE, 0 SALES_FEE, 0 SALES_ORG_FEE, 
+		          0 FEE, 0 PAY_AMT, 0 PAY_VAT, 0 RESR_AMT, 0 RESR_CC_AMT, 0 EXTRA_AMT,
+		          0 SMS_FEE, SUM(A.APP_CNT) CARRAY_APP_CNT, SUM(A.APP_AMT) CARRAY_APP_AMT, SUM(A.CC_CNT) CARRY_CC_CNT, SUM(A.CC_AMT) CARRY_CC_AMT, SUM(A.ORG_FEE) CARRY_ORG_FEE, 
+		          SUM(A.SALES_FEE) CARRY_SALES_FEE, SUM(A.SALES_ORG_FEE) CARRY_SALES_ORG_FEE, SUM(A.FEE) CARRY_FEE, SUM(A.VAT) CARRY_VAT, SUM(A.DPST_AMT) AS CARRY_DPST_AMT, 
+		          SUM(A.RESR_AMT) AS CARRY_RESR_AMT, SUM(A.RESR_CC_AMT) AS CARRY_RESR_CC_AMT, SUM(A.EXTRA_AMT) AS CARRY_EXTRA_AMT, SUM(PAY_AMT) AS CARRY_PAY_AMT, SUM(PAY_VAT) AS CARRY_PAY_VAT         
+		        FROM TB_AGENT_STMT_CARRY A, TB_VGRP B
+		        WHERE A.VID = B.VID
+		        AND B.AGENT_CL_CD != '00'
+		        AND A.STATUS = '0'
+		        AND SUBSTR(A.STMT_DT, 1, 6) != TO_CHAR(SYSDATE, 'YYYYMM')
+		         ]]>
+		        <if test="division!='ALL'">
+		        <![CDATA[
+		        	AND B.VID = #{id}
+		        ]]>
+		        </if>
+		        <![CDATA[
+		        GROUP BY A.VID, B.STMT_CYCLE_CD, A.ORG_FEE
+		    	
+		        UNION ALL
+		    
+		        SELECT 
+		          A.VID, FN_SETTLMNT_DAY(B.STMT_CYCLE_CD, DATE_FORMAT(NOW(), "%Y%m%d"), '0') AS STMT_DT, 
+		          0 APP_CNT, 0 APP_AMT, 0 CC_CNT, 0 CC_AMT, 0 ORG_FEE, 0 SALES_FEE, 0 SALES_ORG_FEE, 0 FEE
+		          , TRUNC(SUM(C.PAY_AMT)*B.RSHARE_RATE/100, 0) AS PAY_AMT
+		          , TRUNC(SUM(C.PAY_AMT*0.1)*B.RSHARE_RATE/100, 0) AS PAY_VAT, 0 RESR_AMT, 0 RESR_CC_AMT, 0 EXTRA_AMT,
+		          0 SMS_FEE, 0 CARRAY_APP_CNT, 0 CARRAY_APP_AMT, 0 CARRY_CC_CNT, 0 CARRY_CC_AMT, 0 CARRY_ORG_FEE, 0 CARRY_SALES_FEE, 0 CARRY_SALES_ORG_FEE, 
+		          0 CARRY_FEE, 0 CARRY_VAT, 0 CARRY_DPST_AMT, 0 CARRY_RESR_AMT, 0 CARRY_RESR_CC_AMT, 0 CARRY_EXTRA_AMT, 0 CARRY_PAY_AMT, 0 CARRY_PAY_VAT        
+		        FROM TB_MBS A, TB_VGRP B, TB_CO_PAY C
+		        WHERE A.VID = B.VID
+		        AND A.VID != '000000000V'
+		        AND B.AGENT_CL_CD != '00'
+		        AND A.CO_NO = C.ID
+		        AND C.PAY_CD = '1'
+		        AND C.EXP_FLG = '0'
+		        AND C.DEL_FLG = '0'
+		        AND C.PAY_ST_TYPE = '0'
+		        AND SUBSTR(C.PAY_DT,1,6) = TO_CHAR(SYSDATE, 'YYYYMM')
+		         ]]>
+		        <if test="division!='ALL'">
+		        <![CDATA[
+		        	AND B.VID = #{id}
+		        ]]>
+		        </if>
+		        <![CDATA[
+		        GROUP BY A.VID,B.STMT_CYCLE_CD,B.RSHARE_RATE
+		      )A
+		    GROUP BY VID, STMT_DT
+	    )A
+	]]>
+	</insert>
+	<!-- 대리점 정산 재생성 리스트 -->
+	<select id="selectReAgentStmt" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+	    SELECT 
+	      VID, TO_CHAR(STMT_DT, 'YYYYMM') AS STMT_DT, (APP_AMT+CC_AMT) AS TRAN_AMT, ORG_FEE, SALES_ORG_FEE, FEE, VAT, 
+	      PAY_AMT, PAY_VAT, RESR_AMT, RESR_CC_AMT, EXTRA_AMT, DPST_AMT, (CARRY_APP_AMT+CARRY_CC_AMT) AS CARRY_TRAN_AMT, CARRY_SALES_FEE,
+	      CARRY_SALES_ORG_FEE, CARRY_FEE, CARRY_VAT, CARRY_PAY_AMT, CARRY_PAY_VAT, CARRY_RESR_AMT, CARRY_RESR_CC_AMT, CARRY_EXTRA_AMT, CARRY_DPST_AMT
+	    FROM TB_AGENT_STMT
+	    WHERE SUBSTR(STMT_DT, 1, 6) = TO_CHAR(SYSDATE, 'YYYYMM')
+	]]>
+	<if test="division!='ALL'">
+	<![CDATA[
+		AND VID = #{id}
+	]]>
+	</if>
+	</select>
+	<!-- 대리점 보류 잔액 -->
+	<select id="selectAgentResrRemainAmt" parameterType="hashmap" resultType="long">
+	<![CDATA[
+	    SELECT COALESCE(SUM(RESR_SET_AMT - RESR_CC_AMT), 0) AS REMAIN_AMT
+	    FROM TB_AGENT_DFR_SET 
+	    WHERE CC_END_DT = '999999'
+	    AND RESR_AMT != 0
+	    AND DEL_FLG = '0'
+	]]>
+	<if test="vid!=null and vid!=''">
+	<![CDATA[
+		AND ID = #{vid} 
+	]]>
+	</if>
+	</select>
+	<!-- 대리점 보류/해제 List -->
+	<select id="selectAgentResrEtcList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT 
+				ROW_NUMBER()OVER(ORDER BY SEQ ASC) AS RNUM, A.SEQ, A.RESR_SET_SEQ, A.RESR_DT, B.VGRP_NM, B.CO_NO, A.ID, A.RESR_TYPE, A.RESR_REASON,
+			  	A.RESR_TYPE_NM, A.RESR_REASON_NM, A.RESR_AMT, A.REMAIN_AMT, A.RESR_DESC,
+			   	CASE WHEN A.RESR_DT < TO_CHAR(SYSDATE, 'YYYYMM')THEN '1' ELSE '2' END DP_FLG ,
+			   	COALESCE((SELECT COALESCE(X.CONF1_EMP, X.CARRY_EMP) FROM TB_AGENT_STMT X WHERE SUBSTR(X.STMT_DT, 1, 6) = A.RESR_DT AND X.VID = A.ID), 'X') PROC_FLG
+			FROM 
+			(
+			   SELECT 
+			   	RESR_DT, ID, RESR_TYPE, RESR_REASON, SEQ, RESR_SET_SEQ,
+			    FN_NM_CODE1('RESR_CD', RESR_TYPE) RESR_TYPE_NM, 
+			    FN_NM_CODE2('RESR_CD', RESR_TYPE, RESR_REASON) RESR_REASON_NM, 
+			    RESR_AMT, REMAIN_AMT, RESR_DESC RESR_DESC
+			   FROM TB_AGENT_DFR_RELESE
+			   WHERE RESR_DT BETWEEN #{frDt} AND #{toDt}
+			   AND DEL_FLG = '0'
+			   ]]>
+			   <if test="vid!=null and vid!=''">
+			   <![CDATA[
+			   			AND ID = #{vid}
+			   ]]>
+			   </if>
+			   <if test="selCD1!='ALL'">
+			   <![CDATA[
+			   			AND RESR_TYPE = #{selCD1}
+			   ]]>
+			   </if>
+			   <if test="selCD2!='ALL'">
+			   <![CDATA[
+			   			AND RESR_REASON = #{selCD2}
+			   ]]>
+			   </if>
+			   <![CDATA[
+			   UNION ALL
+			    
+			   SELECT 
+			   	EXTRA_DT RESR_DT, EXTRA_ID ID, '03' RESR_TYPE, REASON, SEQ, '' AS RESR_SET_SEQ, '별도가감' RESR_TYPE_NM, 
+			    FN_NM_CODE2('RESR_CD', '03', REASON) RESR_REASON_NM, AMT RESR_AMT, 0 REMAIL_AMT, MEMO RESR_DESC
+			   FROM TB_AGENT_EXTRA_HIST
+			   WHERE EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+			   AND DEL_FLG = '0'
+			    ]]>
+			   <if test="vid!=null and vid!=''">
+			   <![CDATA[
+			   			AND EXTRA_ID = #{vid}
+			   ]]>
+			   </if>
+			   <if test="selCD1!='ALL'">
+			   	<if test="selCD1==3">
+			   	<![CDATA[
+			   			AND 1 = 2
+			   	]]>
+			   	</if>
+			   </if>
+			   <if test="selCD2!='ALL'">
+			   <![CDATA[
+			   			AND REASON = #{selCD2}
+			   ]]>
+			   </if>
+			   <![CDATA[
+			) A, TB_VGRP B
+			WHERE A.ID = B.VID
+			ORDER BY A.SEQ , A.RESR_DT, A.ID, A.RESR_TYPE
+		) TBL
+		WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectAgentResrEtcListTotal" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+			COUNT(1)
+		FROM 
+		(
+		   SELECT 
+		   	RESR_DT, ID, RESR_TYPE, SEQ,
+		    FN_NM_CODE1('RESR_CD', RESR_TYPE) RESR_TYPE_NM, 
+		    FN_NM_CODE2('RESR_CD', RESR_TYPE, RESR_REASON) RESR_REASON, 
+		    RESR_AMT, REMAIN_AMT, RESR_DESC RESR_DESC
+		   FROM TB_AGENT_DFR_RELESE
+		   WHERE RESR_DT BETWEEN #{frDt} AND #{toDt}
+		   AND DEL_FLG = '0'
+		   ]]>
+		   <if test="vid!=null and vid!=''">
+		   <![CDATA[
+		   			AND ID = #{vid}
+		   ]]>
+		   </if>
+		   <if test="selCD1!='ALL'">
+		   <![CDATA[
+		   			AND RESR_TYPE = #{selCD1}
+		   ]]>
+		   </if>
+		   <if test="selCD2!='ALL'">
+		   <![CDATA[
+		   			AND RESR_REASON = #{selCD2}
+		   ]]>
+		   </if>
+		   <![CDATA[
+		   UNION ALL
+		    
+		   SELECT 
+		   	EXTRA_DT RESR_DT, EXTRA_ID ID, '03' RESR_TYPE, SEQ, '별도가감' RESR_TYPE_NM, 
+		    FN_NM_CODE2('RESR_CD', '03', REASON) RESR_REASON, AMT RESR_AMT, 0 REMAIL_AMT, MEMO RESR_DESC
+		   FROM TB_AGENT_EXTRA_HIST
+		   WHERE EXTRA_DT BETWEEN #{frDt} AND #{toDt}
+		   AND DEL_FLG = '0'
+		    ]]>
+		   <if test="vid!=null and vid!=''">
+		   <![CDATA[
+		   			AND EXTRA_ID = #{vid}
+		   ]]>
+		   </if>
+		   <if test="selCD1!='ALL'">
+		   	<if test="selCD1==3">
+		   	<![CDATA[
+		   			AND 1 = 2
+		   	]]>
+		   	</if>
+		   </if>
+		   <if test="selCD2!='ALL'">
+		   <![CDATA[
+		   			AND REASON = #{selCD2}
+		   ]]>
+		   </if>
+		   <![CDATA[
+		) A, TB_VGRP B
+		WHERE A.ID = B.VID
+		ORDER BY A.SEQ , A.RESR_DT, A.ID, A.RESR_TYPE
+	]]>
+	</select>
+	<!-- 보류/해제/별도가감....vid 존재 체크  -->
+	<select id="selectExistChkVid"  parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT COUNT(VID) 
+		FROM TB_VGRP
+		WHERE VID = #{extraId}
+	]]>
+	</select>
+	 <!-- 대리점 보류/해제/별도가감 지급 날짜 확정 건 Count -->
+	<select id="selectAgentResrConfSearchCnt" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT COUNT(1) AS CNT
+		FROM TB_AGENT_STMT 
+		WHERE SUBSTR(STMT_DT, 1,6) = #{payDt}
+		AND (CONFIRM_FLG='1' OR CARRY_CL='1' )
+		AND VID = #{extraId}
+	]]>
+	</select>
+	<!-- 대리점 지급보류 설정 등록 -->
+	<insert id="insertAgentResrSet"  parameterType="hashmap"> 
+	<![CDATA[
+		INSERT INTO TB_AGENT_DFR_SET 
+	    (
+	      SEQ, ID, RESR_REASON, RESR_SET_DT, RESR_START_DT, RESR_END_DT, RESR_SET_AMT, RESR_AMT, RESR_DESC, WORKER, REG_DNT
+	    ) 
+	    VALUES
+	    (
+	      #{seq}, #{extraId}, #{selCD2},#{payDt}, #{payDt}, #{payDt}, ${amt}, ${amt}, #{desc}, #{worker}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	    )
+	]]>
+	<selectKey keyProperty="seq"  resultType="integer" order="BEFORE">
+	<![CDATA[
+        SELECT SEQ_AGENT_DFR_SET.NEXTVAL FROM DUAL
+    ]]>    
+    </selectKey>
+	</insert>
+	<!-- 대리점 지급보류 등록 -->
+	<insert id="insertAgentResr" parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO TB_AGENT_DFR_RELESE
+      	(
+       		 SEQ, ID, RESR_TYPE, RESR_REASON, RESR_SET_SEQ, RESR_DT, RESR_AMT, REMAIN_AMT, RESR_DESC, WORKER, REG_DNT
+      	)
+      	SELECT 
+        	 SEQ_AGENT_DFR_RELESE.NEXTVAL, ID, '01', RESR_REASON, SEQ, RESR_SET_DT, RESR_AMT, 
+        	( SELECT 
+            	COALESCE(SUM(RESR_AMT),0)-COALESCE(SUM(RESR_CC_AMT),0) 
+         	  FROM TB_AGENT_DFR_SET B 
+          	WHERE B.ID = A.ID AND B.RESR_AMT !=0 
+          	AND B.RESR_SET_DT <= #{payDt} 
+          	AND COALESCE(B.DEL_FLG,'0') ='0'
+        	)	 AS REMAIN_AMT, RESR_DESC, #{worker}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+      FROM TB_AGENT_DFR_SET A
+      WHERE SEQ = #{seq}
+      AND COALESCE(DEL_FLG,'0') = '0'
+	]]>
+	</insert>
+	<!-- 해제등록 ID 대리점 지급보류 합 -->
+	<select id="selectAgentResrSumOfId" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT COALESCE((RESR_AMT - RESR_CC_AMT), 0) RESR_TOT
+	    FROM 
+	    (
+	      SELECT SUM(COALESCE(RESR_AMT, 0)) RESR_AMT, SUM(COALESCE(RESR_CC_AMT, 0)) RESR_CC_AMT
+	      FROM TB_AGENT_DFR_SET
+	      WHERE ID = #{extraId}
+	      AND RESR_AMT != COALESCE(RESR_CC_AMT, 0)
+	      AND CC_END_DT = '999999' 
+	      AND COALESCE(DEL_FLG,'0') = '0'
+	    ) A
+	]]>
+	</select>
+	<!-- 해제등록 ID 대리점 지급보류 리스트 (해제 미완료건) 산출 -->
+	<select id="selectAgentResrSearchOfId" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT SEQ, (COALESCE(RESR_AMT, 0) - COALESCE(RESR_CC_AMT, 0)) RESR_AMT
+	    FROM TB_AGENT_DFR_SET
+	    WHERE ID = #{extraId}
+	    AND RESR_AMT != COALESCE(RESR_CC_AMT, 0)
+	    AND CC_END_DT = '999999'
+	    AND COALESCE(DEL_FLG,'0') = '0'
+	]]>
+	</select>
+	<!-- 대리점 지급보류 설정에 해제내역 반영(부분) -->
+	<update id="updateAgentResrCcPart" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_DFR_SET
+      	SET 
+	        CC_START_DT = CASE WHEN COALESCE(CC_START_DT, '0') = '0' THEN #{payDt} ELSE CC_START_DT END,
+	        CC_END_DT = #{payDt},
+	        RESR_CC_AMT = COALESCE(RESR_CC_AMT, 0) + #{setAmt}, WORKER = #{worker}
+	        UPD_DNT =DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+      	WHERE SEQ = #{seq}
+	]]>
+	</update>
+	<!-- 대리점 지급보류 해제 등록(부분) -->
+	<insert id="insertAgentResrCcPart" parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO TB_AGENT_DFR_RELESE
+	     (
+	        SEQ, ID, RESR_CL, RESR_SET_SEQ, RESR_DT, RESR_REASON, RESR_AMT, REMAIN_AMT, RESR_DESC, WORKER, REG_DNT
+	     )
+	     SELECT 
+	        SEQ_AGENT_DFR_RELESE.NEXTVAL, ID, '02', SEQ, #{payDt}, #{selCd2}, #{setAmt},
+	        (
+	          SELECT COALESCE(SUM(RESR_AMT),0)-COALESCE(SUM(RESR_CC_AMT),0) FROM TB_AGENT_DFR_SET B 
+	          WHERE B.ID = A.ID AND B.RESR_AMT !=0 AND COALESCE(B.DEL_FLG,'0') = '0'
+	        ) AS REMAIN_AMT, #{desc}, #{worker}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	     FROM TB_AGENT_RESERVE_SET A
+	     WHERE SEQ = #{seq}
+	     AND COALESCE(DEL_FLG,'0') = '0'
+	]]>
+	</insert>
+	 <!-- 지급보류 설정에 해제내역 반영(전체) -->
+	<update id="updateAgentResrCcAll" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_RESERVE_SET
+	    SET 
+	    	CC_START_DT = CASE WHEN COALESCE(CC_START_DT, '0') = '0' THEN #{payDt} ELSE CC_START_DT END,
+	        CC_END_DT = #{payDt},
+	        RESR_CC_AMT = COALESCE(RESR_CC_AMT, 0) + #{setAmt},
+	        WORKER = #{worker}
+	        UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	    WHERE SEQ = #{seq}
+	]]>
+	</update>
+	<!-- 대리점 지급보류 해제 등록(전체) -->
+	<insert id="insertAgentResrCcAll" parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO TB_AGENT_DFR_RELESE 
+	    (
+	      SEQ, ID, RESR_CL, RESR_SET_SEQ, RESR_DT, RESR_REASON, RESR_AMT, REMAIN_AMT, RESR_DESC, WORKER, REG_DNT
+	    )
+	    SELECT 
+	      SEQ_AGENT_DFR_RELESE, ID, '02', SEQ, #{payDt}, #{selCd2}, #{setAmt}, 
+	      (
+	        SELECT COALESCE(SUM(RESR_AMT),0)-COALESCE(SUM(RESR_CC_AMT),0) FROM TB_AGENT_DFR_SET B 
+	        WHERE B.ID = A.ID AND B.RESR_AMT !=0 AND B.DEL_FLG='0'
+	      ) AS REMAIN_AMT, #{desc}, #{worker}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	    FROM TB_AGENT_DFR_SET A
+	    WHERE SEQ = #{seq}
+	    AND COALESCE(DEL_FLG,'0') = '0'
+	]]>
+	</insert>
+	<!-- 대리점 별도가감 등록 -->
+	<insert id="insertAgentExtra"  parameterType="hashmap">
+	<![CDATA[
+		INSERT INTO TB_AGENT_DFR_RELESE
+      	(
+        	SEQ, ID, RESR_TYPE, RESR_SET_SEQ, RESR_DT, RESR_REASON, RESR_AMT, REMAIN_AMT, RESR_DESC, WORKER, REG_DNT
+      	)
+      	SELECT 
+      	  	SEQ_AGENT_DFR_RELESE.NEXTVAL, ID, '02', SEQ, #{payDt}, #{selCD2}, #{amt},
+       		(
+          		SELECT COALESCE(SUM(RESR_AMT),0)-COALESCE(SUM(RESR_CC_AMT),0) 
+          		FROM TB_AGENT_DFR_SET B 
+          		WHERE B.ID = A.ID AND B.RESR_AMT !=0 AND COALESCE(B.DEL_FLG,'0') = '0'
+        	) AS REMAIN_AMT, #{desc}, #{worker}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+      	FROM TB_AGENT_DFR_SET A
+      	WHERE SEQ = #{seq}
+     	AND COALESCE(DEL_FLG,'0') = '0'
+	]]>
+	<selectKey keyProperty="seq"  resultType="integer" order="BEFORE">
+	<![CDATA[
+        SELECT SEQ_AGENT_DFR_RELESE.NEXTVAL FROM DUAL
+    ]]>    
+    </selectKey>
+	</insert>
+	<!-- 별도가감 삭제  (flag change)-->
+	<update id="updateAgentExtraHistory"  parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_EXTRA_HIST 
+		SET 
+			DEL_FLG='1'
+			, WORKER =#{worker}
+			, UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE SEQ = #{seq}
+	]]>
+	</update>
+	<!--  -->
+	<select id="selectAgentResrEtcSearchCnt" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+			SUM(A.CNT)
+	  	FROM 
+  		(
+		   	SELECT COUNT(1) CNT
+		   	FROM TB_AGENT_DFR_RELESE
+		   	WHERE SUBSTR(RESR_DT,1,6) BETWEEN #{frDt} AND #{toDt}
+		  	AND DEL_FLG = '0'
+   		]]>
+	   <if test="extraId!=null and extraId!=''">
+	   <![CDATA[
+	   		AND ID = #{extraId}
+	   ]]>
+	   </if>
+	   <if test="selCD1!='ALL'">
+	   <![CDATA[
+	   		AND RESR_TYPE = #{selCD1}
+	   ]]>
+	   </if>
+	   <if test="selCD2!='ALL'">
+	   <![CDATA[
+	   		AND RESR_REASON = #{selCD2}
+	   ]]>
+	   </if>
+	   <![CDATA[
+	   		UNION ALL
+	    
+	   		SELECT COUNT(1) CNT
+	  	 	FROM TB_AGENT_EXTRA_HIST
+	   		WHERE SUBSTR(EXTRA_DT,1,6) BETWEEN #{frDt} AND #{toDt}
+	   		AND DEL_FLG = '0'
+   		]]>
+	   <if test="extraId!=null and extraId!=''">
+	   <![CDATA[
+	   		AND EXTRA_ID = #{extraId}
+	   ]]>
+	   </if>
+	   <if test="selCD1!='03'">
+	   <![CDATA[
+	   		AND 1 = 2
+	   ]]>
+	   </if>
+	   <if test="selCD2!='ALL'">
+	   <![CDATA[
+	   		AND REASON = #{selCD2}
+	   ]]>
+	   </if>
+	   <![CDATA[
+	   ) A
+	]]>
+	</select>
+	<!-- 지급보류 설정변경 -->
+	<update id="updateAgentReserveSet" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_DFR_SET A 
+		SET 
+			A.DEL_FLG='1'
+			, A.WORKER =#{worker}
+			, A.UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE 
+			A.SEQ = (
+			SELECT X.RESR_SET_SEQ 
+			FROM TB_AGENT_DFR_RELESE X
+			WHERE SEQ = #{seq}
+			)	
+	]]>
+	</update>
+	<!-- 지급보류 설정변경  - 해제건 -->
+	<update id="updateAgentReserveSetCc" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_DFR_SET A 
+		SET 
+			A.CC_END_DT = '999999'
+			, A.RESR_CC_AMT =  A.RESR_CC_AMT - (#{amt}) 
+			, A.WORKER =#{worker}
+			, A.UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE 
+			A.SEQ = (
+			SELECT X.RESR_SET_SEQ 
+			FROM TB_AGENT_DFR_RELESE X
+			WHERE SEQ = #{seq}
+			)	
+	]]>
+	</update>
+	<!-- 지급보류 삭제 -->
+	<update id="updateAgentReserve" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_DFR_RELESE
+		SET 
+			DEL_FLG = '1'
+			, WORKER = #{worker}
+			, UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE
+			SEQ = #{seq}
+	]]>
+	</update>
+	<!-- 정산보고서 조회  -->
+	<select id="selectAgentStmtReportList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+	      (
+	         SELECT
+	            ROW_NUMBER() OVER(ORDER BY SUBSTR(T.STMT_DT, 1, 6) DESC) AS RNUM 
+	             , MAX(T.VID) AS VID
+	             , MAX(T.VGRP_NM) AS VGRP_NM
+	             , MAX(T.EMAIL) AS EMAIL
+	             , MAX(T.STMT_DT) AS STMT_DT
+	             , MAX(T.REP_NM) AS REP_NM
+	             , SUM(T.TRAN_AMT) AS TRAN_AMT
+	             , SUM(T.ORG_FEE) AS ORG_FEE
+	             , SUM(T.SALES_ORG_FEE) AS SALES_ORG_FEE
+	             , SUM(T.SALES_FEE) AS SALES_FEE
+	             , SUM(T.FEE) AS FEE
+	             , SUM(T.DPST_AMT) AS DPST_AMT
+	             , SUM(T.VAT) AS VAT
+	             , SUM(COALESCE((T.RESR_AMT-T.RESR_CC_AMT), 0)) AS RESR_AMT
+	             , SUM(T.EXTRA_AMT) AS EXTRA_AMT
+	             , T.CO_NO
+	             , SUM(T.PAY_AMT) AS PAY_AMT
+	             , SUM(T.PAY_VAT) AS PAY_VAT
+	             , SUM(T.CARRY_ORG_FEE) AS CARRY_ORG_FEE
+	             , SUM(T.CARRY_SALES_ORG_FEE) AS CARRY_SALES_ORG_FEE
+	             , SUM(T.CARRY_SALES_FEE) AS CARRY_SALES_FEE
+	             , SUM(T.CARRY_FEE) AS CARRY_FEE
+	             , SUM(COALESCE((T.CARRY_RESR_AMT-T.CARRY_RESR_CC_AMT), 0)) AS CARRY_RESR_AMT
+	             , SUM(T.CARRY_EXTRA_AMT) AS CARRY_EXTRA_AMT
+	             , SUM(T.CARRY_DPST_AMT) AS CARRY_DPST_AMT
+	             , SUM(T.CARRY_VAT) AS CARRY_VAT
+	             , SUM(T.CARRY_PAY_AMT) AS CARRY_PAY_AMT
+	             , SUM(T.CARRY_PAY_VAT) AS CARRY_PAY_VAT
+	             , SUM(T.CARRY_TRAN_AMT) AS CARRY_TRAN_AMT
+	             , MAX(T.CARD_FLAT_CNT) AS CARD_FLAT_CNT
+	             , MAX(T.CARD_FLAT_FEE) AS CARD_FLAT_FEE
+	             , MAX(T.TRAN_DT) AS TRAN_DT
+	             , MAX(T.CONFIRM_FLG) AS CONFIRM_FLG
+	             , SUM(T.DPST_AMT + T.CARRY_DPST_AMT) AS TOT_DPST_AMT
+	          FROM 
+	          (
+	            SELECT 
+	             S.VID, A.VGRP_NM, A.EMAIL, S.STMT_DT, A.REP_NM, (S.APP_AMT+S.CC_AMT) AS TRAN_AMT, S.ORG_FEE, S.SALES_ORG_FEE, S.SALES_FEE, S.FEE, S.DPST_AMT, S.VAT, 
+	             S.RESR_AMT, S.RESR_CC_AMT, S.EXTRA_AMT, A.CO_NO, S.PAY_AMT, S.PAY_VAT, S.CARRY_ORG_FEE, S.CARRY_SALES_ORG_FEE, S.CARRY_SALES_FEE, 
+	             S.CARRY_FEE, S.CARRY_RESR_AMT, S.CARRY_RESR_CC_AMT, S.CARRY_EXTRA_AMT, S.CARRY_DPST_AMT, S.CARRY_VAT, S.CARRY_PAY_AMT, S.CARRY_PAY_VAT,
+	             (S.CARRY_APP_AMT+S.CARRY_CC_AMT) AS CARRY_TRAN_AMT, C.CARD_FLAT_CNT, C.CARD_FLAT_FEE, TO_CHAR(TO_DATE(S.STMT_DT, 'YYYYMMDD') -1 , 'YYYYMM') AS TRAN_DT, S.CONFIRM_FLG
+	            FROM TB_AGENT_STMT S , TB_VGRP A,
+	             (
+	               SELECT 
+	                SF.ID, 
+	             TO_CHAR(TO_DATE(ST.TR_DT, 'YYYYMMDD'), 'YYYYMM') TR_DT,
+	                SUM(CASE WHEN ST.TRX_ST_CD = '0' THEN 1 WHEN ST.TRX_ST_CD = '2' THEN -1 END) CARD_FLAT_CNT, 
+	                SUM(CASE WHEN ST.TRX_ST_CD = '0' THEN SF.ETC_FEE WHEN ST.TRX_ST_CD = '2' THEN -SF.ETC_FEE END) CARD_FLAT_FEE
+	               FROM 
+	                TB_STMT_TID ST, TB_STMT_FEE SF 
+	               WHERE 
+	                ST.VID = SF.ID 
+	             AND ST.PM_CD = SF.PM_CD
+	                AND ST.PM_CD = '01' 
+	                AND SF.ID_CD = '3' 
+	                AND SF.ETC_FEE != '0'
+	                AND SF.USE_ST_TYPE = '1'
+	                AND SF.ID <>'000000000v'
+			       ]]>
+			      <if test="vid!=null and vid!=''">
+			      <![CDATA[
+			       		AND SF.ID = #{vid}
+			       ]]>
+			       </if>
+			       <![CDATA[
+			      AND TO_CHAR(TO_DATE(ST.TR_DT, 'YYYYMMDD'), 'YYYYMM') = #{mon}
+			      GROUP BY SF.ID,  TO_CHAR(TO_DATE(ST.TR_DT, 'YYYYMMDD'), 'YYYYMM')
+			    ) C 
+			   WHERE C.ID = S.VID 
+			   AND C.TR_DT = TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT,'YYYYMMDD'),-1), 'YYYYMM')
+			    ]]>
+			      <if test="vid!=null and vid!=''">
+			      <![CDATA[
+			   		AND S.VID = #{vid}
+			   	  ]]>
+			   	  </if>
+			   	<![CDATA[	
+			   AND TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT ,'YYYYMMDD'), -1) , 'YYYYMM')= #{mon}
+			  )T
+			  GROUP BY T.VID, SUBSTR(T.STMT_DT, 1, 6), T.CO_NO
+			  ORDER BY SUBSTR(T.STMT_DT, 1, 6) DESC, T.VID ASC
+	    ) TBL
+        WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectAgentStmtReportListTotal" parameterType="hashmap"  resultType="Integer"> 
+	<![CDATA[
+		SELECT  COUNT(1) TOT_CNT 
+	   	FROM (
+	      SELECT A.VID FROM TB_AGENT_STMT S , TB_VGRP A
+	      WHERE S.VID=A.VID 
+	      AND A.VID <>'000000000v' 
+	      AND TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'YYYYMMDD') , -1) , 'YYYYMM')  = #{mon}
+	      ]]>
+	      <if test="vid!=null and vid!=''">
+	      <![CDATA[
+	      	AND S.VID = #{vid}
+	      ]]>
+	      </if>
+	      <![CDATA[
+	      GROUP BY S.VID,  SUBSTR(S.STMT_DT, 1, 6)
+	   	) D
+	]]>
+	</select>
+	<!-- 정산보고서 확정 내역조회-->
+	<select id="selectAgentStmtConfirmList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT ROW_NUMBER()OVER(ORDER BY SUBSTR(T.STMT_DT,1,6) DESC) AS RNUM, 
+			   MAX(T.VID) AS VID, 
+		       MAX(T.VGRP_NM) AS VGRP_NM, 
+		       MAX(T.EMAIL) AS EMAIL, 
+		       MAX(T.STMT_DT) AS STMT_DT, 
+		       MAX(T.REP_NM) AS REP_NM, 
+		       MAX(T.ST_TYPE) AS ST_TYPE,
+		       SUM(T.TRAN_AMT) AS TRAN_AMT, 
+		       SUM(T.ORG_FEE) AS ORG_FEE, 
+		       SUM(T.SALES_ORG_FEE) AS SALES_ORG_FEE, 
+		       SUM(T.SALES_FEE) AS SALES_FEE, 
+		       SUM(T.FEE) AS FEE, 
+		       SUM(T.DPST_AMT) AS DPST_AMT, 
+		       SUM(T.VAT) AS VAT, 
+		       SUM(T.RESR_AMT) AS RESR_AMT,
+		       SUM(T.RESR_CC_AMT) AS RESR_CC_AMT,
+		       SUM(T.EXTRA_AMT) AS EXTRA_AMT, 
+		       T.CO_NO, 
+		       SUM(T.PAY_AMT) AS PAY_AMT, 
+		       SUM(T.PAY_VAT) AS PAY_VAT, 
+		       SUM(T.CARRY_ORG_FEE) AS CARRY_ORG_FEE, 
+		       SUM(T.CARRY_SALES_ORG_FEE) AS CARRY_SALES_ORG_FEE, 
+		       SUM(T.CARRY_SALES_FEE) AS CARRY_SALES_FEE, 
+		       SUM(T.CARRY_FEE) AS CARRY_FEE, 
+		       SUM(COALESCE((T.CARRY_RESR_AMT-T.CARRY_RESR_CC_AMT), 0)) AS CARRY_RESR_AMT, 
+		       SUM(T.CARRY_EXTRA_AMT) AS CARRY_EXTRA_AMT, 
+		       SUM(T.CARRY_DPST_AMT) AS CARRY_DPST_AMT, 
+		       SUM(T.CARRY_VAT) AS CARRY_VAT, 
+		       SUM(T.CARRY_PAY_AMT) AS CARRY_PAY_AMT, 
+		       SUM(T.CARRY_PAY_VAT) AS CARRY_PAY_VAT, 
+		       SUM(T.CARRY_TRAN_AMT) AS CARRY_TRAN_AMT, 
+		       CASE WHEN MAX(T.CONFIRM_FLG) = 1 AND COALESCE(MAX(T.CONF1_TM),0) !=0 THEN 1 ELSE 0 END AS CONFIRM_MODIFY_YN,
+		       CASE WHEN MAX(T.CONFIRM_FLG) = 1 THEN 1 ELSE 0 END AS CARRY_MODIFY_YN,
+		       MAX(T.CARD_FLAT_CNT) AS CARD_FLAT_CNT, 
+		       MAX(T.CARD_FLAT_FEE) AS CARD_FLAT_FEE, 
+		       MAX(T.TRAN_DT) AS TRAN_DT, 
+		       MAX(T.CONFIRM_DT) AS CONFIRM_DT,
+		       MAX(T.CONFIRM_FLG) AS CONFIRM_FLG,
+		       MAX(T.CARRY_DT) AS CARRY_DT, 
+		       MAX(T.CARRY_CL) AS CARRY_CL,
+		       MAX(T.TOT_AMT) AS TOT_AMT,
+	           MAX(T.CARD_AMT) AS CARD_AMT,
+	           MAX(T.APP_AMT) AS APP_AMT,
+	           MAX(T.VAPP_AMT) AS VAPP_AMT,
+	           MAX(T.PHONE_AMT) AS PHONE_AMT,
+	           MAX(TO_CHAR(T.CONF1_TM, 'YYYYMMDD')) AS CONF1_TM,
+	           MAX(T.TAX_DT) AS TAX_DT
+		  FROM (
+		         SELECT S.VID, 
+		                A.VGRP_NM, 
+		                A.EMAIL, 
+		                S.STMT_DT,
+						S.ST_TYPE,
+		                A.REP_NM, 
+		                (S.APP_AMT+S.CC_AMT) AS TRAN_AMT, 
+		                S.ORG_FEE, 
+		                S.SALES_ORG_FEE, 
+		                S.SALES_FEE, 
+		                S.FEE, 
+		                S.DPST_AMT, 
+		                S.VAT, 
+		                S.RESR_AMT, 
+		                S.RESR_CC_AMT, 
+		                S.EXTRA_AMT, 
+		                A.CO_NO, 
+		                S.PAY_AMT, 
+		                S.PAY_VAT, 
+		                S.CARRY_ORG_FEE, 
+		                S.CARRY_SALES_ORG_FEE, 
+		                S.CARRY_SALES_FEE, 
+		                S.CARRY_FEE, 
+		                S.CARRY_RESR_AMT, 
+		                S.CARRY_RESR_CC_AMT, 
+		                S.CARRY_EXTRA_AMT, 
+		                S.CARRY_DPST_AMT, 
+		                S.CARRY_VAT, 
+		                S.CARRY_PAY_AMT, 
+		                S.CARRY_PAY_VAT,
+		                (S.CARRY_APP_AMT+S.CARRY_CC_AMT) AS CARRY_TRAN_AMT, 
+		                C.CARD_FLAT_CNT, 
+		                C.CARD_FLAT_FEE, 
+		                TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'YYYYMMDD'), - 1), 'YYYYMM') AS TRAN_DT,  
+		                S.CONFIRM_DT,
+		                S.CONFIRM_FLG,
+		                S.CARRY_DT,
+		                S.CARRY_CL,
+		                B.TOT_AMT,
+		                B.CARD_AMT, 
+		                B.APP_AMT, 
+		                B.VAPP_AMT, 
+		                B.PHONE_AMT,
+		                S.CONF1_TM,
+		                S.TAX_DT 
+		         FROM TB_AGENT_STMT S, TB_VGRP A,
+			         (
+				        SELECT VID, STMT_DT,
+					    SUM(APP_AMT+CC_AMT) TOT_AMT,
+					    SUM(CASE WHEN PM_CD = '01' THEN APP_AMT+CC_AMT  END) CARD_AMT, 
+					    SUM(CASE WHEN PM_CD = '02' THEN APP_AMT+CC_AMT  END) APP_AMT, 
+					    SUM(CASE WHEN PM_CD = '03' THEN APP_AMT+CC_AMT  END) VAPP_AMT, 
+					    SUM(CASE WHEN PM_CD = '05' THEN APP_AMT+CC_AMT  END) PHONE_AMT
+					    FROM
+					    TB_AGENT_SUB_STMT
+					    GROUP BY VID, STMT_DT
+				    ) B, 
+		            (SELECT 
+		                    SF.ID, 
+		                    TO_CHAR(TO_DATE(ST.TR_DT,'YYYYMMDD'),'YYYYMM') AS TR_DT,
+		                    SUM(CASE WHEN ST.TRX_ST_CD = '0' THEN 1 WHEN ST.TRX_ST_CD = '2' THEN -1 END) CARD_FLAT_CNT, 
+		                    SUM(CASE WHEN ST.TRX_ST_CD = '0' THEN SF.ETC_FEE WHEN ST.TRX_ST_CD = '2' THEN -SF.ETC_FEE END) CARD_FLAT_FEE
+		               FROM TB_STMT_TID ST, TB_STMT_FEE SF 
+		              WHERE ST.VID = SF.ID 
+		                AND ST.PM_CD = SF.PM_CD
+		                AND ST.PM_CD = '01' AND SF.ID_CD = '3' AND SF.ETC_FEE != 0
+		               AND SF.USE_ST_TYPE = '1' 
+		               AND SF.ID <>'000000000v'
+		               ]]>
+		               <if test="vid!=null and vid!=''">
+		               <![CDATA[
+		               	AND SF.ID = #{vid}
+		               ]]>
+		               </if>
+		               <![CDATA[
+		                AND TO_CHAR(TO_DATE(ST.TR_DT,'YYYYMMDD'),'YYYYMM') = #{date}
+		            GROUP BY SF.ID, ST.TR_DT
+		            ) C 
+		         WHERE C.ID = S.VID 
+		           AND C.TR_DT = TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'YYYYMMDD'), - 1), 'YYYYMM')
+		           ]]>
+	               <if test="vid!=null and vid!=''">
+	               <![CDATA[
+	               	AND S.VID = #{vid}
+	               ]]>
+	               </if>
+	               <if test="selType!='ALL'">
+	               <![CDATA[
+	               	AND S.CONFIRM_FLG = #{selType}
+	               ]]>
+	               </if>
+	               <![CDATA[
+		           AND TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'YYYYMMDD'), - 1), 'YYYYMM') = #{date}
+		           AND S.VID = B.VID AND S.STMT_DT = B.STMT_DT   
+		      )T
+		      GROUP BY T.VID, SUBSTR(T.STMT_DT, 1, 6), T.CO_NO
+		      ORDER BY SUBSTR(T.STMT_DT, 1, 6) DESC, T.VID ASC   
+	      ) TBL
+	      WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd} 
+	]]>
+	</select>
+	<select id="selectAgentStmtConfirmListTotal" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT  COUNT(1) TOT_CNT 
+	   	FROM (
+	      SELECT A.VID FROM TB_AGENT_STMT S , TB_VGRP A
+	    WHERE S.VID=A.VID 
+	    AND A.VID <>'000000000v'
+	    AND TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'YYYYMMDD'), - 1), 'YYYYMM') = #{date}
+	    ]]>
+       <if test="vid!=null and vid!='' ">
+       <![CDATA[
+       		AND S.VID = #{vid}
+       ]]>
+       </if>
+       <if test="selType!='ALL'">
+       <![CDATA[
+       		AND S.CONFIRM_FLG = #{selType}
+       ]]>
+       </if>
+       <![CDATA[
+	      GROUP BY S.VID,  SUBSTR(S.STMT_DT, 1, 6)
+	   	) D
+	]]>
+	</select>
+	<!-- 정산보고서 메일 발송 세금계산서 정보  조회 -->
+	<select id="selectAgentStmtTaxAccount" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT T.STMT_MON, 
+             T.CO_NM, 
+             (T.FEE + T.CARRY_FEE + T.PAY_AMT + T.CARRY_PAY_AMT + T.EXTRA_FEE + T.CARRY_EXTRA_FEE) AS SUPP_AMT, 
+             T.TAX_YEAR, T.TAX_MONTH, T.EXTRA_FEE, T.CARRY_EXTRA_FEE, T.EXTRA_VAT, T.CARRY_EXTRA_VAT,
+             (SELECT MAX(D.DD) FROM TB_DAY D WHERE D.YY = T.TAX_YEAR AND D.MM = T.TAX_MONTH) AS TAX_LAST_DAY, DUE_DT,
+             (T.VAT + T.CARRY_VAT + T.PAY_VAT + T.CARRY_PAY_VAT + T.EXTRA_VAT + T.CARRY_EXTRA_VAT) AS VAT, T.SMS_FEE,
+             (T.FEE + T.CARRY_FEE + T.VAT + T.CARRY_VAT + T.SMS_FEE + T.PAY_AMT + T.PAY_VAT + T.CARRY_PAY_AMT + T.CARRY_PAY_VAT + T.EXTRA_FEE + T.CARRY_EXTRA_FEE + T.EXTRA_VAT + T.CARRY_EXTRA_VAT) AS TAX_AMT
+       FROM (
+            SELECT S.STMT_DT, 
+                   S.VID, 
+                   TO_CHAR(TO_DATE(S.STMT_DT, 'YYYYMMDD'), 'MM')  AS STMT_MON,
+                   TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'YYYYMMDD'), - 1), 'YYYY') AS  TAX_YEAR, 
+                   TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'YYYYMMDD'), - 1), 'MM') AS  TAX_MONTH, 
+                   FN_BIZDAY(CONCAT(TO_CHAR(TO_DATE(S.STMT_DT, 'YYYYMMDD'), 'YYYYMM'), '10'), 0) AS DUE_DT,   
+                   A.VGRP_NM CO_NM, 
+                   COALESCE(SUM(S.FEE), 0) AS FEE, 
+                   COALESCE(SUM(S.CARRY_FEE), 0) AS CARRY_FEE, 
+                   COALESCE(SUM(S.VAT), 0) AS VAT, 
+                   COALESCE(SUM(S.CARRY_VAT), 0) AS CARRY_VAT,
+                   COALESCE(SUM(S.PAY_AMT), 0) AS PAY_AMT, 
+                   COALESCE(SUM(S.PAY_VAT), 0) AS PAY_VAT,
+                   COALESCE(SUM(S.CARRY_PAY_AMT), 0) AS CARRY_PAY_AMT, 
+                   COALESCE(SUM(S.CARRY_PAY_VAT), 0) AS CARRY_PAY_VAT,
+                   COALESCE(SUM(S.SMS_FEE),0) AS SMS_FEE,
+                   COALESCE(SUM(CEIL(S.EXTRA_AMT/11)),0) AS EXTRA_VAT, 
+                   COALESCE(SUM(S.EXTRA_AMT-CEIL(S.EXTRA_AMT/11)),0) AS EXTRA_FEE,
+                   COALESCE(SUM(CEIL(S.CARRY_EXTRA_AMT/11)),0) AS CARRY_EXTRA_VAT, 
+                   COALESCE(SUM(S.CARRY_EXTRA_AMT-CEIL(S.CARRY_EXTRA_AMT/11)),0) AS CARRY_EXTRA_FEE
+              FROM TB_AGENT_STMT S , TB_VGRP A
+             WHERE S.VID=A.VID AND TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'YYYYMMDD'), - 1), 'YYYYMM') = #{mon}
+		       ]]>
+		       <if test="vid!=null and vid!='' ">
+		       <![CDATA[
+		       		AND S.VID = #{vid}
+		       ]]>
+		       </if>
+		       <![CDATA[
+	             GROUP BY S.VID, S.STMT_DT, A.VGRP_NM
+	             ) T
+	]]>
+	</select>
+	
+	<select id="selectAgentCompPayAmtListDetail" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT ROWNUM AS RNUM, A.ID, C.CO_NM, FN_NM_CODE1('PAY_CD', A.PAY_CD) PAY_CL_NM, A.PAY_DT, A.REG_DT, TRUNC(A.PAY_AMT+0.1*A.PAY_AMT, 0) PAY_AMT, 
+		        TRUNC(A.PAY_AMT*B.RSHARE_RATE*0.01,0) RPAY_AMT, TRUNC((0.1*A.PAY_AMT)*B.RSHARE_RATE*0.01,0) RPAY_VAT, B.RSHARE_RATE, A.PM_NM, A.TID
+		   FROM TB_CO_PAY A, TB_CO C
+		   LEFT OUTER JOIN TB_VGRP B ON B.VID = #{vid}
+		   WHERE A.ID = C.CO_NO 
+		   AND A.ID_CD = '1'
+		   AND A.ID IN (SELECT CO_NO FROM TB_MBS WHERE VID = B.VID)
+		   AND A.PAY_CD = '1'
+		   AND A.EXP_FLG = '0'
+		   AND A.PAY_ST_TYPE = '0'
+		   AND SUBSTR(A.PAY_DT, 1, 6) = #{mon}
+	   ) TBL
+	   WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectAgentCompPayAmtListDetailTotal" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT 
+			COUNT(1)
+	   FROM TB_CO_PAY A, TB_CO C
+	   LEFT OUTER JOIN TB_VGRP B ON B.VID = #{vid}
+	   WHERE A.ID = C.CO_NO 
+	   AND A.ID_CD = '1'
+	   AND A.ID IN (SELECT CO_NO FROM TB_MBS WHERE VID = B.VID)
+	   AND A.PAY_CD = '1'
+	   AND A.EXP_FLG = '0'
+	   AND A.PAY_ST_TYPE = '0'
+	   AND SUBSTR(A.PAY_DT, 1, 6) = #{mon}
+	]]>
+	</select>
+	<!-- 대리점 정산보고서 확정 내역  조회 -->
+	<select id="selectAgentStmtConfList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT S.VID, A.VGRP_NM, TO_CHAR(ADD_MONTHS(TO_DATE(SUBSTR(S.STMT_DT,1,6), 'YYYYMM'), - 1), 'YYYYMM') AS  TRANS_YYMM , A.REP_NM, S.STMT_DT,
+		   SUM(S.APP_AMT+S.CC_AMT+S.CARRY_APP_AMT+S.CARRY_CC_AMT) AS TRANAMT, SUM(S.ORG_FEE+S.CARRY_ORG_FEE) AS ORG_FEE, SUM(S.SALES_ORG_FEE+S.CARRY_SALES_ORG_FEE) AS SALES_ORG_FEE, 
+		   SUM(S.SALES_FEE+S.CARRY_SALES_FEE) AS SALES_FEE, SUM(S.FEE+S.CARRY_FEE) AS FEE, SUM(S.DPST_AMT+S.CARRY_DPST_AMT) AS DPST_AMT, SUM(S.VAT+S.CARRY_VAT) AS VAT, 
+		   SUM(S.SMS_FEE) AS SMSFEE , A.EMAIL, A.CO_NO, SUM(S.PAY_AMT+S.CARRY_PAY_AMT) AS PAY_AMT, SUM(S.PAY_VAT+S.CARRY_PAY_VAT) AS PAY_VAT, 
+		   MAX(TO_DATE(S.CONFIRM_DT, 'YYYYMMDD')) AS CONFIRM_DT, SUM(COALESCE((S.RESR_AMT-S.RESR_CC_AMT), 0)+COALESCE((S.CARRY_RESR_AMT-S.CARRY_RESR_CC_AMT), 0)) AS RESR_AMT,
+	   	   SUM(S.EXTRA_AMT+S.CARRY_EXTRA_AMT) AS EXTRA_AMT,
+	   	   A.ACCNT_NM, A.ACCNT_NO, A.BANK_CD, C.DESC1 AS BANK_NM
+	   FROM TB_AGENT_STMT S , TB_VGRP A , TB_CODE C
+       WHERE A.VID <>'000000000a' AND S.VID=A.VID 
+       AND C.COL_NM = 'BANK_CD' AND C.CODE1 = A.BANK_CD 
+	   AND SUBSTR(S.CONFIRM_DT,1,6) =  #{confDt}
+	   GROUP BY S.VID, S.STMT_DT, A.VGRP_NM, A.REP_NM, A.EMAIL, A.CO_NO, A.ACCNT_NM, A.ACCNT_NO, A.BANK_CD, C.DESC1
+	]]>
+	</select>
+	
+	<select id="selectAgentStmtUserRecord" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT TO_CHAR(A.CONF1_CNT, '999,999,999,999') CONF1_CNT,
+           CASE WHEN  A.CONF1_CNT> 0 THEN 'O' ELSE 'X' END CONF1_COMP,
+           TO_CHAR(A.CONF2_CNT, '999,999,999,999') CONF2_CNT,
+           CASE WHEN A.CONF2_CNT > 0 THEN 'O' ELSE 'X' END CONF2_COMP,
+           TO_CHAR(A.CONF3_CNT, '999,999,999,999') CONF3_CNT,
+           CASE WHEN A.CONF3_CNT > 0 THEN 'O' ELSE 'X' END CONF3_COMP,
+           (SELECT U.USRID FROM TB_USR U WHERE U.USRID = A.CONF1_EMP) CONF1_EMP,
+           A.CONF1_TM,
+           (SELECT U.USRID FROM TB_USR U WHERE U.USRID = A.CONF2_EMP) CONF2_EMP,
+           A.CONF2_TM,
+           (SELECT U.USRID FROM TB_USR U WHERE U.USRID = A.CONF3_EMP) CONF3_EMP,      
+           A.CONF3_TM,
+           STATUS
+	   FROM ( 
+	      SELECT COUNT(CASE WHEN ST_TYPE IN ('1', '2', '3') THEN 1 END) CONF1_CNT
+	            , COUNT(CASE WHEN ST_TYPE IN ('2', '3') THEN 1 END) CONF2_CNT
+	            , COUNT(CASE WHEN ST_TYPE = '3' THEN 1 END) CONF3_CNT
+	            , MAX(CONFIRM_EMP) CONF1_EMP
+	            , MAX(CONFIRM_DT) CONF1_TM
+	            , MAX(CONF1_EMP) CONF2_EMP
+	            , MAX(CONF1_TM) CONF2_TM
+	            , MAX(CONF2_EMP) CONF3_EMP
+	            , MAX(CONF2_TM) CONF3_TM  
+	            , MAX(ST_TYPE) AS STATUS        
+	            FROM TB_AGENT_STMT 
+	         WHERE CONFIRM_FLG = '1'
+	         AND SUBSTR(CONFIRM_DT,1,6) = #{confDt}
+	       )A
+	]]>
+	</select>
+	<!-- 이월 확정 내용 조회  -->
+	<select id="selectAgentStmtCarryConfVid"  parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT 
+			VID
+		FROM TB_AGENT_STMT
+		WHERE CONFIRM_DT = #{confDt} 
+		AND ST_TYPE = '1'
+	]]>
+	</select>
+	
+	<!-- 대리점정산 이월 내역 확정 -->
+	<update id="updateConfAgentStmtCarry" parameterType="hashmap" >
+	<![CDATA[
+		UPDATE TB_AGENT_STMT
+		SET
+			ST_TYPE = '2' ,
+			CONFIRM_DT = DATE_FORMAT(NOW(), "%Y%m%d"),
+			WORKER = #{worker},
+			UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE
+			VID = #{vid}
+		AND 
+			ST_TYPE = '0' 	
+	]]>
+	</update>
+	
+	<!-- 대리점 정산 확정 처리(2차 담당자) -->
+	<update id="updateConfStmtSecEmp" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT
+		SET
+			ST_TYPE = '2',
+			CONF1_TM = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"),
+			CONF1_EMP = #{worker},
+			UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE 
+			CONFIRM_DT = #{confDt}
+		AND
+			ST_TYPE = '1'
+	]]>
+	</update>
+	<!-- 대리점 정산 확정 처리(3차 담당자) -->
+	<update id="updateConfStmtThrEmp" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT
+		SET
+			ST_TYPE = '3',
+			CONF2_TM = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"),
+			CONF2_EMP = #{worker},
+			UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE 
+			CONFIRM_DT = #{confDt}
+		AND
+			ST_TYPE = '2'
+	]]>
+	</update>
+	<!-- 대리점 정산 확정취소 처리(1차 담당자) -->
+	<update id="updateConfStmtFirEmp" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT
+		SET
+			ST_TYPE = '0',
+			CONFIRM_FLG = '0',
+			CONFIRM_DT = null,
+			CONFIRM_EMP = null
+			UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE 
+			CONFIRM_DT = #{confDt}
+		AND
+			ST_TYPE = '1'
+	]]>
+	</update>
+	<!-- 이월 확정 취소 내용 -->
+	<select id="selectAgentStmtCarryCanVid" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT VID, SUBSTR(CONF1_TM, 1,8) AS CONF_TM
+		FROM TB_AGENT_STMT
+		WHERE CONFIRM_DT = #{confDt}
+		AND ST_TYPE = '2'
+	]]>
+	</select>
+	
+	<!-- 대리점정산 이월 내역 확정 취소 -->
+	<update id="updateConfAgentStmtCarryCan" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT_CARRY
+		SET
+			STATUS = '0', 
+			CONFIRM_DT = null,
+			WORKER = #{worker},
+			UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+		WHERE
+			VID = #{vid} 
+		AND 
+			STATUS = '2' 
+		AND
+			CONFIRM_DT = #{confDt}
+	]]>
+	</update>
+	<!-- 대리점 정산 확정취소 처리(2차 담당자) -->
+	<update id="updateConfCanSecEmp" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT
+		SET
+			ST_TYPE = '1',
+			CONF1_TM =null,
+			CONF1_EMP = null,
+			UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")			
+		WHERE
+			CONFIRM_DT = #{confDt}
+		AND
+			ST_TYPE ='2'
+	]]>
+	</update>
+	<!-- 대리점 정산 확정취소 처리(3차 담당자) -->
+	<update id="updateConfCanThrEmp" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT
+		SET
+			ST_TYPE = '2',
+			CONF2_TM =null,
+			CONF2_EMP = null,
+			UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")			
+		WHERE
+			CONFIRM_DT = #{confDt}
+		AND
+			ST_TYPE ='3'
+	]]>
+	</update>
+	<!--  대리점 등록비 내역 확인  -->
+	<select id="selectAgentCoPayAmtDetail" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT 
+		 ROWNUM AS RNUM, A.ID, C.CO_NM, FN_NM_CODE1('PAY_CD', A.PAY_CD) PAY_CD_NM, A.PAY_DT, A.REG_DT, TRUNC(A.PAY_AMT+0.1*A.PAY_AMT, 0) PAY_AMT, 
+		 TRUNC(A.PAY_AMT*B.RSHARE_RATE*0.01,0) RPAY_AMT, TRUNC((0.1*A.PAY_AMT)*B.RSHARE_RATE*0.01,0) RPAY_VAT, B.RSHARE_RATE, A.PM_NM, A.TID
+		 FROM TB_CO_PAY A, TB_CO C, TB_VGRP B
+		 WHERE A.ID = C.CO_NO 
+		 AND B.VID = #{vid}
+		 AND A.ID_CD = '1'
+		 AND A.ID IN (SELECT CO_NO FROM TB_MBS WHERE VID = B.VID)
+		 AND A.PAY_CD = '1'
+		 AND A.EXP_FLG = '0'
+		 AND A.DEL_FLG = '0'
+		 AND SUBSTR(A.PAY_DT, 1, 6) = #{trDt}
+	]]>
+	</select>
+	<!--  이월 내역  -->
+	<select id="selectAgentStmtCarryDetail" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		 SELECT  
+		 	ROWNUM AS RNUM, VID, TO_CHAR(CARRY_DT, 'YYYYMM') AS CARRY_DT,(APP_AMT+CC_AMT) AS TR_AMT, FEE, VAT, DPST_AMT, CONFIRM_DT, STATUS
+		 FROM TB_AGENT_STMT_CARRY
+		 WHERE VID = #{vid}
+	]]>
+	<if test="status==2">
+	<![CDATA[
+		AND STATUS = '2' 
+		AND TO_CHAR(CONFIRM_DT, 'YYYYMM') = TO_CHAR(#{confDt}, 'YYYYMM') 
+	]]>
+	</if>
+	<if test="status!=2">
+	<![CDATA[
+		AND STATUS = '0'
+	]]>
+    	<if test='carryCl==1'>
+    	<![CDATA[
+			AND TO_CHAR(CARRY_DT, 'YYYYMM') != TO_CHAR(#{carryDt}, 'YYYYMM')
+		]]>
+		</if> 
+	</if>
+	</select>
+	<select id="selectStatusCurMonStmt" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT COALESCE(MAX(ST_TYPE),0) AS ST_TYPE     
+	    FROM TB_AGENT_STMT
+	  	WHERE CONFIRM_FLG = '1'
+	    AND ST_TYPE IN ('1','2')
+	    AND SUBSTR(CONFIRM_DT,1,6) = TO_CHAR(SYSDATE, 'YYYYMM')
+	]]>
+	</select>
+	<!-- 대리점 정산 확정 처리(1차 담당자) -->
+	<update id="updateConfStmtSave"  parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT
+	    SET CONFIRM_FLG = '1',
+	          ST_TYPE = '1',
+	          CONFIRM_DT = DATE_FORMAT(NOW(), "%Y%m%d"),
+	          TAX_DT = #{taxDt},
+	          CONFIRM_EMP = #{worker},
+	          UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	    WHERE STMT_DT= #{stmtDt}
+	    AND VID = #{vid}
+	]]>
+	</update>
+	<!-- 대리점 정산 확정취소 처리(1차 담당자) -->
+	<update id="updateConfStmtCancel"  parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT
+	    SET CONFIRM_FLG = '0',
+	          ST_TYPE = '0',
+	          CONFIRM_DT = null,
+	          CONFIRM_EMP = null,
+	          UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	    WHERE STMT_DT = #{stmtDt}
+	    AND VID = #{vid}
+	]]>
+	</update>
+	<!-- 대리점정산 이월 내역 확정 취소 -->
+	<update id="updateConfAgentStmtCarryCancel"  parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT_CARRY
+	    SET STATUS = '0',
+	          CONFIRM_DT = null,
+	          WORKER = #{worker},
+	          UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	    WHERE VID = #{vid}
+	    AND STATUS = '2'
+	    AND CONFIRM_DT = #{conf1Dt}
+	]]>
+	</update>
+	<!-- 대리점정산 이월 내용 -->
+	<select id="selectAgentStmtCarryCnt" parameterType="hashmap" resultType="Integer">
+	<![CDATA[
+		SELECT COUNT(1)
+	    FROM TB_AGENT_STMT_CARRY
+	    WHERE TO_CHAR(ADD_MONTHS(TO_DATE(STMT_DT -1, 'YYYYMMDD'), 'YYYYMM')) = #{stmtDt} 
+	    AND VID = #{vid}
+	]]>
+	</select>
+	<!-- 대리점정산 기존 이월 수정 -->
+	<update id="updateAgentStmtCarry"  parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT_CARRY
+	    SET STATUS = '0',
+	          CONFIRM_DT = null,
+	          WORKER = #{worker},
+	          UPD_DNT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s")
+	    WHERE VID = #{vid}
+	    AND STATUS = '2'
+	    AND CONFIRM_DT = #{conf1Dt}
+	]]>
+	</update>
+	<!-- 대리점정산 이월 등록 -->
+	<insert id="insertAgentStmtCarry" parameterType="hashmap">
+	<![CDATA[
+		MERGE INTO TB_AGENT_STMT_CARRY A 
+	     USING (
+   			SELECT B.APP_CNT, 
+	                   B.APP_AMT,
+	                   B.CC_CNT, 
+	                   B.CC_AMT, 
+	                   B.ORG_FEE, 
+	                   B.SALES_FEE, 
+	                   B.SALES_ORG_FEE, 
+	                   B.FEE, 
+	                   B.VAT, 
+	                   B.RESR_AMT, 
+	                   B.RESR_CC_AMT, 
+	                   B.EXTRA_AMT, 
+	                   B.PAY_AMT, 
+	                   B.PAY_VAT,
+	                   B.DPST_AMT,
+	                   B.VID,
+	                   B.STMT_DT
+	          FROM TB_AGENT_STMT_CARRY A, TB_AGENT_STMT B
+	          WHERE A.VID = B.VID 
+	          AND A.STMT_DT = B.STMT_DT 
+	          AND B.VID = #{vid} 
+	          AND TO_CHAR(B.STMT_DT, 'YYYYMM') = TO_CHAR(#{stmtDt}, 'YYYYMM') 
+	          AND B.CONFIRM_FLG = '0'
+	       ) B
+	    ON (A.VID = B.VID AND A.STMT_DT = B.STMT_DT)
+		WHEN MATCHED THEN
+	    UPDATE SET A.APP_CNT = B.APP_CNT, 
+	               A.APP_AMT = B.APP_AMT,
+	               A.CC_CNT = B.CC_CNT, 
+	               A.CC_AMT = B.CC_AMT, 
+	               A.ORG_FEE = B.ORG_FEE, 
+	               A.SALES_FEE = B.SALES_FEE, 
+	               A.SALES_ORG_FEE = B.SALES_ORG_FEE, 
+	               A.FEE = B.FEE, 
+	               A.VAT = B.VAT, 
+	               A.RESR_AMT = B.RESR_AMT, 
+	               A.RESR_CC_AMT = B.RESR_CC_AMT, 
+	               A.EXTRA_AMT = B.EXTRA_AMT, 
+	               A.PAY_AMT = B.PAY_AMT, 
+	               A.PAY_VAT = B.PAY_VAT,
+	               A.DPST_AMT = B.DPST_AMT, 
+	               A.CARRY_DT = (SELECT DATE_FORMAT(NOW(), "%Y%m%d") FROM DUAL),
+	               A.STATUS = '0', 
+	               A.WORKER = #{worker} 
+	]]>
+	</insert>
+	<!-- 대리점정산 이월 sum -->
+	<update id="updateAgentStmtCarrySum" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT 
+		SET CARRY_CL = '1',
+				CARRY_DT = DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"), 
+				CARRY_EMP = #{worker},
+				UPD_DNT(SYSDATE, 'YYYYMMDDHH24MISS')
+   		WHERE VID = #{vid}
+   		AND TO_CHAR(STMT_DT, 'YYYYMM') = TO_CHAR(#{stmtDt}, 'YYYYMM')
+   		AND CONFIRM_FLG = '0'
+	]]>
+	</update>
+	<!-- 대리점 정산 이월 취소 처리 -->
+	<update id="updateCarryStmtCancel" parameterType="hashmap">
+	<![CDATA[
+		UPDATE TB_AGENT_STMT
+        SET CARRY_CL = '0',
+             CARRY_DT = NULL,
+             CARRY_EMP = NULL,
+             UPD_DNT(SYSDATE, 'YYYYMMDDHH24MISS')
+    	WHERE TO_CHAR(STMT_DT, 'YYYYMM') = TO_CHAR(#{stmtDt}, 'YYYYMM')
+      	AND VID = #{vid} 
+      	AND ST_TYPE != '2'
+	]]>
+	</update>
+	<select id="">
+	<![CDATA[
+		SELECT T.STMT_MON, 
+	       T.CO_NM, 
+	       (T.FEE + T.CARRY_FEE + T.PAY_AMT + T.CARRY_PAY_AMT + T.EXTRA_FEE + T.CARRY_EXTRA_FEE) AS SUPP_AMT, 
+	       T.TAX_YEAR, T.TAX_MONTH, T.EXTRA_FEE, T.CARRY_EXTRA_FEE, T.EXTRA_VAT, T.CARRY_EXTRA_VAT,
+	       (SELECT MAX(D.DD) FROM TB_DAY D WHERE D.YY = T.TAX_YEAR AND D.MM = T.TAX_MONTH) AS TAX_LAST_DAY, DUE_DT,
+	       (T.VAT + T.CARRY_VAT + T.PAY_VAT + T.CARRY_PAY_VAT + T.EXTRA_VAT + T.CARRY_EXTRA_VAT) AS VAT, T.SMS_FEE,
+	       (T.FEE + T.CARRY_FEE + T.VAT + T.CARRY_VAT + T.SMS_FEE + T.PAY_AMT + T.PAY_VAT + T.CARRY_PAY_AMT + T.CARRY_PAY_VAT + T.EXTRA_FEE + T.CARRY_EXTRA_FEE + T.EXTRA_VAT + T.CARRY_EXTRA_VAT) AS TAX_AMT
+		 FROM (
+		      SELECT S.STMT_DT, 
+		             S.VID, 
+		             TO_CHAR(S.STMT_DT, 'MM')  AS STMT_MON,
+		             TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'YYYY'), - 1), 'YYYYMM') AS  TAX_YEAR, 
+		             TO_CHAR(ADD_MONTHS(TO_DATE(S.STMT_DT, 'MM'), - 1), 'YYYYMM') AS  TAX_MONTH, 
+		             FN_BIZDAY(CONCAT(TO_CHAR(S.STMT_DT, 'YYYYMM'), '10'), 0) AS DUE_DT,   
+		             A.VGRP_NM CO_NM, 
+		             COALESCE(SUM(S.FEE), 0) AS FEE, 
+		             COALESCE(SUM(S.CARRY_FEE), 0) AS CARRY_FEE, 
+		             COALESCE(SUM(S.VAT), 0) AS VAT, 
+		             COALESCE(SUM(S.CARRY_VAT), 0) AS CARRY_VAT,
+		             COALESCE(SUM(S.PAY_AMT), 0) AS PAY_AMT, 
+		             COALESCE(SUM(S.PAY_VAT), 0) AS PAY_VAT,
+		             COALESCE(SUM(S.CARRY_PAY_AMT), 0) AS CARRY_PAY_AMT, 
+		             COALESCE(SUM(S.CARRY_PAY_VAT), 0) AS CARRY_PAY_VAT,
+		             COALESCE(SUM(S.SMS_FEE),0) AS SMS_FEE,
+		             COALESCE(SUM(CEIL(S.EXTRA_AMT/11)),0) AS EXTRA_VAT, 
+		             COALESCE(SUM(S.EXTRA_AMT-CEIL(S.EXTRA_AMT/11)),0) AS EXTRA_FEE,
+		             COALESCE(SUM(CEIL(S.CARRY_EXTRA_AMT/11)),0) AS CARRY_EXTRA_VAT, 
+		             COALESCE(SUM(S.CARRY_EXTRA_AMT-CEIL(S.CARRY_EXTRA_AMT/11)),0) AS CARRY_EXTRA_FEE
+		        FROM TB_AGENT_STMT S , TB_VGRP A
+		       WHERE S.VID=A.VID AND TO_CHAR(ADD_MONTHS(TO_DATE(STMT_DT, 'YYYYMM'), - 1), 'YYYYMM') = #{mon}
+		       ]]>
+		       <if test="vid!=null and vid!=''">
+		       <![CDATA[
+					AND S.VID = #{vid} 
+				]]>
+				</if>
+		       <![CDATA[
+		       GROUP BY S.VID, SUBSTR(S.STMT_DT, 1, 6), S.STMT_DT, A.VGRP_NM 
+	       ) T
+	]]>
+	</select>
+</mapper>

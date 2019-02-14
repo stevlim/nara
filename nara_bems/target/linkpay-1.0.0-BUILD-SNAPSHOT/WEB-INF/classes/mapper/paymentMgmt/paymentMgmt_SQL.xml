@@ -1,0 +1,2206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cardPaymentMgmt">
+	<select id="selectTransInfoList" parameterType="hashmap" resultType="hashmap">
+	
+	<![CDATA[
+		SELECT A.RNUM
+			, IFNULL(DATE_FORMAT(A.APP_DT, '%Y-%m-%d'), '') AS APP_DT
+			, IFNULL(DATE_FORMAT(A.CC_DT, '%Y-%m-%d'), '') AS CC_DT
+			, IFNULL(A.RCV_DT, '') AS RCV_DT
+			, A.MID	
+			, A.GID
+			, A.VID
+			, A.TID
+			, A.GOODS_AMT
+			, A.GOODS_SPL_AMT
+			, A.GOODS_VAT
+			, A.GOODS_SVC_FEE
+			, A.ORD_NM_ENC
+			, A.UID
+			, IFNULL(A.STMT_CYCLE_CD, '') AS STMT_CYCLE_CD
+			, IFNULL(A.TRX_ST_CD, '') AS TRX_ST_CD
+			, A.CO_NO
+			, A.APP_DNT
+			
+			, A.CO_NM
+			, A.REP_NM
+			, A.ADDR
+			, A.TEL_NO
+			, A.PM_NM
+			, A.GOODS_NM
+			, A.ORD_NO
+			, A.APP_DT_FULL
+			, A.CC_DT_FULL
+			, APP_DT_HIS
+			, CC_DT_HIS
+			FROM (
+			select  @rownum:=@rownum+1 AS RNUM , TBL.APP_DT
+				, TBL.CC_DT
+				, TBL.RCV_DT
+				, TBL.MID
+				, TBL.GID
+				, TBL.VID
+				, TBL.TID
+				, TBL.GOODS_AMT
+				, TBL.GOODS_SPL_AMT
+				, TBL.GOODS_VAT
+				, TBL.GOODS_SVC_FEE
+				, TBL.ORD_NM_ENC
+				, TBL.UID
+				, TBL.STMT_CYCLE_CD
+				, TBL.TRX_ST_CD	
+				, TBL.CO_NO
+				, TBL.APP_DNT
+				, TBL.CO_NM
+				, TBL.REP_NM
+				, TBL.ADDR
+				, TBL.TEL_NO
+				, TBL.PM_NM
+				, TBL.GOODS_NM
+				, TBL.ORD_NO
+				, TBL.APP_DT_FULL
+				, TBL.APP_DT_HIS
+				, TBL.CC_DT_FULL
+				, TBL.CC_DT_HIS 
+            from(
+					SELECT MT.APP_DT
+						, MT.CC_DT
+						, DATE_FORMAT(MT.RCV_DNT, "%Y%m%d") AS RCV_DT
+						, MT.MID
+						, MT.APP_TM
+						, MT.GID
+						, MT.VID
+						, MT.TID
+						, MT.GOODS_AMT
+						, MT.GOODS_SPL_AMT
+						, MT.GOODS_VAT
+						, MT.GOODS_SVC_FEE
+						, MT.ORD_NM AS ORD_NM_ENC
+						, (SELECT A.LOGIN_ID FROM TB_MSTR_USR A WHERE A.UID = MT.UID) AS UID
+						, (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+							WHERE 1=1
+							AND SC.MID = MT.MID
+							AND SC.PM_CD = IF(MT.PM_CD='0000', '01', '')
+							AND SC.SPM_CD = '00'
+							LIMIT 1) AS STMT_CYCLE_CD
+						, MT.TRX_ST_CD	
+						, (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = MT.MID LIMIT 1) AS CO_NO
+						, MT.APP_DNT
+						
+						, C.CO_NM
+						, C.REP_NM
+						, CONCAT(C.RPOST_NO, ' ', C.RADDR_NO1, ' ', C.RADDR_NO2) AS ADDR
+						, C.TEL_NO
+						, IFNULL((SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0022' AND USE_FLG = '1' AND CODE1=MT.PM_CD LIMIT 1), '') AS PM_NM
+						, MT.GOODS_NM
+						, MT.ORD_NO
+						, DATE_FORMAT(MT.APP_DNT, '%Y-%m-%d %H:%i:%s') AS APP_DT_FULL
+						, DATE_FORMAT(MT.APP_DNT, '%H:%i:%s') AS APP_DT_HIS
+						, DATE_FORMAT(MT.CC_DNT, '%Y-%m-%d %H:%i:%s') AS CC_DT_FULL
+						, DATE_FORMAT(MT.CC_DNT, '%H:%i:%s') AS CC_DT_HIS
+					FROM (SELECT * FROM TB_MSTR_TRX WHERE RSLT_CD IN('50','60') AND TRX_ST_CD IN ('0', '1', '2') ORDER BY APP_DNT DESC) MT
+					
+					LEFT OUTER JOIN TB_MBS M
+		            ON MT.MID = M.MID
+		            LEFT OUTER JOIN TB_CO C
+		            ON M.CO_NO = C.CO_NO
+					
+					WHERE 1=1
+					]]>
+					<choose>
+			        	<when test="dateChk=='trans'">
+			         	<![CDATA[
+			         		AND (MT.APP_DT BETWEEN #{frDt} AND #{toDt}
+			         			OR MT.CC_DT BETWEEN #{frDt} AND #{toDt})
+			         	]]>
+			         	</when>
+			         	<when test="dateChk=='app'">
+			         	<![CDATA[
+			         		AND MT.APP_DT BETWEEN #{frDt} AND #{toDt}
+			         	]]>
+			         	</when>
+			         	<when test="dateChk=='cc'">
+			         	<![CDATA[
+			         		AND MT.CC_DT BETWEEN #{frDt} AND #{toDt}
+			         	]]>
+			         	</when>
+			         	<otherwise></otherwise>
+			        </choose>
+			        
+			        <if test="searchFlg!='all'">
+			        	<choose>
+			         		<when test="searchFlg==1"> <!-- mid -->
+					        <![CDATA[
+					        	AND MT.MID=#{txtSearch}
+					        ]]>
+					        </when>
+					        <when test="searchFlg==2"> <!-- gid -->
+					        <![CDATA[
+					        	AND MT.GID=#{txtSearch}
+					        ]]>
+					        </when>
+					        
+					        <when test="searchFlg==3"> <!-- vid -->
+					        <![CDATA[
+					        	AND MT.VID=#{txtSearch}
+					        ]]>
+					        </when>
+					         <when test="searchFlg==0"> <!-- coNo -->
+					        <![CDATA[
+					        	AND (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = MT.MID LIMIT 1)=#{txtSearch}
+					        ]]>
+					        </when>
+					        <otherwise></otherwise>
+			         	</choose>
+			         </if>
+			         
+			         <if test="searchPayFlg!='all'">
+			        	<choose>
+			         		<when test="searchPayFlg==1"> <!-- 구매자명 -->
+					        <![CDATA[
+					        	AND MT.ORD_NM=#{txtPaySearch}
+					        ]]>
+					        </when>
+					        <when test="searchPayFlg==2"> <!-- 결제 시도금액 -->
+					        <![CDATA[
+					        	AND MT.GOODS_AMT=#{txtPaySearch}
+					        ]]>
+					        </when>
+					        
+					        <when test="searchPayFlg==3"> <!-- TID -->
+					        <![CDATA[
+					        	AND MT.TID=#{txtPaySearch}
+					        ]]>
+					        </when>
+					        <otherwise></otherwise>
+			         	</choose>
+			         </if>
+		        	
+		        	<if test="settleCycle!='ALL'">
+			         	<![CDATA[
+							AND (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+								WHERE 1=1
+								AND SC.MID = MT.MID
+								AND SC.PM_CD = IF(MT.PM_CD='0000', '01', '')
+								AND SC.SPM_CD = '00'
+								LIMIT 1) = #{settleCycle}
+			         	]]>
+			        </if>
+			        
+			        <if test="status!='ALL'">
+				        <![CDATA[
+				        	AND MT.TRX_ST_CD = #{status}
+				        ]]> 
+			        </if>
+			        
+					<![CDATA[
+					order by MT.APP_DNT DESC
+				)TBL, (SELECT @rownum:=0) tmp
+			
+        	) A
+        	
+        	WHERE 1=1
+	]]>	
+        	
+	         	 	
+        	
+	<![CDATA[
+	AND A.RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	
+	
+	]]>
+	
+	</select>
+	
+	<select id="selectRecpt" parameterType="String" resultType="hashmap">
+	<![CDATA[
+		SELECT 
+				 DATE_FORMAT(MT.APP_DNT, "%Y%m%d") AS APP_DT
+				, DATE_FORMAT(MT.CC_DNT, "%Y%m%d") AS CC_DT
+				, DATE_FORMAT(MT.RCV_DNT, "%Y%m%d") AS RCV_DT
+				, MT.MID
+				, MT.GID
+				, MT.VID
+				, MT.TID
+				, MT.GOODS_AMT
+				, MT.GOODS_SPL_AMT
+				, MT.GOODS_VAT
+				, MT.GOODS_SVC_FEE
+				, MT.ORD_NM AS ORD_NM_ENC
+				, (SELECT A.LOGIN_ID FROM TB_MSTR_USR A WHERE A.UID = MT.UID) AS UID
+				, MT.TRX_ST_CD	
+				, MBS.CO_NO
+				, MT.APP_DNT
+				, MBS.CO_NM
+				, MBS.REP_NM 
+				, CONCAT(MBS.RPOST_NO, ' ', MBS.RADDR_NO1, ' ', MBS.RADDR_NO2) AS ADDR
+				, MBS.TEL_NO
+				, IFNULL((SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0022' AND USE_FLG = '1' AND CODE1=MT.PM_CD LIMIT 1), '') AS PM_NM
+				, MT.GOODS_NM
+				, MT.ORD_NO
+				, DATE_FORMAT(MT.APP_DNT, '%Y-%m-%d %H:%i:%s') AS APP_DT_FULL
+		FROM TB_MSTR_TRX MT, TB_MBS MBS
+       WHERE MT.MID = MBS.MID
+	     AND TID = #{tid}
+	]]>
+	</select>
+	
+	<select id="selectTransInfoListTotal" parameterType="hashmap" resultType="integer">
+	<![CDATA[
+		SELECT COUNT(1) AS TOTPAGECNT
+			FROM (
+			SELECT @rownum:=@rownum+1 AS RNUM
+				, MT.APP_DT
+				, MT.CC_DT
+				, DATE_FORMAT(MT.RCV_DNT, "%Y%m%d") AS RCV_DT
+				, MT.MID
+				, MT.GID
+				, MT.VID
+				, MT.TID
+				, MT.GOODS_AMT
+				, MT.ORD_NM AS ORD_NM_ENC
+				, (SELECT A.LOGIN_ID FROM TB_MSTR_USR A WHERE A.UID = MT.UID) AS UID
+				, (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+					WHERE 1=1
+					AND SC.MID = MT.MID
+					AND SC.PM_CD = IF(MT.PM_CD='0000', '01', '')
+					AND SC.SPM_CD = '00'
+					LIMIT 1) AS STMT_CYCLE_CD
+				, MT.TRX_ST_CD	
+				, (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = MT.MID) AS CO_NO
+				, MT.APP_DNT
+			FROM (SELECT * FROM TB_MSTR_TRX WHERE RSLT_CD IN('50','60') AND TRX_ST_CD IN ('0', '1', '2')) MT
+			
+			LEFT OUTER JOIN TB_MBS M
+            ON MT.MID = M.MID
+            LEFT OUTER JOIN TB_CO C
+            ON M.CO_NO = C.CO_NO
+			
+			, (SELECT @rownum:=0) tmp
+			
+			WHERE 1=1
+			]]>
+			<choose>
+	        	<when test="dateChk=='trans'">
+	         	<![CDATA[
+	         		AND (MT.APP_DT BETWEEN #{frDt} AND #{toDt}
+	         			OR MT.CC_DT BETWEEN #{frDt} AND #{toDt})
+	         	]]>
+	         	</when>
+	         	<when test="dateChk=='app'">
+	         	<![CDATA[
+	         		AND MT.APP_DT BETWEEN #{frDt} AND #{toDt}
+	         	]]>
+	         	</when>
+	         	<when test="dateChk=='cc'">
+	         	<![CDATA[
+	         		AND MT.CC_DT BETWEEN #{frDt} AND #{toDt}
+	         	]]>
+	         	</when>
+	         	<otherwise></otherwise>
+	        </choose>
+	        
+	        <if test="searchFlg!='all'">
+	        	<choose>
+	         		<when test="searchFlg==1"> <!-- mid -->
+			        <![CDATA[
+			        	AND MT.MID=#{txtSearch}
+			        ]]>
+			        </when>
+			        <when test="searchFlg==2"> <!-- gid -->
+			        <![CDATA[
+			        	AND MT.GID=#{txtSearch}
+			        ]]>
+			        </when>
+			        
+			        <when test="searchFlg==3"> <!-- vid -->
+			        <![CDATA[
+			        	AND MT.VID=#{txtSearch}
+			        ]]>
+			        </when>
+			         <when test="searchFlg==0"> <!-- coNo -->
+			        <![CDATA[
+			        	AND (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = MT.MID LIMIT 1)=#{txtSearch}
+			        ]]>
+			        </when>
+			        <otherwise></otherwise>
+	         	</choose>
+	         </if>
+	         
+	         <if test="searchPayFlg!='all'">
+	        	<choose>
+	         		<when test="searchPayFlg==1"> <!-- 구매자명 -->
+			        <![CDATA[
+			        	AND MT.ORD_NM=#{txtPaySearch}
+			        ]]>
+			        </when>
+			        <when test="searchPayFlg==2"> <!-- 결제 시도금액 -->
+			        <![CDATA[
+			        	AND MT.GOODS_AMT=#{txtPaySearch}
+			        ]]>
+			        </when>
+			        
+			        <when test="searchPayFlg==3"> <!-- TID -->
+			        <![CDATA[
+			        	AND MT.TID=#{txtPaySearch}
+			        ]]>
+			        </when>
+			        <otherwise></otherwise>
+	         	</choose>
+	         </if>
+        	
+        	<if test="settleCycle!='ALL'">
+	         	<![CDATA[
+					AND (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+						WHERE 1=
+						AND SC.MID = MT.MID
+						AND SC.PM_CD = IF(MT.PM_CD='0000', '01', '')
+						AND SC.SPM_CD = '00'
+						LIMIT 1) = #{settleCycle}
+	         	]]>
+	        </if>
+	        
+	        <if test="status!='ALL'">
+		        <![CDATA[
+		        	AND MT.TRX_ST_CD = #{status}
+		        ]]> 
+	        </if>
+	        
+			<![CDATA[
+        	) A
+        	WHERE 1=1
+	]]>	
+        	
+	         	 	
+        	
+	<![CDATA[
+	
+	]]>
+	
+	</select>
+	
+	<select id="selectTransFailInfoList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT A.RNUM
+			, IFNULL(A.APP_DT, '') AS APP_DT
+			, IFNULL(A.APP_HI, '') AS APP_HI
+			, IFNULL(A.CC_DT, '') AS CC_DT
+			, IFNULL(A.RCV_DT, '') AS RCV_DT
+			, A.MID
+			, A.GID
+			, A.VID
+			, A.TID
+			, A.GOODS_AMT
+			, A.ORD_NM_ENC
+			, A.UID
+			, IFNULL(A.STMT_CYCLE_CD, '') AS STMT_CYCLE_CD
+			, IFNULL(A.TRX_ST_CD, '') AS TRX_ST_CD
+			, A.CO_NO
+			, A.APP_DNT
+			, IFNULL(A.GOODS_NM, '') AS GOODS_NM
+			FROM (
+			SELECT @rownum:=@rownum+1 AS RNUM
+				, DATE_FORMAT(MT.REG_DNT, "%Y%m%d") AS APP_DT
+				, DATE_FORMAT(MT.REG_DNT, "%H:%i:%s") AS APP_HI
+				, DATE_FORMAT(MT.CC_DNT, "%Y%m%d") AS CC_DT
+				, DATE_FORMAT(MT.RCV_DNT, "%Y%m%d") AS RCV_DT
+				, MT.MID
+				, MT.GID
+				, MT.VID
+				, MT.TID
+				, MT.GOODS_AMT
+				, MT.ORD_NM AS ORD_NM_ENC
+				, (SELECT A.LOGIN_ID FROM TB_MSTR_USR A WHERE A.UID = MT.UID) AS UID
+				, (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+					WHERE 1=1
+					AND SC.MID = MT.MID
+					AND SC.PM_CD = IF(MT.PM_CD='0000', '01', '')
+					AND SC.SPM_CD = '00'
+					LIMIT 1) AS STMT_CYCLE_CD
+				, MT.TRX_ST_CD	
+				, (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = MT.MID) AS CO_NO
+				, MT.APP_DNT
+				, MT.GOODS_NM
+			FROM (SELECT * FROM TB_UNSC_TRX ORDER BY REG_DNT DESC) MT, (SELECT @rownum:=0) tmp
+			WHERE 1=1
+	]]>		
+			<if test="searchFlg!='all'">
+	        	<choose>
+	         		<when test="searchFlg==1"> <!-- mid -->
+			        <![CDATA[
+			        	AND MT.MID=#{txtSearch}
+			        ]]>
+			        </when>
+			        <when test="searchFlg==2"> <!-- gid -->
+			        <![CDATA[
+			        	AND MT.GID=#{txtSearch}
+			        ]]>
+			        </when>
+			        
+			        <when test="searchFlg==3"> <!-- vid -->
+			        <![CDATA[
+			        	AND MT.VID=#{txtSearch}
+			        ]]>
+			        </when>
+			         <when test="searchFlg==0"> <!-- coNo -->
+			        <![CDATA[
+			        	AND (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = MT.MID)=#{txtSearch}
+			        ]]>
+			        </when>
+			        <otherwise></otherwise>
+	         	</choose>
+	         </if>
+	         
+	         <if test="searchPayFlg!='all'">
+	        	<choose>
+	         		<when test="searchPayFlg==1"> <!-- 구매자명 -->
+			        <![CDATA[
+			        	AND MT.ORD_NM=#{txtPaySearch}
+			        ]]>
+			        </when>
+			        <when test="searchPayFlg==2"> <!-- 결제 시도금액 -->
+			        <![CDATA[
+			        	AND MT.GOODS_AMT=#{txtPaySearch}
+			        ]]>
+			        </when>
+			        
+			        <when test="searchPayFlg==3"> <!-- TID -->
+			        <![CDATA[
+			        	AND MT.TID=#{txtPaySearch}
+			        ]]>
+			        </when>
+			        <otherwise></otherwise>
+	         	</choose>
+	         </if>
+        	
+        	<!-- trans:거래일, app:승인일, cc:취소일 -->
+        	<choose>
+	        	<when test="dateChk=='fail'">
+	         	<![CDATA[
+	         		AND DATE_FORMAT(MT.REG_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+	         	]]>
+	         	</when>
+	         	
+	         	<otherwise></otherwise>
+	        </choose>
+	
+	<![CDATA[			
+        	) A
+        	WHERE 1=1
+	]]>	
+        	
+	<![CDATA[
+	AND A.RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	
+	
+	]]>
+<!--   			WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd} -->
+	</select>
+	
+	<select id="selectTransFailInfoListTotal" parameterType="hashmap" resultType="integer">
+	<![CDATA[
+		SELECT COUNT(1) AS TOTPAGECNT
+			FROM (
+			SELECT @rownum:=@rownum+1 AS RNUM
+				, DATE_FORMAT(MT.REG_DNT, "%Y%m%d") AS APP_DT
+				, DATE_FORMAT(MT.CC_DNT, "%Y%m%d") AS CC_DT
+				, DATE_FORMAT(MT.RCV_DNT, "%Y%m%d") AS RCV_DT
+				, MT.MID
+				, MT.GID
+				, MT.VID
+				, MT.TID
+				, MT.GOODS_AMT
+				, MT.ORD_NM AS ORD_NM_ENC
+				, (SELECT A.LOGIN_ID FROM TB_MSTR_USR A WHERE A.UID = MT.UID) AS UID
+				, (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+					WHERE 1=1
+					AND SC.MID = MT.MID
+					AND SC.PM_CD = IF(MT.PM_CD='0000', '01', '')
+					AND SC.SPM_CD = '00'
+					LIMIT 1) AS STMT_CYCLE_CD
+				, MT.TRX_ST_CD	
+				, (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = MT.MID) AS CO_NO
+				, MT.APP_DNT
+			FROM TB_UNSC_TRX MT, (SELECT @rownum:=0) tmp
+			WHERE 1=1
+	]]>		
+			<if test="searchFlg!='all'">
+	        	<choose>
+	         		<when test="searchFlg==1"> <!-- mid -->
+			        <![CDATA[
+			        	AND MT.MID=#{txtSearch}
+			        ]]>
+			        </when>
+			        <when test="searchFlg==2"> <!-- gid -->
+			        <![CDATA[
+			        	AND MT.GID=#{txtSearch}
+			        ]]>
+			        </when>
+			        
+			        <when test="searchFlg==3"> <!-- vid -->
+			        <![CDATA[
+			        	AND MT.VID=#{txtSearch}
+			        ]]>
+			        </when>
+			         <when test="searchFlg==0"> <!-- coNo -->
+			        <![CDATA[
+			        	AND (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = MT.MID)=#{txtSearch}
+			        ]]>
+			        </when>
+			        <otherwise></otherwise>
+	         	</choose>
+	         </if>
+	         
+	         <if test="searchPayFlg!='all'">
+	        	<choose>
+	         		<when test="searchPayFlg==1"> <!-- 구매자명 -->
+			        <![CDATA[
+			        	AND MT.ORD_NM=#{txtPaySearch}
+			        ]]>
+			        </when>
+			        <when test="searchPayFlg==2"> <!-- 결제 시도금액 -->
+			        <![CDATA[
+			        	AND MT.GOODS_AMT=#{txtPaySearch}
+			        ]]>
+			        </when>
+			        
+			        <when test="searchPayFlg==3"> <!-- TID -->
+			        <![CDATA[
+			        	AND MT.TID=#{txtPaySearch}
+			        ]]>
+			        </when>
+			        <otherwise></otherwise>
+	         	</choose>
+	         </if>
+        	
+        	<!-- trans:거래일, app:승인일, cc:취소일 -->
+        	<choose>
+	        	<when test="dateChk=='fail'">
+	         	<![CDATA[
+	         		AND DATE_FORMAT(MT.REG_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+	         	]]>
+	         	</when>
+	         	
+	         	<otherwise></otherwise>
+	        </choose>
+	
+	<![CDATA[			
+        	) A
+        	WHERE 1=1
+	]]>	
+        	
+	<![CDATA[
+	
+	]]>
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<select id="selectCardInfoAmt" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[                                  
+	SELECT CAST(IFNULL(AL.TRAN_CNT, '0') AS SIGNED) AS TRAN_CNT
+			, CAST(IFNULL(AL.TRAN_AMT, '0') AS SIGNED) AS TRAN_AMT
+	FROM 
+	(
+		(
+			SELECT
+				COUNT(AP.TID) TRAN_CNT
+				, SUM(AP.GOODS_AMT) TRAN_AMT
+			FROM TB_MSTR_TRX AP
+			WHERE 1=1
+			AND AP.RSLT_CD IN('50','60') 
+			
+			AND AP.APP_DNT IS NOT NULL
+			AND AP.PM_CD = '01'
+	        
+			
+	]]>	
+	<if test="searchFlg!='all'">
+		<choose>
+			<when test="searchFlg==1"> <!-- mid -->
+			<![CDATA[
+				AND AP.MID=#{txtSearch}
+			]]>
+			</when>
+			<when test="searchFlg==2"> <!-- gid -->
+			<![CDATA[
+				AND AP.GID=#{txtSearch}
+			]]>
+			</when>
+			
+			<when test="searchFlg==3"> <!-- vid -->
+			<![CDATA[
+				AND AP.VID=#{txtSearch}
+			]]>
+			</when>
+			 <when test="searchFlg==0"> <!-- coNo -->
+			<![CDATA[
+				AND (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = AP.MID LIMIT 1)=#{txtSearch}
+			]]>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	 </if>
+	 
+	 <if test="searchPayFlg!='all'">
+		<choose>
+			<when test="searchPayFlg==1"> <!-- 구매자명 -->
+			<![CDATA[
+				AND AP.ORD_NM_ENC=#{txtPaySearch}
+			]]>
+			</when>
+			<when test="searchPayFlg==2"> <!-- 결제 시도금액 -->
+			<![CDATA[
+				AND AP.GOODS_AMT=#{txtPaySearch}
+			]]>
+			</when>
+			
+			<when test="searchPayFlg==3"> <!-- TID -->
+			<![CDATA[
+				AND AP.TID=#{txtPaySearch}
+			]]>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	 </if>
+	
+	<if test="settleCycle!='ALL'">
+		<![CDATA[
+			AND (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+				WHERE 1=1
+				AND SC.MID = AP.MID
+				AND SC.PM_CD = AP.PM_CD
+				AND SC.SPM_CD = '00'
+				LIMIT 1) = #{settleCycle}
+		]]>
+	</if>
+	
+	<if test="status!='ALL'">
+		<![CDATA[
+			AND AP.TRX_ST_CD = #{status}
+		]]> 
+	</if>
+			
+	<!-- trans:거래일, app:승인일, cc:취소일 -->
+	<choose>
+		<when test="dateChk=='trans'">
+		<![CDATA[
+			AND ( DATE_FORMAT(AP.APP_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+				OR DATE_FORMAT(AP.CC_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt})
+		]]>
+		</when>
+		<when test="dateChk=='app'">
+		<![CDATA[
+			AND DATE_FORMAT(AP.APP_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</when>
+		<when test="dateChk=='cc'">
+		<![CDATA[
+			AND DATE_FORMAT(AP.CC_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</when>
+		<otherwise></otherwise>
+	</choose>
+	<![CDATA[        
+		)                        
+		UNION ALL
+		(
+			SELECT
+				COUNT(CC.TID) TRAN_CNT
+				, SUM(CC.GOODS_AMT) TRAN_AMT
+			FROM TB_MSTR_TRX CC
+			WHERE 1=1
+			AND CC.RSLT_CD IN('50','60') 
+			AND CC.TRX_ST_CD IN ('1', '2')
+			AND CC.PM_CD = '01'
+	]]>
+	<if test="searchFlg!='all'">
+		<choose>
+			<when test="searchFlg==1"> <!-- mid -->
+			<![CDATA[
+				AND CC.MID=#{txtSearch}
+			]]>
+			</when>
+			<when test="searchFlg==2"> <!-- gid -->
+			<![CDATA[
+				AND CC.GID=#{txtSearch}
+			]]>
+			</when>
+			
+			<when test="searchFlg==3"> <!-- vid -->
+			<![CDATA[
+				AND CC.VID=#{txtSearch}
+			]]>
+			</when>
+			 <when test="searchFlg==0"> <!-- coNo -->
+			<![CDATA[
+				AND (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = CC.MID LIMIT 1)=#{txtSearch}
+			]]>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	 </if>
+	 
+	 <if test="searchPayFlg!='all'">
+		<choose>
+			<when test="searchPayFlg==1"> <!-- 구매자명 -->
+			<![CDATA[
+				AND CC.ORD_NM_ENC=#{txtPaySearch}
+			]]>
+			</when>
+			<when test="searchPayFlg==2"> <!-- 결제 시도금액 -->
+			<![CDATA[
+				AND CC.GOODS_AMT=#{txtPaySearch}
+			]]>
+			</when>
+			
+			<when test="searchPayFlg==3"> <!-- TID -->
+			<![CDATA[
+				AND CC.TID=#{txtPaySearch}
+			]]>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	 </if>
+	
+	<if test="settleCycle!='ALL'">
+		<![CDATA[
+			AND (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+				WHERE 1=1
+				AND SC.MID = CC.MID
+				AND SC.PM_CD = CC.PM_CD
+				AND SC.SPM_CD = '00'
+				LIMIT 1) = #{settleCycle}
+		]]>
+	</if>
+	
+	<if test="status!='ALL'">
+		<![CDATA[
+			AND CC.TRX_ST_CD = #{status}
+		]]> 
+	</if>
+			
+	<!-- trans:거래일, app:승인일, cc:취소일 -->
+	<choose>
+		<when test="dateChk=='trans'">
+		<![CDATA[
+			AND ( DATE_FORMAT(CC.APP_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+				OR DATE_FORMAT(CC.CC_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt})
+		]]>
+		</when>
+		<when test="dateChk=='app'">
+		<![CDATA[
+			AND DATE_FORMAT(CC.APP_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</when>
+		<when test="dateChk=='cc'">
+		<![CDATA[
+			AND DATE_FORMAT(CC.CC_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</when>
+		<otherwise></otherwise>
+	</choose>
+	<![CDATA[                            
+		)
+	) AL
+	]]>
+	</select>
+
+	
+	<!-- 신용카드  결제내역 TID 상세내역 조회 -->
+	<select id="selectDetailCardTid" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		    SELECT 
+				IF(F.PM_CD='01', '이롬머니', '') AS PM_NM
+				
+				, (SELECT A.LOGIN_ID FROM TB_MSTR_USR A WHERE A.UID = F.UID) AS MBS_USR_ID
+				, F.TID
+				, F.ORD_NO
+				, F.MID
+				, F.GID
+				, F.VID
+				, F.PM_CD
+				
+				, DATE_FORMAT(F.APP_REQ_DNT, "%Y-%m-%d %H:%i:%s") APP_REQ_DNT
+				, DATE_FORMAT(F.APP_DNT, "%Y-%m-%d %H:%i:%s") APP_DNT
+				, F.GOODS_NM
+				, F.GOODS_AMT
+				, F.GOODS_SPL_AMT
+				, F.GOODS_VAT
+				, F.UID
+				, F.CARD_NO
+				, F.ORD_NM
+				, F.ORD_NM_ENC
+				, F.ORD_TEL
+				, F.ORD_TEL_ENC
+				, F.ORD_HP
+				, F.ORD_HP_ENC
+				, F.ORD_EMAIL
+				, F.ORD_EMAIL_ENC
+				, F.TRX_MSG
+				, F.RSLT_CD
+				, F.PM_MTHD_CD
+				, F.PGSW_VER
+				, F.MBS_DVC_ID
+				, F.MBS_SCK_ID
+				, F.APP_NO
+				, F.TRX_ST_CD
+				, F.APP_DT
+				, (SELECT MKEY FROM TB_MBS_KEY WHERE MID = F.MID) AS MBS_KEY
+				, CASE F.RSLT_SND_ST
+					WHEN '10' then '미통보'
+					when '20' then '통보'
+				    WHEN '30' then '통보실패'
+					when '40' then '대기'
+				        else F.RSLT_SND_ST
+				        end AS RSLT_SND_ST
+				
+				, DATE_FORMAT(F.RSLT_SND_DNT, "%Y%m%d") RSLT_SND_DNT
+				
+				, IF(F.AUTO_CHRG_CD='Y', '예', IF(F.AUTO_CHRG_CD='N', '아니오', '')) AS AUTO_CHRG_CD
+				
+				, F.PNT_ID
+				, IF(F.RE_SND_FLG='Y', '재통보', '재통보안함') RE_SND_FLG
+				, DATE_FORMAT(F.SND_DNT, "%Y%m%d") SND_DNT
+				, DATE_FORMAT(F.RCV_DNT, "%Y%m%d") RCV_DNT
+				, F.REG_ID
+				, DATE_FORMAT(F.REG_DNT, "%Y%m%d") REG_DNT
+				, DATE_FORMAT(F.UPD_DNT, "%Y%m%d") UPD_DNT
+				
+				, C.REASON_DESC
+                , C.REASON_CD
+                , C.REG_ID AS CC_REG_ID
+                
+                , DATE_FORMAT(F.RSLT_SND_DNT, "%Y-%m-%d %H:%i:%s") AS RSLT_SND_DNT_FULL
+                , DATE_FORMAT(F.SND_DNT, "%Y-%m-%d %H:%i:%s") AS SND_DNT_FULL
+                , DATE_FORMAT(F.RCV_DNT, "%Y-%m-%d %H:%i:%s") AS RCV_DNT_FULL                
+                
+				 FROM TB_MSTR_TRX F 
+				 LEFT OUTER JOIN TB_CC_REQ C
+                 ON F.TID = C.TID
+                 
+				 WHERE 1=1
+				AND F.TID = #{tid}
+	]]>
+	<choose>
+	<when test="idCd ==0">
+	<![CDATA[
+		AND F.MID = #{usrId}
+	]]>
+	</when>
+	<when test="idCd ==1">
+	<![CDATA[
+		AND F.GID = #{usrId}
+	]]>
+	</when>
+	<when test="idCd ==2">
+	<![CDATA[
+		AND F.VID = #{usrId}
+	]]>
+	</when>
+	</choose>
+		ORDER BY C.REG_DNT DESC
+        LIMIT 1
+	</select>
+	<!-- 부분취소 원거래 및 부분거래 구별 쿼리-->
+	<select id="selectTransPartCnt" parameterType="hashmap" resultType="integer">
+	<![CDATA[
+		SELECT COALESCE(SUM(A.CNT),0) CNT
+		 FROM (
+		  SELECT 1 CNT
+		  FROM TB_CC_PART_HIST WHERE TID = #{tid}
+		  UNION ALL
+		  SELECT 2 CNT
+		  FROM TB_CC_PART_HIST WHERE OTID = #{tid}
+		 ) A
+	]]>
+	</select>
+	<!-- 부분취소 TID 상세내역 조회 -->
+	<select id="selectTransPartDetail" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT A.CC_SEQ ,  A.TID, A.CC_DT, A.CC_AMT, A.REMAIN_AMT, A.OTID
+		 FROM (
+		   SELECT  -1 CC_SEQ, TID, '' AS CC_DT, GOODS_AMT AS CC_AMT, 
+		   GOODS_AMT AS REMAIN_AMT, TID AS OTID 
+		   FROM TB_MSTR_TRX 
+		   WHERE TID IN (SELECT DISTINCT(OTID) AS OTID FROM TB_CC_PART_HIST WHERE TID = #{tid})
+		   UNION ALL
+		   SELECT  CC_SEQ, TID, CC_DT, CC_AMT, REMAIN_AMT, OTID 
+		   FROM TB_CC_PART_HIST
+		   WHERE OTID IN (SELECT DISTINCT(OTID) AS OTID FROM TB_CC_PART_HIST WHERE TID = #{tid} ) 
+		 ) A
+		 ORDER BY CC_SEQ
+	]]>
+	</select>
+	<!-- 부분취소 원거래 TID 상세내역 조회 -->
+	<select id="selectTransPartOrgDetail" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT  A.CC_SEQ, A.TID, A.CC_DT, A.CC_AMT, A.REMAIN_AMT, A.OTID
+		 FROM (
+		   SELECT  -1 CC_SEQ, TID, '' AS CC_DT, GOODS_AMT AS CC_AMT, 
+		   GOODS_AMT AS REMAIN_AMT, TID AS OTID 
+		   FROM TB_MSTR_TRX 
+		   WHERE TID  =#{tid}
+		   UNION ALL
+		   SELECT  CC_SEQ, TID, CC_DT, CC_AMT, REMAIN_AMT, OTID 
+		   FROM TB_CC_PART_HIST
+		   WHERE OTID = #{tid}
+		 ) A
+		 ORDER BY CC_SEQ
+	]]>
+	</select>
+	<!-- 부분취소 최종 잔액을 가져온다.-->
+	<select id="selectTransPartRemain" parameterType="hashmap" resultType="integer">
+	<![CDATA[
+		SELECT COALESCE(REMAIN_AMT,0) REMAIN_AMT 
+		 FROM (  
+		  SELECT 0 AS SEQ, GOODS_AMT AS REMAIN_AMT
+		  FROM TB_MSTR_TRX WHERE TID = #{tid}
+		  UNION ALL
+		  SELECT CC_SEQ AS SEQ, REMAIN_AMT
+		  FROM TB_CC_PART_HIST WHERE OTID = #{tid}
+		 ) A
+		 WHERE ROWNUM < 2
+	]]>
+	</select>
+	<select id="selectCardTotal" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM 
+		(
+			SELECT
+				ROW_NUMBER()OVER(ORDER BY A.TR_DT DESC) AS RNUM, 
+				A.TR_DT,
+	           SUM(A.REAL_APP_CNT + A.REAL_CC_CNT + A.REAL_RF_CNT) REALTOTCNT,
+	           SUM(A.REAL_APP_AMT + A.REAL_CC_AMT + A.REAL_RF_AMT) REALTOTAMT,
+	           SUM(A.REAL_APP_CNT) REALAPPCNT,
+	           SUM(A.REAL_APP_AMT) REALAPPAMT,
+	           SUM(A.REAL_CC_CNT) REALCCCNT,
+	           SUM(A.REAL_CC_AMT) REALCCAMT,
+	           SUM(A.REAL_RF_CNT) REALRFCNT,
+	           SUM(A.REAL_RF_AMT) REALRFAMT,
+	           
+	           SUM(A.TEST_APP_CNT + A.TEST_CC_CNT + A.TEST_RF_CNT) TESTTOTCNT,
+	           SUM(A.TEST_APP_AMT + A.TEST_CC_AMT + A.TEST_RF_AMT) TESTTOTAMT,
+	           SUM(A.TEST_APP_CNT) TESTAPPCNT,
+	           SUM(A.TEST_APP_AMT) TESTAPPAMT,
+	           SUM(A.TEST_CC_CNT) TESTCCCNT,
+	           SUM(A.TEST_CC_AMT) TESTCCAMT,
+	           SUM(A.TEST_RF_CNT) TESTRFCNT,
+	           SUM(A.TEST_RF_AMT) TESTRFAMT
+	    FROM (
+	      SELECT B.APP_DT TR_DT
+	      , SUM(CASE WHEN B.GID != 'TPAYTEST0G' THEN 1 ELSE 0 END) REAL_APP_CNT
+	      , SUM(CASE WHEN C.GID != 'TPAYTEST0G' THEN B.GOODS_AMT ELSE 0 END) REAL_APP_AMT
+	      , SUM(CASE WHEN B.GID = 'TPAYTEST0G' THEN 1 ELSE 0 END) TEST_APP_CNT
+	      , SUM(CASE WHEN C.GID = 'TPAYTEST0G' THEN B.GOODS_AMT ELSE 0 END) TEST_APP_AMT 
+	      
+	      
+	      , 0 REAL_CC_CNT
+	      , 0 REAL_CC_AMT
+	      , 0 TEST_CC_CNT
+	      , 0 TEST_CC_AMT
+	      
+	      , 0 REAL_RF_CNT
+	      , 0 REAL_RF_AMT
+	      , 0 TEST_RF_CNT
+	      , 0 TEST_RF_AMT
+	      
+	      FROM TB_CARD_TRX A, TB_MSTR_TRX B, TB_MBS C
+	     WHERE A.TID = B.TID AND B.MID = C.MID
+	     ]]>
+		         <choose>
+		         <when test="dateChk=='cc'">
+		         <![CDATA[
+		         	AND 1=2
+		         ]]>
+		         </when>
+		         <when test="dateChk!='cc'">
+		         <![CDATA[
+		         	AND B.APP_DT BETWEEN #{frDt} AND #{toDt}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         <if test="searchFlg!='ALL'">
+		         <choose>
+		         <when test="searchFlg==2"> <!-- gid -->
+		         <![CDATA[
+		         	AND B.GID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==1"> <!-- mid -->
+		         <![CDATA[
+		         	AND B.MID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==3"> <!-- vid -->
+		         <![CDATA[
+		         	AND B.VID=#{txtSearch}
+		         ]]>
+		         </when>
+		          <when test="searchFlg==0"> <!-- coNo -->
+		         <![CDATA[
+		         	AND C.CO_NO=#{txtSearch}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         </if>
+		         <if test="status!='ALL'">
+		        <![CDATA[
+		        	AND B.TRX_ST_CD = #{status}
+		        ]]> 
+	         	</if>
+	         	<if test="settleCycle!='ALL'">
+	         	<![CDATA[
+					AND B.STMT_CYCLE_CD = #{settleCycle}
+	         	]]>
+	         	</if>
+	         	<if test="cardFlg!='ALL'">
+	         	<![CDATA[
+	         		AND A.APP_CARD_CD = #{cardFlg}
+	         	]]>
+	         	</if>
+	         	<choose>
+	         	<when test="flagChk=='AppNo'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='BuyerNm'">
+	         	<![CDATA[
+	         		AND A.ORD_NM_ENC = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='GoodsAmt'">
+	         	<![CDATA[
+	         		AND B.GOODS_AMT = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='CardNo'">
+	         	<![CDATA[
+	         		AND A.CARD_NO_ENC IN ( #{ispTextEnc},#{ispText2Enc},#{flagEnc})
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='TID'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<otherwise></otherwise>
+         		</choose>
+         		<if test="typeChk!='ALL'">
+         		<![CDATA[
+         			AND A.MBS_TYPE_CD = #{typeChk}
+         		]]>
+         		</if>
+         		<if test="connFlg!='ALL'">
+         		<![CDATA[
+         			AND B.CONN_TYPE = #{connFlg}
+         		]]>
+         		</if>
+         		<if test="certType!='ALL'">
+         		<![CDATA[
+         			AND A.AUTH_TYPE_CD = #{certType}
+         		]]>
+         		</if>
+         		<if test="escrow!='ALL'">
+         		<choose>
+         		<when test="escrow==1	">
+         		<![CDATA[
+         			AND B.TRX_CD =#{escrow}
+         		]]>
+         		</when>
+         		<when test="escrow==0	">
+         		<![CDATA[
+         			AND B.TRX_CD !='1'
+         		]]>
+         		</when>
+         		<otherwise></otherwise>
+         		</choose>
+         		</if>
+         		<if test="dealFlg!='ALL'">
+         		<choose>
+         		<when test="dealFlg=='real'">
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</when>
+         		<otherwise>
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</otherwise>
+         		</choose>
+         		</if>
+		         <![CDATA[
+	     AND A.TID = B.OTID
+	      GROUP BY B.APP_DT
+	      
+	      UNION ALL
+	      
+	      SELECT B.CC_DT TR_DT
+	      	, 0 REAL_APP_CNT
+	      	, 0 REAL_APP_AMT
+	      	, 0 TEST_APP_CNT
+	      	, 0 TEST_APP_AMT
+	      	
+	      	, SUM(CASE WHEN B.GID != 'TPAYTEST0G' THEN 1 ELSE 0 END) REAL_CC_CNT
+	      	, SUM(CASE WHEN B.GID != 'TPAYTEST0G' THEN -1*B.GOODS_AMT ELSE 0 END) REAL_CC_AMT
+	      	, SUM(CASE WHEN B.GID = 'TPAYTEST0G' THEN 1 ELSE 0 END) TEST_CC_CNT
+	      	, SUM(CASE WHEN B.GID = 'TPAYTEST0G' THEN -1*B.GOODS_AMT ELSE 0 END) TEST_CC_AMT
+	       
+	        , 0 REAL_RF_CNT
+	        , 0 REAL_RF_AMT
+	        , 0 TEST_RF_CNT
+	        , 0 TEST_RF_AMT
+	      
+	      FROM TB_CARD_TRX A, TB_MSTR_TRX B, TB_MBS C
+	     WHERE A.TID = B.TID AND B.MID = C.MID
+	     ]]>
+		         <choose>
+		         <when test="dateChk=='app'">
+		         <![CDATA[
+		         	AND 1=2
+		         ]]>
+		         </when>
+		         <when test="dateChk!='app'">
+		         <![CDATA[
+		         	AND B.CC_DT BETWEEN #{frDt} AND #{toDt}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         <if test="searchFlg!='ALL'">
+		         <choose>
+		         <when test="searchFlg==2"> <!-- gid -->
+		         <![CDATA[
+		         	AND B.GID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==1"> <!-- mid -->
+		         <![CDATA[
+		         	AND B.MID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==3"> <!-- vid -->
+		         <![CDATA[
+		         	AND B.VID=#{txtSearch}
+		         ]]>
+		         </when>
+		          <when test="searchFlg==0"> <!-- coNo -->
+		         <![CDATA[
+		         	AND C.CO_NO=#{txtSearch}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         </if>
+		         <if test="status!='ALL'">
+		         <choose>
+		         <when test="status=='part'">
+		         <![CDATA[
+		         	AND B.TRX_ST_CD = #{status}
+		         ]]>
+		         </when>
+		         <when test="status!='part'">
+		         <![CDATA[
+		         	AND B.TRX_ST_CD = '2' AND A.TID != B.OTID
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+	         	</if>
+	         	<if test="settleCycle!='ALL'">
+	         	<![CDATA[
+	         		AND B.STMT_CYCLE_CD = #{settleCycle}
+	         	]]>
+	         	</if>
+	         	<if test="cardFlg!='ALL'">
+	         	<![CDATA[
+	         		AND A.APP_CARD_CD = #{cardFlg}
+	         	]]>
+	         	</if>
+	         	<choose>
+	         	<when test="flagChk=='AppNo'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='BuyerNm'">
+	         	<![CDATA[
+	         		AND A.ORD_NM_ENC = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='GoodsAmt'">
+	         	<![CDATA[
+	         		AND B.GOODS_AMT = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='CardNo'">
+	         	<![CDATA[
+	         		AND A.CARD_NO_ENC IN ( #{ispTextEnc},#{ispText2Enc},#{flagEnc})
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='TID'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<otherwise></otherwise>
+         		</choose>
+         		<if test="typeChk!='ALL'">
+         		<![CDATA[
+         			AND A.MBS_TYPE_CD = #{typeChk}
+         		]]>
+         		</if>
+         		<if test="connFlg!='ALL'">
+         		<![CDATA[
+         			AND B.CONN_TYPE = #{connFlg}
+         		]]>
+         		</if>
+         		<if test="certType!='ALL'">
+         		<![CDATA[
+         			AND A.AUTH_TYPE_CD = #{certType}
+         		]]>
+         		</if>
+         		<if test="escrow!='ALL'">
+         		<choose>
+         		<when test="escrow==1	">
+         		<![CDATA[
+         			AND B.TRX_CD =#{escrow}
+         		]]>
+         		</when>
+         		<when test="escrow==0	">
+         		<![CDATA[
+         			AND B.TRX_CD !='1'
+         		]]>
+         		</when>
+         		<otherwise></otherwise>
+         		</choose>
+         		</if>
+         		<if test="dealFlg!='ALL'">
+         		<choose>
+         		<when test="dealFlg=='real'">
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</when>
+         		<otherwise>
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</otherwise>
+         		</choose>
+         		</if>
+		         <![CDATA[
+	       GROUP BY B.CC_DT
+	       
+	       
+	       UNION ALL
+	      
+	      SELECT B.CC_DT TR_DT
+	      	, 0 REAL_APP_CNT
+	      	, 0 REAL_APP_AMT
+	      	, 0 TEST_APP_CNT
+	      	, 0 TEST_APP_AMT
+	      	
+	        , 0 REAL_CC_CNT
+	        , 0 REAL_CC_AMT
+	        , 0 TEST_CC_CNT
+	        , 0 TEST_CC_AMT
+	        
+	        , SUM(CASE WHEN B.GID != 'TPAYTEST0G' THEN 1 ELSE 0 END) REAL_RF_CNT
+	      	, SUM(CASE WHEN B.GID != 'TPAYTEST0G' THEN -1*B.GOODS_AMT ELSE 0 END) REAL_RF_AMT
+	      	, SUM(CASE WHEN B.GID = 'TPAYTEST0G' THEN 1 ELSE 0 END) TEST_RF_CNT
+	      	, SUM(CASE WHEN B.GID = 'TPAYTEST0G' THEN -1*B.GOODS_AMT ELSE 0 END) TEST_RF_AMT
+	      
+	      FROM TB_CARD_TRX A, TB_MSTR_TRX B, TB_MBS C
+	     WHERE A.TID = B.TID AND B.MID = C.MID
+	     ]]>
+		         <choose>
+		         <when test="dateChk=='app'">
+		         <![CDATA[
+		         	AND 1=2
+		         ]]>
+		         </when>
+		         <when test="dateChk!='app'">
+		         <![CDATA[
+		         	AND B.CC_DT BETWEEN #{frDt} AND #{toDt}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         <if test="searchFlg!='ALL'">
+		         <choose>
+		         <when test="searchFlg==2"> <!-- gid -->
+		         <![CDATA[
+		         	AND B.GID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==1"> <!-- mid -->
+		         <![CDATA[
+		         	AND B.MID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==3"> <!-- vid -->
+		         <![CDATA[
+		         	AND B.VID=#{txtSearch}
+		         ]]>
+		         </when>
+		          <when test="searchFlg==0"> <!-- coNo -->
+		         <![CDATA[
+		         	AND C.CO_NO=#{txtSearch}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         </if>
+		         <if test="status!='ALL'">
+		         <choose>
+		         <when test="status=='part'">
+		         <![CDATA[
+		         	AND B.TRX_ST_CD = #{status}
+		         ]]>
+		         </when>
+		         <when test="status!='part'">
+		         <![CDATA[
+		         	AND B.TRX_ST_CD = '2' AND A.TID != B.OTID
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+	         	</if>
+	         	<if test="settleCycle!='ALL'">
+	         	<![CDATA[
+	         		AND B.STMT_CYCLE_CD = #{settleCycle}
+	         	]]>
+	         	</if>
+	         	<if test="cardFlg!='ALL'">
+	         	<![CDATA[
+	         		AND A.APP_CARD_CD = #{cardFlg}
+	         	]]>
+	         	</if>
+	         	<choose>
+	         	<when test="flagChk=='AppNo'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='BuyerNm'">
+	         	<![CDATA[
+	         		AND A.ORD_NM_ENC = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='GoodsAmt'">
+	         	<![CDATA[
+	         		AND B.GOODS_AMT = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='CardNo'">
+	         	<![CDATA[
+	         		AND A.CARD_NO_ENC IN ( #{ispTextEnc},#{ispText2Enc},#{flagEnc})
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='TID'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<otherwise></otherwise>
+         		</choose>
+         		<if test="typeChk!='ALL'">
+         		<![CDATA[
+         			AND A.MBS_TYPE_CD = #{typeChk}
+         		]]>
+         		</if>
+         		<if test="connFlg!='ALL'">
+         		<![CDATA[
+         			AND B.CONN_TYPE = #{connFlg}
+         		]]>
+         		</if>
+         		<if test="certType!='ALL'">
+         		<![CDATA[
+         			AND A.AUTH_TYPE_CD = #{certType}
+         		]]>
+         		</if>
+         		<if test="escrow!='ALL'">
+         		<choose>
+         		<when test="escrow==1	">
+         		<![CDATA[
+         			AND B.TRX_CD =#{escrow}
+         		]]>
+         		</when>
+         		<when test="escrow==0	">
+         		<![CDATA[
+         			AND B.TRX_CD !='1'
+         		]]>
+         		</when>
+         		<otherwise></otherwise>
+         		</choose>
+         		</if>
+         		<if test="dealFlg!='ALL'">
+         		<choose>
+         		<when test="dealFlg=='real'">
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</when>
+         		<otherwise>
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</otherwise>
+         		</choose>
+         		</if>
+		   <!-- GROUP BY B.CC_DT -->
+		         <![CDATA[
+	       
+	       GROUP BY B.APP_DT
+	       
+	       
+	    ) A   
+	    GROUP BY A.TR_DT
+	    ORDER BY A.TR_DT DESC
+	    )TBL
+  			WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	
+	<select id="selectCardTotalCnt" parameterType="hashmap" resultType="integer">
+	<![CDATA[
+		SELECT
+			COUNT(1)
+	    FROM (
+	      SELECT B.APP_DT TR_DT, 0 REAL_CC_CNT, 0 REAL_CC_AMT, 0 TEST_CC_CNT, 0 TEST_CC_AMT, 
+	      SUM(CASE WHEN B.GID != 'TPAYTEST0G' THEN 1 ELSE 0 END) REAL_APP_CNT, SUM(CASE WHEN C.GID != 'TPAYTEST0G' THEN B.GOODS_AMT ELSE 0 END) REAL_APP_AMT, 
+	      SUM(CASE WHEN B.GID = 'TPAYTEST0G' THEN 1 ELSE 0 END) TEST_APP_CNT, SUM(CASE WHEN C.GID = 'TPAYTEST0G' THEN B.GOODS_AMT ELSE 0 END) TEST_APP_AMT 
+	      FROM TB_CARD_TRX A, TB_MSTR_TRX B, TB_MBS C
+	     WHERE A.TID = B.TID AND B.MID = C.MID
+	     ]]>
+		         <choose>
+		         <when test="dateChk=='cc'">
+		         <![CDATA[
+		         	AND 1=2
+		         ]]>
+		         </when>
+		         <when test="dateChk!='cc'">
+		         <![CDATA[
+		         	AND B.APP_DT BETWEEN #{frDt} AND #{toDt}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         <if test="searchFlg!='ALL'">
+		         <choose>
+		         <when test="searchFlg==2"> <!-- gid -->
+		         <![CDATA[
+		         	AND B.GID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==1"> <!-- mid -->
+		         <![CDATA[
+		         	AND B.MID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==3"> <!-- vid -->
+		         <![CDATA[
+		         	AND B.VID=#{txtSearch}
+		         ]]>
+		         </when>
+		          <when test="searchFlg==0"> <!-- coNo -->
+		         <![CDATA[
+		         	AND C.CO_NO=#{txtSearch}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         </if>
+		         <if test="status!='ALL'">
+		        <![CDATA[
+		        	AND B.TRX_ST_CD = #{status}
+		        ]]> 
+	         	</if>
+	         	<if test="settleCycle!='ALL'">
+	         	<![CDATA[
+					AND B.STMT_CYCLE_CD = #{settleCycle}
+	         	]]>
+	         	</if>
+	         	<if test="cardFlg!='ALL'">
+	         	<![CDATA[
+	         		AND A.APP_CARD_CD = #{cardFlg}
+	         	]]>
+	         	</if>
+	         	<choose>
+	         	<when test="flagChk=='AppNo'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='BuyerNm'">
+	         	<![CDATA[
+	         		AND A.ORD_NM_ENC = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='GoodsAmt'">
+	         	<![CDATA[
+	         		AND B.GOODS_AMT = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='CardNo'">
+	         	<![CDATA[
+	         		AND A.CARD_NO_ENC IN ( #{ispTextEnc},#{ispText2Enc},#{flagEnc})
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='TID'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<otherwise></otherwise>
+         		</choose>
+         		<if test="typeChk!='ALL'">
+         		<![CDATA[
+         			AND A.MBS_TYPE_CD = #{typeChk}
+         		]]>
+         		</if>
+         		<if test="connFlg!='ALL'">
+         		<![CDATA[
+         			AND B.CONN_TYPE = #{connFlg}
+         		]]>
+         		</if>
+         		<if test="certType!='ALL'">
+         		<![CDATA[
+         			AND A.AUTH_TYPE_CD = #{certType}
+         		]]>
+         		</if>
+         		<if test="escrow!='ALL'">
+         		<choose>
+         		<when test="escrow==1	">
+         		<![CDATA[
+         			AND B.TRX_CD =#{escrow}
+         		]]>
+         		</when>
+         		<when test="escrow==0	">
+         		<![CDATA[
+         			AND B.TRX_CD !='1'
+         		]]>
+         		</when>
+         		<otherwise></otherwise>
+         		</choose>
+         		</if>
+         		<if test="dealFlg!='ALL'">
+         		<choose>
+         		<when test="dealFlg=='real'">
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</when>
+         		<otherwise>
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</otherwise>
+         		</choose>
+         		</if>
+		         <![CDATA[
+	     AND A.TID = B.OTID
+	      GROUP BY B.APP_DT
+	      
+	      UNION ALL
+	      
+	      SELECT B.CC_DT TR_DT, SUM(CASE WHEN B.GID != 'TPAYTEST0G' THEN 1 ELSE 0 END) REAL_CC_CNT, SUM(CASE WHEN B.GID != 'TPAYTEST0G' THEN -1*B.GOODS_AMT ELSE 0 END) REAL_CC_AMT,
+	       SUM(CASE WHEN B.GID = 'TPAYTEST0G' THEN 1 ELSE 0 END) TEST_CC_CNT, SUM(CASE WHEN B.GID = 'TPAYTEST0G' THEN -1*B.GOODS_AMT ELSE 0 END) TEST_CC_AMT,
+	       0 REAL_APP_CNT, 0 REAL_APP_AMT, 0 TEST_APP_CNT, 0 TEST_APP_AMT
+	      FROM TB_CARD_TRX A, TB_MSTR_TRX B, TB_MBS C
+	     WHERE A.TID = B.TID AND B.MID = C.MID
+	     ]]>
+		         <choose>
+		         <when test="dateChk=='app'">
+		         <![CDATA[
+		         	AND 1=2
+		         ]]>
+		         </when>
+		         <when test="dateChk!='app'">
+		         <![CDATA[
+		         	AND B.CC_DT BETWEEN #{frDt} AND #{toDt}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         <if test="searchFlg!='ALL'">
+		         <choose>
+		         <when test="searchFlg==2"> <!-- gid -->
+		         <![CDATA[
+		         	AND B.GID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==1"> <!-- mid -->
+		         <![CDATA[
+		         	AND B.MID=#{txtSearch}
+		         ]]>
+		         </when>
+		         <when test="searchFlg==3"> <!-- vid -->
+		         <![CDATA[
+		         	AND B.VID=#{txtSearch}
+		         ]]>
+		         </when>
+		          <when test="searchFlg==0"> <!-- coNo -->
+		         <![CDATA[
+		         	AND C.CO_NO=#{txtSearch}
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+		         </if>
+		         <if test="status!='ALL'">
+		         <choose>
+		         <when test="status=='part'">
+		         <![CDATA[
+		         	AND B.TRX_ST_CD = #{status}
+		         ]]>
+		         </when>
+		         <when test="status!='part'">
+		         <![CDATA[
+		         	AND B.TRX_ST_CD = '2' AND A.TID != B.OTID
+		         ]]>
+		         </when>
+		         <otherwise></otherwise>
+		         </choose>
+	         	</if>
+	         	<if test="settleCycle!='ALL'">
+	         	<![CDATA[
+	         		AND B.STMT_CYCLE_CD = #{settleCycle}
+	         	]]>
+	         	</if>
+	         	<if test="cardFlg!='ALL'">
+	         	<![CDATA[
+	         		AND A.APP_CARD_CD = #{cardFlg}
+	         	]]>
+	         	</if>
+	         	<choose>
+	         	<when test="flagChk=='AppNo'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='BuyerNm'">
+	         	<![CDATA[
+	         		AND A.ORD_NM_ENC = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='GoodsAmt'">
+	         	<![CDATA[
+	         		AND B.GOODS_AMT = #{flag}
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='CardNo'">
+	         	<![CDATA[
+	         		AND A.CARD_NO_ENC IN ( #{ispTextEnc},#{ispText2Enc},#{flagEnc})
+	         	]]>
+	         	</when>
+	         	<when test="flagChk=='TID'">
+	         	<![CDATA[
+	         		AND A.APP_NO = #{flag}
+	         	]]>
+	         	</when>
+	         	<otherwise></otherwise>
+         		</choose>
+         		<if test="typeChk!='ALL'">
+         		<![CDATA[
+         			AND A.MBS_TYPE_CD = #{typeChk}
+         		]]>
+         		</if>
+         		<if test="connFlg!='ALL'">
+         		<![CDATA[
+         			AND B.CONN_TYPE = #{connFlg}
+         		]]>
+         		</if>
+         		<if test="certType!='ALL'">
+         		<![CDATA[
+         			AND A.AUTH_TYPE_CD = #{certType}
+         		]]>
+         		</if>
+         		<if test="escrow!='ALL'">
+         		<choose>
+         		<when test="escrow==1	">
+         		<![CDATA[
+         			AND B.TRX_CD =#{escrow}
+         		]]>
+         		</when>
+         		<when test="escrow==0	">
+         		<![CDATA[
+         			AND B.TRX_CD !='1'
+         		]]>
+         		</when>
+         		<otherwise></otherwise>
+         		</choose>
+         		</if>
+         		<if test="dealFlg!='ALL'">
+         		<choose>
+         		<when test="dealFlg=='real'">
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</when>
+         		<otherwise>
+         		<![CDATA[
+         			AND C.GID='tpaytest0g'
+         		]]>
+         		</otherwise>
+         		</choose>
+         		</if>
+		         <![CDATA[
+	       GROUP BY B.CC_DT
+	    ) A   
+	]]>
+	</select>
+	<select id="selectCardTotalAmt" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[                                  
+	SELECT CAST(IFNULL(AL.TRAN_CNT, '0') AS SIGNED) AS TRAN_CNT
+			, CAST(IFNULL(AL.TRAN_AMT, '0') AS SIGNED) AS TRAN_AMT
+	FROM 
+	(
+		(
+			SELECT
+				COUNT(AP.TID) TRAN_CNT
+				, SUM(AP.GOODS_AMT) TRAN_AMT
+			FROM TB_MSTR_TRX AP
+			WHERE 1=1
+			AND AP.RSLT_CD IN('50','60') 
+			
+			AND AP.APP_DNT IS NOT NULL
+			AND AP.PM_CD = '01'
+	        
+			
+	]]>	
+	<if test="searchFlg!='all'">
+		<choose>
+			<when test="searchFlg==1"> <!-- mid -->
+			<![CDATA[
+				AND AP.MID=#{txtSearch}
+			]]>
+			</when>
+			<when test="searchFlg==2"> <!-- gid -->
+			<![CDATA[
+				AND AP.GID=#{txtSearch}
+			]]>
+			</when>
+			
+			<when test="searchFlg==3"> <!-- vid -->
+			<![CDATA[
+				AND AP.VID=#{txtSearch}
+			]]>
+			</when>
+			 <when test="searchFlg==0"> <!-- coNo -->
+			<![CDATA[
+				AND (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = AP.MID LIMIT 1)=#{txtSearch}
+			]]>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	 </if>
+	 
+	 <if test="searchPayFlg!='all'">
+		<choose>
+			<when test="searchPayFlg==1"> <!-- 구매자명 -->
+			<![CDATA[
+				AND AP.ORD_NM_ENC=#{txtPaySearch}
+			]]>
+			</when>
+			<when test="searchPayFlg==2"> <!-- 결제 시도금액 -->
+			<![CDATA[
+				AND AP.GOODS_AMT=#{txtPaySearch}
+			]]>
+			</when>
+			
+			<when test="searchPayFlg==3"> <!-- TID -->
+			<![CDATA[
+				AND AP.TID=#{txtPaySearch}
+			]]>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	 </if>
+	
+	<if test="settleCycle!='ALL'">
+		<![CDATA[
+			AND (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+				WHERE 1=1
+				AND SC.MID = AP.MID
+				AND SC.PM_CD = AP.PM_CD
+				AND SC.SPM_CD = '00'
+				LIMIT 1) = #{settleCycle}
+		]]>
+	</if>
+	
+	<if test="status!='ALL'">
+		<![CDATA[
+			AND AP.TRX_ST_CD = #{status}
+		]]> 
+	</if>
+			
+	<!-- trans:거래일, app:승인일, cc:취소일 -->
+	<choose>
+		<when test="dateChk=='trans'">
+		<![CDATA[
+			AND ( DATE_FORMAT(AP.APP_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+				OR DATE_FORMAT(AP.CC_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt})
+		]]>
+		</when>
+		<when test="dateChk=='app'">
+		<![CDATA[
+			AND DATE_FORMAT(AP.APP_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</when>
+		<when test="dateChk=='cc'">
+		<![CDATA[
+			AND DATE_FORMAT(AP.CC_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</when>
+		<otherwise></otherwise>
+	</choose>
+	<![CDATA[        
+		)                        
+		UNION ALL
+		(
+			SELECT
+				COUNT(CC.TID) TRAN_CNT
+				, SUM(CC.GOODS_AMT) TRAN_AMT
+			FROM TB_MSTR_TRX CC
+			WHERE 1=1
+			AND CC.RSLT_CD IN('50','60') 
+			AND CC.TRX_ST_CD IN ('1', '2')
+			AND CC.PM_CD = '01'
+	]]>
+	<if test="searchFlg!='all'">
+		<choose>
+			<when test="searchFlg==1"> <!-- mid -->
+			<![CDATA[
+				AND CC.MID=#{txtSearch}
+			]]>
+			</when>
+			<when test="searchFlg==2"> <!-- gid -->
+			<![CDATA[
+				AND CC.GID=#{txtSearch}
+			]]>
+			</when>
+			
+			<when test="searchFlg==3"> <!-- vid -->
+			<![CDATA[
+				AND CC.VID=#{txtSearch}
+			]]>
+			</when>
+			 <when test="searchFlg==0"> <!-- coNo -->
+			<![CDATA[
+				AND (SELECT M.CO_NO FROM TB_MBS M WHERE M.MID = CC.MID LIMIT 1)=#{txtSearch}
+			]]>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	 </if>
+	 
+	 <if test="searchPayFlg!='all'">
+		<choose>
+			<when test="searchPayFlg==1"> <!-- 구매자명 -->
+			<![CDATA[
+				AND CC.ORD_NM_ENC=#{txtPaySearch}
+			]]>
+			</when>
+			<when test="searchPayFlg==2"> <!-- 결제 시도금액 -->
+			<![CDATA[
+				AND CC.GOODS_AMT=#{txtPaySearch}
+			]]>
+			</when>
+			
+			<when test="searchPayFlg==3"> <!-- TID -->
+			<![CDATA[
+				AND CC.TID=#{txtPaySearch}
+			]]>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	 </if>
+	
+	<if test="settleCycle!='ALL'">
+		<![CDATA[
+			AND (SELECT STMT_CYCLE_CD FROM TB_STMT_CYCLE SC 
+				WHERE 1=1
+				AND SC.MID = CC.MID
+				AND SC.PM_CD = CC.PM_CD
+				AND SC.SPM_CD = '00'
+				LIMIT 1) = #{settleCycle}
+		]]>
+	</if>
+	
+	<if test="status!='ALL'">
+		<![CDATA[
+			AND CC.TRX_ST_CD = #{status}
+		]]> 
+	</if>
+			
+	<!-- trans:거래일, app:승인일, cc:취소일 -->
+	<choose>
+		<when test="dateChk=='trans'">
+		<![CDATA[
+			AND ( DATE_FORMAT(CC.APP_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+				OR DATE_FORMAT(CC.CC_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt})
+		]]>
+		</when>
+		<when test="dateChk=='app'">
+		<![CDATA[
+			AND DATE_FORMAT(CC.APP_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</when>
+		<when test="dateChk=='cc'">
+		<![CDATA[
+			AND DATE_FORMAT(CC.CC_DNT, "%Y%m%d") BETWEEN #{frDt} AND #{toDt}
+		]]>
+		</when>
+		<otherwise></otherwise>
+	</choose>
+	<![CDATA[                            
+		)
+	) AL
+	]]>
+	</select>
+	
+	<select id="selectCheckCardEventList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT * FROM
+		(
+			SELECT ROW_NUMBER()OVER(ORDER BY A.APP_DT||A.APP_TM DESC) AS RNUM, A.ACQ_CARD_CD, A.MBS_NO, 
+		     (SELECT X.DESC1 FROM TB_CODE X WHERE X.COL_NM = 'CARD_CD' AND X.USE_FLG = '1' AND X.CODE1 = A.ACQ_CARD_CD) AS CP_NM,             
+		    SUM(A.APPAMT) APPAMT, SUM(A.APPCNT) APPCNT,
+		           CASE WHEN A.NOINT_FLG = '0' THEN '일반' ELSE '무이자' END NON_INTEREST_NM
+		    FROM (
+		        SELECT A.ACQ_CARD_CD, A.MBS_NO, SUM(B.GOODS_AMT) APPAMT, SUM(1) APPCNT, A.NOINT_FLG, B.APP_DT, B.APP_TM
+		        FROM TB_CARD_TRX A, TB_MSTR_TRX B
+		        WHERE B.PM_CD = '01'
+		        AND B.APP_DT BETWEEN #{frDt} AND #{toDt}
+		        ]]>
+		        <if test="cardFlg!='ALL'">
+		        <![CDATA[
+		        	AND APP_CARD_CD =#{cardFlg}
+		        ]]>
+		        </if>
+		        <if test="merNo!=null and merNo!=''">
+		        <![CDATA[
+		        	AND MBS_NO =#{merNo}
+		        ]]>
+		        </if>
+		        <![CDATA[
+		        GROUP BY ACQ_CARD_CD, MBS_NO, NOINT_FLG, APP_DT, APP_TM
+		
+		        UNION ALL
+		    
+		        SELECT ACQ_CARD_CD, A.MBS_NO, -1*SUM(B.GOODS_AMT) APPAMT, -1*SUM(1) APPCNT, A.NOINT_FLG , B.APP_DT, B.APP_TM
+		        FROM TB_CARD_TRX A, TB_MSTR_TRX B
+		        WHERE B.PM_CD = '01'
+		        AND B.CC_DT BETWEEN #{frDt} AND #{toDt}
+		        ]]>
+		        <if test="cardFlg!='ALL'">
+		        <![CDATA[
+		        	AND APP_CARD_CD =#{cardFlg}
+		        ]]>
+		        </if>
+		        <if test="merNo!=null and merNo!=''">
+		        <![CDATA[
+		        	AND MBS_NO =#{merNo}
+		        ]]>
+		        </if>
+		        <![CDATA[
+		        AND B.TRX_ST_CD IN ('1','2')
+		        GROUP BY A.ACQ_CARD_CD,A.MBS_NO, A.NOINT_FLG, APP_DT, APP_TM
+		        
+		    ) A
+		    GROUP BY A.ACQ_CARD_CD, A.MBS_NO, A.NOINT_FLG, A.APP_DT, A.APP_TM
+	    ) TBL
+	    WHERE RNUM BETWEEN  ${intPageStart} AND ${intPageEnd}
+	]]>
+	</select>
+	<select id="selectCheckCardEventListTotal" parameterType="hashmap" resultType="integer">
+	<![CDATA[
+		SELECT 
+			COUNT(1)
+	    FROM (
+	        SELECT A.ACQ_CARD_CD, A.MBS_NO, SUM(B.GOODS_AMT) APPAMT, SUM(1) APPCNT, A.NOINT_FLG, B.APP_DT, B.APP_TM
+	        FROM TB_CARD_TRX A, TB_MSTR_TRX B
+	        WHERE B.PM_CD = '01'
+	        AND B.APP_DT BETWEEN #{frDt} AND #{toDt}
+	        ]]>
+	        <if test="cardFlg!='ALL'">
+	        <![CDATA[
+	        	AND APP_CARD_CD =#{cardFlg}
+	        ]]>
+	        </if>
+	        <if test="merNo!=null and merNo!=''">
+	        <![CDATA[
+	        	AND MBS_NO =#{merNo}
+	        ]]>
+	        </if>
+	        <![CDATA[
+	        GROUP BY ACQ_CARD_CD, MBS_NO, NOINT_FLG, APP_DT, APP_TM
+	
+	        UNION ALL
+	    
+	        SELECT ACQ_CARD_CD, A.MBS_NO, -1*SUM(B.GOODS_AMT) APPAMT, -1*SUM(1) APPCNT, A.NOINT_FLG , B.APP_DT, B.APP_TM
+	        FROM TB_CARD_TRX A, TB_MSTR_TRX B
+	        WHERE B.PM_CD = '01'
+	        AND B.CC_DT BETWEEN #{frDt} AND #{toDt}
+	        ]]>
+	        <if test="cardFlg!='ALL'">
+	        <![CDATA[
+	        	AND APP_CARD_CD =#{cardFlg}
+	        ]]>
+	        </if>
+	        <if test="merNo!=null and merNo!=''">
+	        <![CDATA[
+	        	AND MBS_NO =#{merNo}
+	        ]]>
+	        </if>
+	        <![CDATA[
+	        AND B.TRX_ST_CD IN ('1','2')
+	        GROUP BY A.ACQ_CARD_CD,A.MBS_NO, A.NOINT_FLG, APP_DT, APP_TM
+	    ) A
+	]]>
+	</select>
+	<select id="selectCardNoTID" parameterType="String" resultType="hashmap">
+	<![CDATA[
+		SELECT A.TID, A.CARD_NO, A.CARD_NO_ENC FROM (
+	        SELECT TID, CARD_NO, CARD_NO_ENC
+	        FROM TB_CARD_TRX 
+	        WHERE TID = 'paylink00m0101170706162800DB_S'
+	        UNION 
+	        SELECT TID, CARD_NO, CARD_NO_ENC
+	        FROM TB_CARD_UNSC WHERE TID = 'paylink00m0101170706162800DB_S'
+        ) A
+	]]>
+	</select>
+	<select id="chkEmpPW" parameterType="hashmap" resultType="String">
+	<![CDATA[
+		SELECT CASE WHEN PASSWORD = #{hPw} THEN 'Y' ELSE 'N' END
+	     	 STATUS
+	    FROM TB_EMP
+	    WHERE EMP_NO = #{worker}
+	]]>
+	</select>
+	<select id="selectMailSendSearch" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT SND_DT, SND_TM, CO_NM, MID, TID, GOODS_NM, AMT, ORD_NM, ORD_NM_ENC, ORD_EMAIL, ORD_EMAIL_ENC, SEQ, 'TB_MAIL_DAILY' TABLE_NM,
+	     (SELECT DESC1 FROM TB_CODE WHERE COL_NM='MAIL_TMPL_CD' AND USE_FLG = '1' AND CODE1=TMPL_ID) AS STATE_NM, INVOICE_NO, DELIVERY_CD, 
+	     (SELECT DESC1 FROM TB_CODE WHERE CODE_CL='0072' AND USE_FLG = '1' AND CODE1=DELIVERY_CD) AS DELIVERY_NM
+	    FROM TB_EMAIL_DAILY
+	    WHERE TID = #{tid}
+	    
+	    UNION ALL
+	    SELECT SND_DT, SND_TM, CO_NM, MID, TID, GOODS_NM, AMT, ORD_NM, ORD_NM_ENC, ORD_EMAIL, ORD_EMAIL_ENC, SEQ, 'TB_MAIL' TABLE_NM,
+	     (SELECT DESC1 FROM TB_CODE WHERE COL_NM='MAIL_TMPL_CD' AND USE_FLG = '1' AND CODE1=TMPL_ID) AS STATE_NM, '', '', ''
+	    FROM TB_EMAIL
+	    WHERE TID = #{tid}
+	    ORDER BY SND_DT DESC
+	]]>
+	</select>
+	
+	<!-- 신용카드  결제내역 TID 상세내역 조회 -->
+	<select id="selectDetailCardFailTid" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		    SELECT 
+				IF(F.PM_CD='01', '이롬머니', '') AS PM_NM
+				
+				, (SELECT A.LOGIN_ID FROM TB_MSTR_USR A WHERE A.UID = F.UID) AS MBS_USR_ID
+				, F.TID
+				, F.ORD_NO
+				, F.MID
+				, F.GID
+				, F.VID
+				, F.PM_CD
+				
+				, DATE_FORMAT(F.APP_REQ_DNT, "%Y%m%d") APP_REQ_DNT
+				, DATE_FORMAT(F.APP_DNT, "%Y%m%d") APP_DNT
+				, F.GOODS_NM
+				, F.GOODS_AMT
+				, F.GOODS_SPL_AMT
+				, F.GOODS_VAT
+				, F.UID
+				, F.CARD_NO
+				, F.ORD_NM
+				, F.ORD_NM_ENC
+				, F.ORD_TEL
+				, F.ORD_TEL_ENC
+				, F.ORD_HP
+				, F.ORD_HP_ENC
+				, F.ORD_EMAIL
+				, F.ORD_EMAIL_ENC
+				, F.TRX_MSG
+				
+				, IF(F.RSLT_CD='0000', '정상', '비정상') RSLT_CD
+				, F.PM_MTHD_CD
+				, F.PGSW_VER
+				, F.MBS_DVC_ID
+				, F.MBS_SCK_ID
+				
+				, CASE F.RSLT_SND_ST
+					WHEN '10' then '미통보'
+					when '20' then '통보'
+				    WHEN '30' then '통보실패'
+					when '40' then '대기'
+				        else F.RSLT_SND_ST
+				        end AS RSLT_SND_ST
+				
+				, DATE_FORMAT(F.RSLT_SND_DNT, "%Y%m%d") RSLT_SND_DNT
+				, IF(F.AUTO_CHRG_CD='Y', '예', IF(F.AUTO_CHRG_CD='N', '아니오', '')) AS AUTO_CHRG_CD
+				, F.PNT_ID
+				
+				, IF(F.RE_SND_FLG='Y', '재통보', '재통보안함') RE_SND_FLG
+				
+				, DATE_FORMAT(F.SND_DNT, "%Y%m%d") SND_DNT
+				, DATE_FORMAT(F.RCV_DNT, "%Y%m%d") RCV_DNT
+				, F.REG_ID
+				, DATE_FORMAT(F.REG_DNT, "%Y%m%d") REG_DNT
+				, DATE_FORMAT(F.UPD_DNT, "%Y%m%d") UPD_DNT
+				
+				, C.REASON_DESC
+                , C.REASON_CD
+                , C.REG_ID AS CC_REG_ID
+                
+                , DATE_FORMAT(F.RSLT_SND_DNT, "%Y-%m-%d %H:%i:%s") AS RSLT_SND_DNT_FULL
+                , DATE_FORMAT(F.SND_DNT, "%Y-%m-%d %H:%i:%s") AS SND_DNT_FULL
+                , DATE_FORMAT(F.RCV_DNT, "%Y-%m-%d %H:%i:%s") AS RCV_DNT_FULL                
+                
+				 FROM TB_UNSC_TRX F 
+				 LEFT OUTER JOIN TB_CC_REQ C
+                 ON F.TID = C.TID
+                 
+				 WHERE 1=1
+				AND F.TID = #{tid}
+	]]>
+	<choose>
+	<when test="idCd ==0">
+	<![CDATA[
+		AND F.MID = #{usrId}
+	]]>
+	</when>
+	<when test="idCd ==1">
+	<![CDATA[
+		AND F.GID = #{usrId}
+	]]>
+	</when>
+	<when test="idCd ==2">
+	<![CDATA[
+		AND F.VID = #{usrId}
+	]]>
+	</when>
+	</choose>
+		ORDER BY C.REG_DNT DESC
+        LIMIT 1
+	</select>
+</mapper>
