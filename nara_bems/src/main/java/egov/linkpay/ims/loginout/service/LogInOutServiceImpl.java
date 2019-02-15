@@ -78,6 +78,8 @@ public class LogInOutServiceImpl implements LogInOutService {
             throw new Exception(CommonMessage.MSG_ERR_USINGSTOP);
         }
         
+        logger.info(objMap.get("PSWD") + " : " + objAdminInfoMap.get("PSWD"));
+        
         if(!objMap.get("PSWD").equals(objAdminInfoMap.get("PSWD"))){	// check password
         	logInOutDAO.updateFailCnt(objMap);	// add fail_cnt
         	
@@ -103,43 +105,12 @@ public class LogInOutServiceImpl implements LogInOutService {
         /*
          * mid or gid or vid check start
          */
-        String midType = "0";
+        String midType = "m";
         String mid = "";
         
-    	if(objMap.containsKey("MER_ID") && objMap.get("MER_ID")!=null) {
-    		mid = objMap.get("MER_ID").toString();
-
-    		if(mid.length() > 1) {
-    			midType = mid.substring(mid.length() -1);
-    		}
-    	}
     	
     	objMap.put("MER_TYPE", midType);
-    	
-        
-        
-        if(!(midType.equals("m") || midType.equals("g") || midType.equals("v"))) {
-        	objMap.put("LOG_DESC", "Login Fail - not mid or gid or vid");
-            logInOutDAO.insertLoginLog(objMap);
-        	
-        	objMap.put("ResultMessage", CommonMessage.MSG_ERR_LOGIN_FAIL);
-            throw new Exception(CommonMessage.MSG_ERR_LOGIN_FAIL);
-        }
-        
-        Map<String,Object> objLoginMidInfoMap = logInOutDAO.selectLoginMidInfo(objMap);
-        
-        if(objLoginMidInfoMap == null) {
-        	objMap.put("LOG_DESC", "Login Fail - can not found merchant id");
-            logInOutDAO.insertLoginLog(objMap);
-        	
-        	objMap.put("ResultMessage", CommonMessage.MSG_ERR_LOGIN_FAIL);
-            throw new Exception(CommonMessage.MSG_ERR_LOGIN_FAIL);
-        }
-        /*
-         * mid or gid or vid check end
-         */
-        
-        objMap.put("LOG_DESC", "Login");
+    	objMap.put("LOG_DESC", "Login");
         logInOutDAO.insertLoginLog(objMap);
         
         session.setAttribute("USR_ID", objMap.get("USR_ID"));
@@ -147,7 +118,7 @@ public class LogInOutServiceImpl implements LogInOutService {
         /*Merchant id type
          * m:mid g:gid v:vid
          */
-        session.setAttribute("MER_ID", mid);
+        session.setAttribute("MER_ID", "erompay01m");
         session.setAttribute("MER_ID_TYPE", midType);
         
         return objAdminInfoMap;

@@ -13,23 +13,30 @@
 	<meta content="" name="description" />
 	<meta content="" name="author" />
 	<!-- BEGIN PLUGIN CSS -->
-    <link rel="stylesheet" type="text/css" media="screen" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/plugins/pace/pace-theme-flash.css" />
+    <%-- <link rel="stylesheet" type="text/css" media="screen" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/plugins/pace/pace-theme-flash.css" /> --%>
     <!-- END PLUGIN CSS -->
     <!-- BEGIN CORE CSS FRAMEWORK -->
-    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/plugins/boostrapv3/css/bootstrap.min.css" />
+    <%-- <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/plugins/boostrapv3/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/plugins/boostrapv3/css/bootstrap-theme.min.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/plugins/font-awesome/css/font-awesome.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/animate.min.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/plugins/jquery-scrollbar/jquery.scrollbar.css"/>
-    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/login.css" />
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/login.css" /> --%>
     <!-- END CORE CSS FRAMEWORK -->
     <!-- BEGIN CSS TEMPLATE -->
-    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/style.css" />
+    <%-- <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/style.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/responsive.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/custom-icon-set.css" />
     
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/login-style.css" />
-    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/login-google-style.css" />
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/login-google-style.css" /> --%>
+    
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/login/global.css" />
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/login/jquery.datetimepicker.css" />
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/login/private.css" />
+    
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/element/element.css" />
+    
     <!-- END CSS TEMPLATE -->
     <!-- BEGIN CORE JS FRAMEWORK-->
     <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/jquery-1.11.3.min.js"></script>
@@ -40,6 +47,9 @@
     <!-- BEGIN IMS MSG JS --> 
     <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/IONPayMSG.IMS.js?v=<fmt:formatDate pattern="yyyyMMddHHmmss" value="${date }" />"></script>
     <!-- END IMS MSG JS -->
+    
+    <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/js/nara/element/element.js"></script>
+    
 </head>
 <%-- <body class="error-body no-top" style="background-image: url(//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Images/loginBg.jpg); background-repeat:no-repeat; background-position:center;">    --%>
 <body>

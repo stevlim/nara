@@ -60,7 +60,6 @@
 	            ON UA.USR_ID = UM.USR_ID
 			WHERE UA.USR_ID   = #{USR_ID}
 			  AND UA.USR_TYPE = '2'
-			  AND UM.I_MID = #{MER_ID}
         ]]>
     </select>
     
