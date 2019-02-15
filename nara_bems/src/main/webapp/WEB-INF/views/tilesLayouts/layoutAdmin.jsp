@@ -36,7 +36,11 @@
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/custom-icon-set.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/common-LNB.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/dashboard.css" />
+    
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/common-header.css" />
+    
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/common-footer.css" />
+    
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/font-awesome.min.css" />
     <!-- END CSS TEMPLATE -->
     <!-- BEGIN CSS DATATABLE -->
@@ -51,6 +55,9 @@
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/plugins/fullcalendar/fullcalendar.css" />
     <!-- END CSS FULLCALENDER -->
 
+
+	
+    
     <!-- BEGIN jqGrid CSS -->
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/jqGrid/css/ui.jqgrid.css" />
     <!-- END jqGrid CSS -->
@@ -58,6 +65,11 @@
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/jqueryUi/jquery-ui.css" />
     <!-- END jqueryUi CSS -->
 
+
+	<link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/header/global.css" />
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/header/private.css" />
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/font/style.css" />
+	<link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/lightslider/lightslider.css" />
 
     <!-- BEGIN CORE JS FRAMEWORK-->
     <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/jquery-1.11.3.min.js"></script>
@@ -68,9 +80,15 @@
     <!-- BEGIN IMS MSG JS -->
     <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/IONPayMSG.IMS.js?v=<fmt:formatDate pattern="yyyyMMddHHmmss" value="${date }" />"></script>
     <!-- END IMS MSG JS -->
+    
+    <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/js/nara/lightslider/lightslider.js"></script>
+    <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/js/nara/header/main.js"></script>
+    
 </head>
 <body class="">
 <%--     <tiles:insertAttribute name="GNB" /> --%>
+    <tiles:insertAttribute name="HEADER" />
+    
     <tiles:insertAttribute name="LNB" />
     <tiles:insertAttribute name="BODY" />
     <tiles:insertAttribute name="FOOTER" />

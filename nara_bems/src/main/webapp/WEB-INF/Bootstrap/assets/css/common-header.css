@@ -1,15 +1,16 @@
 @charset "UTF-8";
-#tiles-wrapper{
+#tiles-head-wrapper{
 	position: fixed;
 	width: 100%;
 	background-color: #1b1e24;
-	z-index: 2000000;
-	bottom: 0;
+	z-index: 998;
+	/* bottom: 0; */
 }
-#tiles-footer{
+#tiles-header{
 	position: relative;
 	display: inline-block;
 	/* left: 40%; */
+	width: 100%;
 }
 .copyright{
 	color:  #555555;

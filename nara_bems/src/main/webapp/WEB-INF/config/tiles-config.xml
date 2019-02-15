@@ -25,7 +25,9 @@
     
     <!--############################## BEGIN ADMIN TEMPLATE ##############################-->
     <definition name="tilesAdmin" template="/WEB-INF/views/tilesLayouts/layoutAdmin.jsp">
-        <put-attribute name="GNB"  value="/WEB-INF/views/tilesLayouts/commonGNB.jsp" />
+        <put-attribute name="HEADER"  value="/WEB-INF/views/tilesLayouts/commonHeader.jsp" />
+        
+        <!-- <put-attribute name="GNB"  value="/WEB-INF/views/tilesLayouts/commonGNB.jsp" /> -->
         <put-attribute name="LNB"  value="/WEB-INF/views/tilesLayouts/commonLNB.jsp" />
         <put-attribute name="BODY" value="" />
         <put-attribute name="FOOTER"  value="/WEB-INF/views/tilesLayouts/commonFooter.jsp" />      
