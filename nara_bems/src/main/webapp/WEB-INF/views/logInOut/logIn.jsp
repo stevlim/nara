@@ -416,7 +416,7 @@ function fnCoNoDupChkSuccessResult() {
 			</div>
 			
 			<div class="login_text_fixed">
-				merchant id
+				merchant id2
 			</div>
 			<input type="text" id="MER_ID" name="MER_ID" placeholder="아이디를 입력해주세요" class="masked" value="erompay01m" />
 			
