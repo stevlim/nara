@@ -1351,7 +1351,8 @@ body.modal-open .chat-window-wrapper {
   padding-left: 26px;
   padding-right: 26px;
 /*   padding-top: 83px; */
-  padding-top: 15px;
+  /* padding-top: 15px; */
+  padding-top: 50px;
   background-color: #e1e1e1;
 }
 .inner-menu {

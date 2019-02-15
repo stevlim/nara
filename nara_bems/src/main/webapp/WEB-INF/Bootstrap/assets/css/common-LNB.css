@@ -57,7 +57,7 @@
 	transition: all 0.3s;
 	position: fixed;
 	left: 100px;
-	z-index: 10000;
+	z-index: 20001;
 }
 #authority{
 	top: 195px;

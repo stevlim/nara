@@ -44,26 +44,26 @@
 		<div class="mainmenu">
 			<h2 class="title_accmenu accmms">Merchant information</h2>
 			<ul class="list_submenu pnl">
-				<li class="active"><a href="#0">Merchant information</a></li>
-				<li><a href="#0">Settlement information</a></li>
-				<li><a href="#0">Service information</a></li>
-				<li><a href="#0">Limit information</a></li>
+				<li class="active"><a href="/businessMgmt/noticeMgmt/noticeMgmt.do">Merchant information</a></li>
+				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Settlement information</a></li>
+				<li><a href="/businessMgmt/qnaMgmt/qnaMgmt.do">Service information</a></li>
+				<li><a href="/baseInfoMgmt/keyInfoMgmt/keyInfoMgmt.do">Limit information</a></li>
 			</ul>
 			<h2 class="title_accmenu accmms">Transaction information</h2>
 			<ul class="list_submenu pnl">
-				<li><a href="#0">Total transaction history</a></li>
-				<li><a href="#0">Failure transaction history</a></li>
+				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Total transaction history</a></li>
+				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Failure transaction history</a></li>
 			</ul>
 			<h2 class="title_accmenu accmms">Settlement information</h2>
 			<ul class="list_submenu pnl">
-				<li><a href="#0">Settlement schedule</a></li>
-				<li><a href="#0">Exceptional payment</a></li>
-				<li><a href="#0">Receivables by transaction</a></li>
+				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Settlement schedule</a></li>
+				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Exceptional payment</a></li>
+				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Receivables by transaction</a></li>
 			</ul>
 			<h2 class="title_accmenu accmms">Customer support</h2>
 			<ul class="list_submenu pnl">
-				<li><a href="#0">Notifications</a></li>
-				<li><a href="#0">FAQ</a></li>
+				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Notifications</a></li>
+				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">FAQ</a></li>
 			</ul>
 		</div>
 	</div>

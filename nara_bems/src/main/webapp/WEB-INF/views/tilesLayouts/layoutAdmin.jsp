@@ -34,8 +34,8 @@
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/style.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/responsive.css" />
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/custom-icon-set.css" />
-    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/common-LNB.css" />
-    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/dashboard.css" />
+    <%-- <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/common-LNB.css" /> --%>
+    <%-- <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/dashboard.css" /> --%>
     
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/common-header.css" />
     
@@ -88,8 +88,6 @@
 <body class="">
 <%--     <tiles:insertAttribute name="GNB" /> --%>
     <tiles:insertAttribute name="HEADER" />
-    
-    <tiles:insertAttribute name="LNB" />
     <tiles:insertAttribute name="BODY" />
     <tiles:insertAttribute name="FOOTER" />
 

@@ -58,7 +58,8 @@
 			FROM  TB_BO_USR_ACCT UA	
 				LEFT OUTER JOIN TB_BO_USR_ACCT_MER UM
 	            ON UA.USR_ID = UM.USR_ID
-			WHERE UA.USR_ID   = #{USR_ID}
+			WHERE 1=1 
+				AND UA.USR_ID   = #{USR_ID}
 			  AND UA.USR_TYPE = '2'
         ]]>
     </select>

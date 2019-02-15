@@ -100,7 +100,7 @@
   }
   /*** Page content ***/
   .page-content {
-    margin-left: 100px;
+    /* margin-left: 100px; */
 /*     margin-left: 250px; */
     min-height: 100%;
   }
@@ -749,7 +749,7 @@
   }
   .page-content .content {
     padding: 25px;
-    padding-top: 95px;
+    padding-top: 60px;
   }
   .widget {
     margin-right: 0px;
@@ -1091,7 +1091,8 @@
   }
   .page-content .content {
     padding: 8px;
-    padding-top: 93px;
+    /* padding-top: 93px; */
+    padding-top: 50px;
     overflow-x: hidden;
   }
   .tiles.margin-reset {
