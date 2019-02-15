@@ -1,0 +1,30 @@
+.custom-checkbox{
+	width: 20px;
+	height: 20px;
+	display: inline-block;
+	position: relative;
+	z-index: 1;
+	top: 5px;
+	margin-left: 4px;
+	background: url("../../../img/nara/element/icocheckbox.png") 0 0 no-repeat;
+}
+.custom-checkbox:hover{
+	background: url("../../../img/nara/element/icocheckbox.png") 0 0 no-repeat;
+}
+.custom-checkbox.selected{
+	background: url("../../../img/nara/element/icocheckbox.png") 0 -20px no-repeat;
+}
+.custom-checkbox input[type="checkbox"]{
+	margin: 0;
+	position: absolute;
+	z-index: 2;            
+	cursor: pointer;
+	outline: none;
+	opacity: 0;
+	/* CSS hacks for older browsers */
+	_noFocusLine: expression(this.hideFocus=true); 
+	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+	filter: alpha(opacity=0);
+	-khtml-opacity: 0;
+	-moz-opacity: 0;
+}
