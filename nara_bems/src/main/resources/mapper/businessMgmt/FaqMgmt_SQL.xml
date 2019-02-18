@@ -117,7 +117,7 @@
     <insert id="insertFaqMgmt" parameterType="hashmap">
 	    INSERT INTO TB_FAQ
 		( SEQ, CTGR, TITLE, BODY, DEL_FLG, NOTI_TYPE, REG_DT, WORKER, REG_DNT, UPD_DNT )
-		VALUES( SEQ_FAQ.NEXTVAL, #{CTGR}, #{TITLE}, #{BODY}, '0', #{NOTI_TYPE}, DATE_FORMAT(NOW(), "%Y%m%d"), #{WORKER}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"), DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"))
+		VALUES( 4, #{CTGR}, #{TITLE}, #{BODY}, '0', #{NOTI_TYPE}, DATE_FORMAT(NOW(), "%Y%m%d"), #{WORKER}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"), DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"))
     </insert>
     
     <update id="updateFaqMgmt" parameterType="hashmap">
