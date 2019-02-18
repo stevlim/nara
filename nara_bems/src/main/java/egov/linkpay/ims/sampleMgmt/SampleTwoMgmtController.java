@@ -61,9 +61,9 @@ public class SampleTwoMgmtController {
 	public ModelAndView selectApproLimitDetail(@RequestBody String strJsonParameter) throws Exception {
 		ModelAndView objMv = new ModelAndView();
 		Map<String, Object> objMap = new HashMap<String, Object>();
-		Map<String, Object> rstMap = new HashMap<String, Object>();
+		//Map<String, Object> rstMap = new HashMap<String, Object>();
 		int intResultCode = 0;
-		int intPageTotalCnt = 0;
+		//int intPageTotalCnt = 0;
 		String strResultMessage = "";
 
 		try {
@@ -73,47 +73,24 @@ public class SampleTwoMgmtController {
 				//rstMap = rmApprovalService.getContLimitDetail(objMap);
 
 				// test
-				/*Map<String, Object> testMap = new HashMap<String, Object>();
-				testMap.put("SEQ", "1");
-				testMap.put("FR_DT", "20170629");
-				testMap.put("TO_DT", "20170629");
-				testMap.put("REG_DATE", "1");
-				testMap.put("WORKER", "1");
-				testMap.put("INSTMN_DT", "1");
-				testMap.put("LMT_CD_NM", "1");
-				testMap.put("LMT_CD", "1");
-				testMap.put("LMT_ID", "1");
-				testMap.put("LMT_TYPE_CD_NM", "1"); 
-				testMap.put("LMT_TYPE_CD", "1");
-				testMap.put("CATE1", "1");
-				testMap.put("CATE2", "1");
-				testMap.put("BLOCK_NM", "1");
-				testMap.put("BLOCK_FLG", "1");
-				testMap.put("LMT_CD_DESC", "1");
-				testMap.put("PM_NM", "1");
-				testMap.put("PM_CD", "1");
-				testMap.put("SPM_NM", "1");
-				testMap.put("SPM_CD", "1");
-				testMap.put("TRX_ST_NM", "1");
-				testMap.put("TRX_ST_CD", "1");
-				testMap.put("AMT_TYPE_NM", "1");
-				testMap.put("AMT_TYPE", "1");
-				testMap.put("AMT_LMT", "1");
-				testMap.put("CNT_TYPE_NM", "1");
-				testMap.put("CNT_TYPE", "1");
-				testMap.put("CNT_LMT", "1");
-				testMap.put("NOTI_NM", "1");
-				testMap.put("NOTI_FLG", "1");
-				testMap.put("NOTI_PCT", "1");
-				testMap.put("NOTI_TRG_TYPE_NM", "1"); 
-				testMap.put("NOTI_TRG_TYPE", "1");
-				testMap.put("MEMO", "1");
-				testMap.put("EMAIL_LIST", "1");
-				testMap.put("SMS_LIST", "1");
-				testMap.put("MODIFY_YN", "Y");*/
+				Map<String, Object> testMap = new HashMap<String, Object>();
+				testMap.put("DATA01", "11234");
+				testMap.put("DATA02", "13214");
+				testMap.put("DATA03", "12314");
+				testMap.put("DATA04", "13214");
+				testMap.put("DATA05", "13214");
+				testMap.put("DATA06", "134514");
+				testMap.put("DATA07", "124");
+				testMap.put("DATA08", "1645");
+				testMap.put("DATA09", "1436");
+				testMap.put("DATA10", "174334");
 				
-				objMv.addObject("data", rstMap);
-				//objMv.addObject("data", testMap);
+				testMap.put("DATA11", "176544");
+				testMap.put("DATA12", "14325");
+
+				
+				//objMv.addObject("data", rstMap);
+				objMv.addObject("data", testMap);
 			}
 		} catch (Exception e) {
 			intResultCode = 9999;

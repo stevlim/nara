@@ -8,16 +8,18 @@ $(document).ready(function(){
 	
 	$("#hdingpgNm").text("Sample 02");
 	
+	fnEdit();
+	
     //fnInitEvent();
     //fnSetDDLB();
     //fnEditFaqMgmt();
 });
 
 function fnEdit() {
-	arrParameter = $("#regist").serializeObject();
-	arrParameter["worker"] = strWorker;
+	//arrParameter = $("#regist").serializeObject();
+	//arrParameter["worker"] = strWorker;
 	
-	strCallUrl = "/rmApproval/approvalLimit/selectApproLimitDetail.do";
+	strCallUrl = "/sampleMgmt/sampleTwoMgmt/selectApproLimitDetail.do";
 	strCallBack = "fnEditRet";
 	IONPay.Ajax.fnRequest(arrParameter, strCallUrl, strCallBack);
 }
@@ -25,65 +27,23 @@ function fnEdit() {
 function fnEditRet(objJson) {
 	if (objJson.resultCode == 0) {
 		if(objJson.data != null ) {
-			$("#regist #tranCutFlg").val(objJson.data.BLOCK_FLG);
-			$("#regist #date").val(objJson.data.FR_DT);
-			$("#regist #payType").val(objJson.data.PM_CD);
-			$("#regist #instMon").val(objJson.data.INSTMN_DT);
-			$("#regist #limitType").val(objJson.data.LMT_CD);
-			$("#regist #detail").val(objJson.data.LMT_TYPE_CD);
-			$("#regist #cashLimit").val(objJson.data.AMT_TYPE);
-			$("#regist #limit").val(objJson.data.AMT_LMT);
-			$("#regist #countLimit").val(objJson.data.CNT_TYPE);
-			$("#regist #count").val(objJson.data.CNT_LMT);
-			$("#regist #sendChk").val(objJson.data.NOTI_FLG);
-			$("#regist #target").val(objJson.data.NOTI_TRG_TYPE);
-			$("#regist #pac").val(objJson.data.NOTI_PCT);
+			$("#data01").text(objJson.data.DATA01);
+			$("#data02").text(objJson.data.DATA02);
+			$("#data03").text(objJson.data.DATA03);
+			$("#data04").text(objJson.data.DATA04);
+			$("#data05").text(objJson.data.DATA05);
+			$("#data06").text(objJson.data.DATA06);
+			$("#data07").text(objJson.data.DATA07);
+			$("#data08").text(objJson.data.DATA08);
+			$("#data09").text(objJson.data.DATA09);
+			$("#data10").text(objJson.data.DATA10);
+			$("#data11").text(objJson.data.DATA11);
+			$("#data12").text(objJson.data.DATA12);
 			
-			$("#regist #maxCount").val(objJson.data.MAX_SND_CNT);
-			$("#regist #sendEmail").val(objJson.data.EMAIL_LIST);
-			$("#regist #sendSms").val(objJson.data.SMS_LIST);
-			$("#regist #regiReason").val(objJson.data.MEMO);
-			$("#regist #registType").val("1");	
-			$("#regist #seqNo").val(objJson.data.SEQ);	
 		}
 	} else {
 		IONPay.Msg.fnAlert(objJson.resultMessage);
 	}
-}
-
-/**------------------------------------------------------------
-* FAQ 등록/수정
-------------------------------------------------------------*/
-function fnEditFaqMgmt() {
-    alert("123123213123777777");
-        var editMode = "insert";
-        
-		// 구분 - CTGR : division
-		// 표시 - NOTI_TYPE : flag
-		// Question - TITLE : TITLE 
-		// Ask - BODY : $("#MEMO_EDITOR").data("wysihtml5").editor.getValue();
-		arrParameter = {
-	        "CTGR" 		 : "26",
-	        "NOTI_TYPE"  : "26",
-	        "TITLE"      : "26",
-	        "BODY"       : "23",
-	        "SEQ_NO"     : "23",
-        };
-		//"STATUS"	 : $.trim($("#STATUS").val()),
-        strCallUrl  = (editMode == "insert" ? "/sampleMgmt/sampleOneMgmt/insertFaqMgmt.do" : "/sampleMgmt/sampleOneMgmt/updateFaqMgmt.do");
-        strCallBack = "fnEditFaqMgmtRet";
-         
-        IONPay.Ajax.fnRequest(arrParameter, strCallUrl, strCallBack);
-    
-}
-
-function fnEditFaqMgmtRet(objJson) {
-    if (objJson.resultCode == 0) {
-        IONPay.Utils.fnClearHideForm();
-        fnFaqMgmtListDT();
-    } else {
-        IONPay.Msg.fnAlert(objJson.resultMessage);      
-    }
 }
 
 </script>
@@ -98,55 +58,55 @@ function fnEditFaqMgmtRet(objJson) {
 	</ul>
 	<div class="tab_content">
 		<div class="contentmerchant transcontent">
-			<h3 class="titlemerchant">Merchant information</h3>
+			<h3 class="titlemerchant">Power information</h3>
 			<ul class="list_transhistory">
 				<li>
-					<span class="labeltranshistory">MID</span>
-					<span class="infotranshistory">EPAYTEST</span>
+					<span class="labeltranshistory">충전 제한 온도</span>
+					<span class="infotranshistory" id="data01"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">MID name</span>
-					<span class="infotranshistory">VNPT EPAY</span>
+					<span class="labeltranshistory">충전 제한 전력 값</span>
+					<span class="infotranshistory" id="data02"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Representative MID</span>
-					<span class="infotranshistory">EPAYTEST</span>
+					<span class="labeltranshistory">방전 제한 온도</span>
+					<span class="infotranshistory" id="data03"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Tax number</span>
-					<span class="infotranshistory">123456799</span>
+					<span class="labeltranshistory">방전 제한 전력 값</span>
+					<span class="infotranshistory" id="data04"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Phone number</span>
-					<span class="infotranshistory">84 234 5678</span>
+					<span class="labeltranshistory">최대 충전 전력량</span>
+					<span class="infotranshistory" id="data05"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Fax</span>
-					<span class="infotranshistory">84 234 5678</span>
+					<span class="labeltranshistory">최대 방전 전력량</span>
+					<span class="infotranshistory" id="data06"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Homepage</span>
-					<span class="infotranshistory">www.vnptepay.com.vn</span>
+					<span class="labeltranshistory">기준 주파수</span>
+					<span class="infotranshistory" id="data07"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Contracting person</span>
-					<span class="infotranshistory">Dang Kim Ngan</span>
+					<span class="labeltranshistory">기준 접압</span>
+					<span class="infotranshistory" id="data08"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Business PIC</span>
-					<span class="infotranshistory">Phan Van A</span>
+					<span class="labeltranshistory">목표 충전량</span>
+					<span class="infotranshistory" id="data09"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Technical PIC</span>
-					<span class="infotranshistory">Nguyen Van B</span>
+					<span class="labeltranshistory">목표 전력량</span>
+					<span class="infotranshistory" id="data10"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Contract status</span>
-					<span class="infotranshistory">Effective</span>
+					<span class="labeltranshistory">PV 전력</span>
+					<span class="infotranshistory" id="data11"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">Contract effective date</span>
-					<span class="infotranshistory">01/12/2018</span>
+					<span class="labeltranshistory">배터리 전력</span>
+					<span class="infotranshistory" id="data12"></span>
 				</li>
 			</ul>
 		</div>
