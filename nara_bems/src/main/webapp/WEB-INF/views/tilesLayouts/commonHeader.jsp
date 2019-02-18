@@ -42,10 +42,9 @@
 			</ul>
 		</div>
 		<div class="mainmenu">
-			<h2 class="title_accmenu accmms">Merchant information</h2>
-			<ul class="list_submenu pnl">
-				<li class="active"><a href="/businessMgmt/noticeMgmt/noticeMgmt.do">Merchant information</a></li>
-				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Settlement information</a></li>
+			<h2 class="title_accmenu accmms">Sample information</h2>
+			<ul class="list_submenu pnl">				
+				<li><a href="/sampleMgmt/sampleOneMgmt/sampleOneMgmt.do">sample 01</a></li>
 				<li><a href="/businessMgmt/qnaMgmt/qnaMgmt.do">Service information</a></li>
 				<li><a href="/baseInfoMgmt/keyInfoMgmt/keyInfoMgmt.do">Limit information</a></li>
 			</ul>
@@ -54,7 +53,7 @@
 				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Total transaction history</a></li>
 				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Failure transaction history</a></li>
 			</ul>
-			<h2 class="title_accmenu accmms">Settlement information</h2>
+			<!-- <h2 class="title_accmenu accmms">Settlement information</h2>
 			<ul class="list_submenu pnl">
 				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Settlement schedule</a></li>
 				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Exceptional payment</a></li>
@@ -64,7 +63,7 @@
 			<ul class="list_submenu pnl">
 				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Notifications</a></li>
 				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">FAQ</a></li>
-			</ul>
+			</ul> -->
 		</div>
 	</div>
 	<div class="botsetting">

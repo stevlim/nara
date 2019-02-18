@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sampleMgmt">
+        <select id="selectFaqMgmtList" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT * 
+            FROM (
+                SELECT 
+                		@rownum := @rownum + 1 AS RNUM
+                      , SEQ AS SEQ_NO
+                      , CASE CTGR 	WHEN '1' THEN 'IMS_BM_FAQ_0018'
+                                    WHEN '2' THEN 'IMS_BM_FAQ_0001'
+                                    WHEN '3' THEN 'IMS_BM_FAQ_0002'
+                                    WHEN '4' THEN 'IMS_BM_FAQ_0019'
+                                    WHEN '5' THEN 'IMS_BM_FAQ_0020'
+                                    WHEN '6' THEN 'IMS_BM_FAQ_0004'
+                                    WHEN '7' THEN 'IMS_BM_FAQ_0005'                                       
+                                    END CTGR
+                      , TITLE
+                      , BODY
+                      , CASE NOTI_TYPE 	WHEN '1' THEN 'IMS_BM_FAQ_0022'
+                      					WHEN '2' THEN 'IMS_BM_FAQ_0023'
+                      					WHEN '3' THEN 'IMS_BM_FAQ_0024'
+                      					END NOTI_TYPE
+                      , CASE DEL_FLG 	WHEN '0' THEN 'IMS_BM_FAQ_0006' 
+                                    	WHEN '1' THEN 'IMS_BM_FAQ_0007' 
+                                    	END DEL_FLG
+                      , REG_DT
+                      , WORKER
+                FROM  TB_FAQ, (SELECT @rownum := 0)R
+                WHERE 1=1            
+        ]]>
+        
+        <if test="BOARD_TYPE != null and BOARD_TYPE != '' and BOARD_TYPE != 'ALL'">
+            <![CDATA[
+               AND CTGR = #{BOARD_TYPE}
+            ]]>
+        </if>
+        
+        <if test="TITLE != null and TITLE != ''">
+            <![CDATA[
+               AND TITLE LIKE '%'||#{TITLE}||'%'
+            ]]>
+        </if>        
+        	ORDER BY SEQ_NO DESC
+        <![CDATA[
+	        )TBL
+	        WHERE RNUM BETWEEN #{intPageStart} AND #{intPageEnd}
+        ]]>
+    </select>
+    
+    <select id="selectFaqMgmtListTotal" parameterType="hashmap" resultType="Integer">
+        <![CDATA[
+            SELECT 
+            	COUNT(1)
+            FROM (
+                SELECT 
+                		SEQ AS SEQ_NO
+                      , CASE CTGR 	WHEN '1' THEN 'IMS_BM_FAQ_0018'
+                                    WHEN '2' THEN 'IMS_BM_FAQ_0001'
+                                    WHEN '3' THEN 'IMS_BM_FAQ_0002'
+                                    WHEN '4' THEN 'IMS_BM_FAQ_0019'
+                                    WHEN '5' THEN 'IMS_BM_FAQ_0020'
+                                    WHEN '6' THEN 'IMS_BM_FAQ_0004'
+                                    WHEN '7' THEN 'IMS_BM_FAQ_0005'                                       
+                                    END CTGR
+                      , TITLE
+                      , BODY
+                      , CASE NOTI_TYPE 	WHEN '1' THEN 'IMS_BM_FAQ_0022'
+                      					WHEN '2' THEN 'IMS_BM_FAQ_0023'
+                      					WHEN '3' THEN 'IMS_BM_FAQ_0024'
+                      					END NOTI_TYPE
+                      , CASE DEL_FLG 	WHEN '0' THEN 'IMS_BM_FAQ_0006' 
+                                    	WHEN '1' THEN 'IMS_BM_FAQ_0007' 
+                                    	END DEL_FLG
+                      , REG_DT
+                      , WORKER
+                FROM  TB_FAQ
+                WHERE 1=1            
+        ]]>
+        
+        <if test="BOARD_TYPE != null and BOARD_TYPE != '' and BOARD_TYPE != 'ALL'">
+            <![CDATA[
+               AND CTGR = #{BOARD_TYPE}
+            ]]>
+        </if>
+        
+        <if test="TITLE != null and TITLE != ''">
+            <![CDATA[
+               AND TITLE LIKE '%'||#{TITLE}||'%'
+            ]]>
+        </if>        
+        	ORDER BY SEQ_NO DESC
+        <![CDATA[
+	        )TBL	        
+        ]]>        
+    </select>
+    
+    <select id="selectFaqMgmt" parameterType="hashmap" resultType="hashmap">
+        <![CDATA[
+            SELECT 
+            	  SEQ AS SEQ_NO                        
+                  , CTGR
+                  , TITLE
+                  , BODY
+                  , NOTI_TYPE
+                  , DEL_FLG
+                  , WORKER
+            FROM  
+            	  TB_FAQ
+            WHERE 
+            	  SEQ = #{SEQ_NO}
+        ]]>
+    </select>
+    
+    <insert id="insertFaqMgmt" parameterType="hashmap">
+	    INSERT INTO TB_FAQ
+		( SEQ, CTGR, TITLE, BODY, DEL_FLG, NOTI_TYPE, REG_DT, WORKER, REG_DNT, UPD_DNT )
+		VALUES( 6, #{CTGR}, #{TITLE}, #{BODY}, '0', #{NOTI_TYPE}, DATE_FORMAT(NOW(), "%Y%m%d"), #{WORKER}, DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"), DATE_FORMAT(NOW(), "%Y%m%d%H%i%s"))
+    </insert>
+    
+    <update id="updateFaqMgmt" parameterType="hashmap">
+        <![CDATA[
+            UPDATE TB_FAQ 
+            SET  CTGR 	    = #{CTGR}
+               , TITLE      = #{TITLE}
+               , BODY       = #{BODY}
+               , NOTI_TYPE  = #{NOTI_TYPE}
+               , WORKER     = #{WORKER}
+            WHERE SEQ = #{SEQ_NO}
+        ]]>
+    </update>
+</mapper>

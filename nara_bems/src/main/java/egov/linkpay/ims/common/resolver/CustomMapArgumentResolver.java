@@ -69,7 +69,7 @@ public class CustomMapArgumentResolver implements HandlerMethodArgumentResolver 
         objMap.put("MENU_URI_SGMNT", strMenuURISgmnt);
         
         try{
-            objMap = commonDAO.selectAuthUserMenu(objMap);
+            /*objMap = commonDAO.selectAuthUserMenu(objMap);
             
             strIP = CommonUtils.GetIPAddr(request);
             
@@ -78,7 +78,7 @@ public class CustomMapArgumentResolver implements HandlerMethodArgumentResolver 
             commonMap.put("MENU_GRP_NM", objMap.get("MENU_GRP_NM"));
             commonMap.put("MENU_NM",     objMap.get("MENU_NM"));
             commonMap.put("AUTH_CD",     objMap.get("AUTH_CD"));
-            commonMap.put("MASTER_CD",   objMap.get("MASTER_CD"));
+            commonMap.put("MASTER_CD",   objMap.get("MASTER_CD"));*/
             
             commonMap.put("USR_ID",      CommonUtils.getSessionInfo(session, "USR_ID"));
             commonMap.put("USR_IP",      strIP);

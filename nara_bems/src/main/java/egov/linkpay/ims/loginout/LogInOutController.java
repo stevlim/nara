@@ -149,7 +149,7 @@ public class LogInOutController {
                 session.setAttribute(CommonConstants.IMS_SESSION_LOGIN_KEY, objRet);
                 //메뉴 그룹 리스트 생성
                 List<Map<String,Object>> objMerchantIDList = new ArrayList<Map<String,Object>>();
-                List<Map<String,Object>> objMerchantIDGrpList = commonDAO.selectAuthUserMenuGrpList(objRet);
+                /*List<Map<String,Object>> objMerchantIDGrpList = commonDAO.selectAuthUserMenuGrpList(objRet);
                 List<Map<String,Object>> objMerchantIDItemList = commonDAO.selectAuthUserMenuList(objRet);
                 
                 for (Map<String, Object> map : objMerchantIDGrpList) {
@@ -162,19 +162,16 @@ public class LogInOutController {
                 		
                 		if(menuGrpNoItem==menuGrpNoGrp) {
                 			if(parentMenuGrpNoItem==0){
-						//if(((BigDecimal)map2.get("MENU_GRP_NO")).intValue() == ((BigDecimal)map.get("MENU_GRP_NO")).intValue()){
-							//if(((BigDecimal)map2.get("PARENT_MENU_NO")).intValue() == 0){
 								objMerchantIDList.add(map2);
 								subMenuList(3, menuGrpNoItem, menuNoItem, objMerchantIDItemList, objMerchantIDList);
-								//subMenuList(3, (BigDecimal)map2.get("MENU_GRP_NO"), (BigDecimal)map2.get("MENU_NO"), objMerchantIDItemList, objMerchantIDList);
 							}
 						}
 					}
-				}
+				}*/
                 
                 session.setAttribute(CommonConstants.IMS_SESSION_MENU_KEY, objMerchantIDList);
-                String menuJson = CommonUtils.listmap_to_json_string(objMerchantIDList);
-                session.setAttribute("menuList", menuJson);
+                /*String menuJson = CommonUtils.listmap_to_json_string(objMerchantIDList);
+                session.setAttribute("menuList", menuJson);*/
                 objMv = CommonUtils.resultSuccess(objMv);
             } else {
                 intResultCode    = 9999;

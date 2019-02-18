@@ -39,6 +39,12 @@
     </definition>
     <!-- END DASHBOARD -->
     
+    <!-- BEGIN SAMPLE MGMT -->
+    <definition name="/sampleMgmt/*/*" extends="tilesAdmin">
+       <put-attribute name="BODY" value="/WEB-INF/views/sampleMgmt/{2}.jsp" />
+    </definition>
+    <!-- END SAMPLE MGMT -->
+    
     <!-- BEGIN TRADING VIEWS -->
     <definition name="/tradingViews/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/tradingViews/{2}.jsp" />
