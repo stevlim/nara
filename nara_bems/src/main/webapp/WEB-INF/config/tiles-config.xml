@@ -45,105 +45,78 @@
     </definition>
     <!-- END SAMPLE MGMT -->
     
-    <!-- BEGIN TRADING VIEWS -->
-    <definition name="/tradingViews/*/*" extends="tilesAdmin">
+    <!-- BEGIN SAMPLE SUB MGMT -->
+    <definition name="/sampleSubMgmt/*/*" extends="tilesAdmin">
+       <put-attribute name="BODY" value="/WEB-INF/views/sampleSubMgmt/{2}.jsp" />
+    </definition>
+    <!-- END SAMPLE SUB MGMT -->
+    
+    <!-- <definition name="/tradingViews/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/tradingViews/{2}.jsp" />
     </definition>
-    <!-- END TRADING VIEWS -->
     
-    <!-- BEGIN SETTLEMENT MGMT -->
     <definition name="/settlementMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/settlementMgmt/{2}.jsp" />
     </definition>
-    <!-- END SETTLEMENT MGMT -->
     
-    <!-- BEGIN PURCHASE MGMT -->
     <definition name="/purchaseMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/purchaseMgmt/{2}.jsp" />
     </definition>
-    <!-- END PURCHASE MGMT -->
     
-    <!-- BEGIN DEPOSIT MGMT -->
     <definition name="/depositMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/depositMgmt/{2}.jsp" />
     </definition>
-    <!-- END DEPOSIT MGMT -->
     
-    <!-- BEGIN BASEINFO MGMT -->
     <definition name="/baseInfoMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/baseInfoMgmt/{2}.jsp" />
     </definition>
-    <!-- END BASEINFO MGMT -->
     
-    <!-- BEGIN BUSINESS MGMT -->
     <definition name="/businessMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/businessMgmt/{2}.jsp" />
     </definition>
-    <!-- END BUSINESS MGMT -->
      
-     <!-- BEGIN BUSINESS MGMT -->
     <definition name="/paymentMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/paymentMgmt/{2}.jsp" />
     </definition>
-    <!-- END BUSINESS MGMT -->
    
-   <!-- BEGIN RM APPROVAL-->
     <definition name="/rmApproval/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/rmApproval/{2}.jsp" />
     </definition>
-    <!-- END RM MGMT -->
     
-     <!-- BEGIN CALCULATE MGMT-->
     <definition name="/calcuMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/calcuMgmt/{2}.jsp" />
     </definition>
-    <!-- END CALCULATE MGMT -->
     
-     <!-- BEGIN TOTAL MGMT-->
     <definition name="/totalMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/totalMgmt/{2}.jsp" />
     </definition>
-    <!-- END TOTALMGMT -->
      
-     <!-- BEGIN OPERATION MGMT-->
     <definition name="/operMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/operMgmt/{2}.jsp" />
     </definition>
-    <!-- END OPERATION MGMT -->
     
-    <!-- BEGIN RISK MGMT -->
     <definition name="/riskMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/riskMgmt/{2}.jsp" />
     </definition>
-    <!-- END RISK MGMT -->
     
-    <!-- BEGIN PERFORMANCE VIEWS -->
     <definition name="/performanceViews/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/performanceViews/{2}.jsp" />
     </definition>
-    <!-- END PERFORMANCE VIEWS -->
     
-    <!-- BEGIN AUTHORITY MGMT -->
     <definition name="/authorityMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/authorityMgmt/{2}.jsp" />
     </definition>
-    <!-- END AUTHORITY MGMT -->
     
-    <!-- BEGIN MESSAGE MGMT -->
     <definition name="/messageMgmt/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/messageMgmt/{2}.jsp" />
     </definition>
     
-    <!-- BEGIN MONITERING -->
     <definition name="/monitering/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/monitering/{2}.jsp" />
     </definition>
     
-    <!-- BEGIN SETTLEMENT VIEWS -->
     <definition name="/settlementViews/*/*" extends="tilesAdmin">
        <put-attribute name="BODY" value="/WEB-INF/views/settlementViews/{2}.jsp" />
-    </definition>
-    <!-- END SETTLEMENT VIEWS -->
-    <!-- END MESSAGE MGMT -->
+    </definition> -->
     <!--############################## BEGIN ADMIN TEMPLATE ##############################-->
 </tiles-definitions>

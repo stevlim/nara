@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import egov.linkpay.ims.businessmgmt.service.FaqMgmtService;
 import egov.linkpay.ims.common.common.CommonConstants;
 import egov.linkpay.ims.common.common.CommonDDLB;
 import egov.linkpay.ims.common.common.CommonDDLB.DDLBType;
@@ -52,7 +51,7 @@ public class SampleOneMgmtController {
      ----------------------------------------------------*/
     //@RequestMapping(value="/faqMgmt.do")
     @RequestMapping(value="/sampleOneMgmt.do")
-    public String faqMgmt(Model model, CommonMap commonMap) throws Exception {
+    public String sampleOneMgmt(Model model, CommonMap commonMap) throws Exception {
         /*model.addAttribute("MENU",               commonMap.get("MENU_GRP_NO"));
         model.addAttribute("SUBMENU",            commonMap.get("MENU_NO"));
         model.addAttribute("MENU_TITLE",         CommonMessageDic.getMessage(commonMap.get("MENU_GRP_NM").toString()));

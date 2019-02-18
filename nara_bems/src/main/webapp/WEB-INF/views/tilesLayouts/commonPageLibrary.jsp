@@ -12,3 +12,4 @@
 
 <c:set var="date"          value="<%=new java.util.Date()%>"/>
 <c:set var="language_code" value="<%=session.getAttribute(CommonConstants.IMS_SESSION_LANGUAGE_KEY)%>"/>
+

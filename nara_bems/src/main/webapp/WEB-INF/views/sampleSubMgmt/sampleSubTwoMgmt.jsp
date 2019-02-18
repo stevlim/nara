@@ -6,8 +6,8 @@
 
 $(document).ready(function(){
 	
+	$("#hdingpgNm").text("Sample Sub 02");
 	
-	$("#hdingpgNm").text("Sample 01");
     //fnInitEvent();
     //fnSetDDLB();
     //fnEditFaqMgmt();
@@ -49,5 +49,15 @@ function fnEditFaqMgmtRet(objJson) {
 }
 
 </script>
-<!-- Sample 01 -->
-    aaaaa samp 01 ~~~~~
+
+<!-- Sample Sub 02 -->
+<div class="transpg">
+	<div class="boxconfirm">
+		<h2 class="titleconfirm">Please insert your current password</h2>
+		<input type="text" class="uid" name="id" autocomplete="on" placeholder="Current password" value="">
+		<button class="btnlogin">Confirm</button>
+		<div class="rowforgot">
+			<a href="#0" class="linkfgid">Forgot your password ?</a>
+		</div>
+	</div>
+</div>

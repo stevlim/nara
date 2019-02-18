@@ -1,11 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ include file="commonPageLibrary.jsp" %>
+
 <div id="tiles-head-wrapper">
 	<center>
 		<div id='tiles-header'>
 			<div class="headerpg">
-				<h1 class="hdingpg">Merchant information</h1>
+				<h1 class="hdingpg" id="hdingpgNm">Dash Board</h1>
 				<button class="btnmenu"><span class="icon-nav"></span></button>
 			</div>
 		</div>
@@ -44,14 +45,14 @@
 		<div class="mainmenu">
 			<h2 class="title_accmenu accmms">Sample information</h2>
 			<ul class="list_submenu pnl">				
-				<li><a href="/sampleMgmt/sampleOneMgmt/sampleOneMgmt.do">sample 01</a></li>
-				<li><a href="/businessMgmt/qnaMgmt/qnaMgmt.do">Service information</a></li>
-				<li><a href="/baseInfoMgmt/keyInfoMgmt/keyInfoMgmt.do">Limit information</a></li>
+				<li><a class="left_menu_nm" href="/sampleMgmt/sampleOneMgmt/sampleOneMgmt.do">Sample 01</a></li>
+				<li><a class="left_menu_nm" href="/sampleMgmt/sampleTwoMgmt/sampleTwoMgmt.do">Sample 02</a></li>
+				<!-- <li><a href="/baseInfoMgmt/keyInfoMgmt/keyInfoMgmt.do">sample 03</a></li> -->
 			</ul>
-			<h2 class="title_accmenu accmms">Transaction information</h2>
+			<h2 class="title_accmenu accmms">Sample Sub information</h2>
 			<ul class="list_submenu pnl">
-				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Total transaction history</a></li>
-				<li><a href="/businessMgmt/faqMgmt/faqMgmt.do">Failure transaction history</a></li>
+				<li><a class="left_menu_nm" href="/sampleSubMgmt/sampleSubOneMgmt/sampleSubOneMgmt.do">Sample Sub 01</a></li>
+				<li><a class="left_menu_nm" href="/sampleSubMgmt/sampleSubTwoMgmt/sampleSubTwoMgmt.do">Sample Sub 02</a></li>
 			</ul>
 			<!-- <h2 class="title_accmenu accmms">Settlement information</h2>
 			<ul class="list_submenu pnl">

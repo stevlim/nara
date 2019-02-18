@@ -1,4 +1,4 @@
-package egov.linkpay.ims.sampleMgmt.service;
+package egov.linkpay.ims.sampleSubMgmt.service;
 
 import java.util.List;
 import java.util.Map;
@@ -8,7 +8,7 @@ import javax.annotation.Resource;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import egov.linkpay.ims.sampleMgmt.dao.SampleMgmtDAO;
+import egov.linkpay.ims.sampleSubMgmt.dao.SampleSubMgmtDAO;
 
 /**------------------------------------------------------------
  * Package Name   : egov.linkpay.ims.businessmgmt.service
@@ -18,38 +18,38 @@ import egov.linkpay.ims.sampleMgmt.dao.SampleMgmtDAO;
  * Modify History : Just Created.
  ------------------------------------------------------------*/
 //@Service("faqMgmtService")
-@Service("sampleMgmtService")
-public class SampleMgmtServiceImpl implements SampleMgmtService {
+@Service("sampleSubMgmtService")
+public class SampleSubMgmtServiceImpl implements SampleSubMgmtService {
     Logger logger = Logger.getLogger(this.getClass());
     
     /*@Resource(name="faqMgmtDAO")
     private FaqMgmtDAO faqMgmtDAO;*/
     
-    @Resource(name="sampleMgmtDAO")
-    private SampleMgmtDAO sampleMgmtDAO;
+    @Resource(name="sampleSubMgmtDAO")
+    private SampleSubMgmtDAO sampleSubMgmtDAO;
     
     @Override
     public List<Map<String, Object>> selectFaqMgmtList(Map<String, Object> objMap) throws Exception {
-        return sampleMgmtDAO.selectFaqMgmtList(objMap);
+        return sampleSubMgmtDAO.selectFaqMgmtList(objMap);
     }
     
     @Override
     public Object selectFaqMgmtListTotal(Map<String, Object> objMap) throws Exception {
-        return sampleMgmtDAO.selectFaqMgmtListTotal(objMap);
+        return sampleSubMgmtDAO.selectFaqMgmtListTotal(objMap);
     }
     
     @Override
     public Map<String, Object> selectFaqMgmt(Map<String, Object> objMap) throws Exception {
-        return sampleMgmtDAO.selectFaqMgmt(objMap);
+        return sampleSubMgmtDAO.selectFaqMgmt(objMap);
     }
     
     @Override
     public void insertFaqMgmt(Map<String, Object> objMap) throws Exception {
-    	sampleMgmtDAO.insertFaqMgmt(objMap);
+    	sampleSubMgmtDAO.insertFaqMgmt(objMap);
     }
     
     @Override
     public void updateFaqMgmt(Map<String, Object> objMap) throws Exception {
-    	sampleMgmtDAO.updateFaqMgmt(objMap);
+    	sampleSubMgmtDAO.updateFaqMgmt(objMap);
     }
 }

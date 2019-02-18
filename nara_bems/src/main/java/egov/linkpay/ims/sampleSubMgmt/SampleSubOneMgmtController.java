@@ -1,4 +1,4 @@
-package egov.linkpay.ims.sampleMgmt;
+package egov.linkpay.ims.sampleSubMgmt;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +23,7 @@ import egov.linkpay.ims.common.common.CommonMessage;
 import egov.linkpay.ims.common.common.CommonMessageDic;
 import egov.linkpay.ims.common.common.CommonUtils;
 import egov.linkpay.ims.sampleMgmt.service.SampleMgmtService;
+import egov.linkpay.ims.sampleSubMgmt.service.SampleSubMgmtService;
 
 /**------------------------------------------------------------
  * Package Name   : egov.linkpay.ims.businessmgmt
@@ -33,15 +34,15 @@ import egov.linkpay.ims.sampleMgmt.service.SampleMgmtService;
  ------------------------------------------------------------*/
 @Controller
 //@RequestMapping(value="/businessMgmt/faqMgmt")
-@RequestMapping(value="/sampleMgmt/sampleTwoMgmt")
-public class SampleTwoMgmtController {
+@RequestMapping(value="/sampleSubMgmt/sampleSubOneMgmt")
+public class SampleSubOneMgmtController {
     Logger logger = Logger.getLogger(this.getClass());
     
     //@Resource(name="faqMgmtService")
     //private FaqMgmtService faqMgmtService;
     
-    @Resource(name="sampleMgmtService")
-    private SampleMgmtService sampleMgmtService;
+    @Resource(name="sampleSubMgmtService")
+    private SampleSubMgmtService sampleSubMgmtService;
     
     /**--------------------------------------------------
      * Method Name    : faqMgmt
@@ -50,8 +51,8 @@ public class SampleTwoMgmtController {
      * Modify History : Just Created.
      ----------------------------------------------------*/
     //@RequestMapping(value="/faqMgmt.do")
-    @RequestMapping(value="/sampleTwoMgmt.do")
-    public String sampleTwoMgmt(Model model, CommonMap commonMap) throws Exception {
+    @RequestMapping(value="/sampleSubOneMgmt.do")
+    public String sampleSubOneMgmt(Model model, CommonMap commonMap) throws Exception {
         /*model.addAttribute("MENU",               commonMap.get("MENU_GRP_NO"));
         model.addAttribute("SUBMENU",            commonMap.get("MENU_NO"));
         model.addAttribute("MENU_TITLE",         CommonMessageDic.getMessage(commonMap.get("MENU_GRP_NM").toString()));
@@ -62,7 +63,7 @@ public class SampleTwoMgmtController {
         model.addAttribute("faqFlag",   CommonDDLB.faqFlag(DDLBType.EDIT));
         model.addAttribute("BOARD_TYPE",   CommonDDLB.faqDivision(DDLBType.SEARCH));*/
         
-        return "/sampleMgmt/sampleTwoMgmt/sampleTwoMgmt";
+        return "/sampleSubMgmt/sampleSubOneMgmt/sampleSubOneMgmt";
     }
     
     /**--------------------------------------------------
@@ -87,14 +88,14 @@ public class SampleTwoMgmtController {
                
                 CommonUtils.initSearchRange(objMap);
     
-                objList         = sampleMgmtService.selectFaqMgmtList(objMap);
+                objList         = sampleSubMgmtService.selectFaqMgmtList(objMap);
                 for( Map<String, Object> row : objList) {
                 	if(row.get("BODY") instanceof java.sql.Clob) {
                 		String body = CommonUtils.clobToString((java.sql.Clob)row.get("BODY"));
                 		row.put("BODY", body);
                 	}
                 }
-                intPageTotalCnt = (Integer)sampleMgmtService.selectFaqMgmtListTotal(objMap);
+                intPageTotalCnt = (Integer)sampleSubMgmtService.selectFaqMgmtListTotal(objMap);
             } else {
                 intResultCode    = 9999;
                 strResultMessage = CommonMessage.MSG_ERR_JSON_PARAMETER_EMPTY;
@@ -130,7 +131,7 @@ public class SampleTwoMgmtController {
         try {
             if (!CommonUtils.isNullorEmpty(strJsonParameter)) {
                 objMap = CommonUtils.jsonToMap(strJsonParameter);
-                objRow = sampleMgmtService.selectFaqMgmt(objMap);
+                objRow = sampleSubMgmtService.selectFaqMgmt(objMap);
                 if(objRow.get("BODY") instanceof java.sql.Clob) {
             		String body = CommonUtils.clobToString((java.sql.Clob)objRow.get("BODY"));
             		objRow.put("BODY", body);
@@ -176,7 +177,7 @@ public class SampleTwoMgmtController {
                 objMap = CommonUtils.jsonToMap(strJsonParameter);
                 objMap.put("WORKER",    commonMap.get("USR_ID"));
                 
-                sampleMgmtService.insertFaqMgmt(objMap);                
+                sampleSubMgmtService.insertFaqMgmt(objMap);                
             } else {                
                 intResultCode    = 9999;
                 strResultMessage = CommonMessage.MSG_ERR_JSON_PARAMETER_EMPTY;
@@ -217,7 +218,7 @@ public class SampleTwoMgmtController {
                 objMap = CommonUtils.jsonToMap(strJsonParameter);
                 objMap.put("WORKER",    commonMap.get("USR_ID"));
                 
-                sampleMgmtService.updateFaqMgmt(objMap);
+                sampleSubMgmtService.updateFaqMgmt(objMap);
                 
                 objMv = CommonUtils.resultSuccess(objMv);
             } else {
