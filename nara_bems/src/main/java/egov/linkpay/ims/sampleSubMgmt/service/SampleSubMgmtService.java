@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 /**------------------------------------------------------------
- * Package Name   : net.ionpay.dashboard.businessmgmt.service
- * File Name      : FaqMgmtService.java
- * Description    : 영업관리 - 가맹점관리 - FAQ
- * Author         : ymjo, 2015. 10. 13.
+ * Package Name   : egov.linkpay.ims.sampleSubMgmt.service
+ * File Name      : SampleSubMgmtService.java
+ * Description    : SampleSubMgmtService
+ * Author         : st.lim, 2019. 02. 18.
  * Modify History : Just Created.
  ------------------------------------------------------------*/
 public interface SampleSubMgmtService {

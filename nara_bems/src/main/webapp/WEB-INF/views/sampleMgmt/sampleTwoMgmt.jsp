@@ -13,6 +13,44 @@ $(document).ready(function(){
     //fnEditFaqMgmt();
 });
 
+function fnEdit() {
+	arrParameter = $("#regist").serializeObject();
+	arrParameter["worker"] = strWorker;
+	
+	strCallUrl = "/rmApproval/approvalLimit/selectApproLimitDetail.do";
+	strCallBack = "fnEditRet";
+	IONPay.Ajax.fnRequest(arrParameter, strCallUrl, strCallBack);
+}
+
+function fnEditRet(objJson) {
+	if (objJson.resultCode == 0) {
+		if(objJson.data != null ) {
+			$("#regist #tranCutFlg").val(objJson.data.BLOCK_FLG);
+			$("#regist #date").val(objJson.data.FR_DT);
+			$("#regist #payType").val(objJson.data.PM_CD);
+			$("#regist #instMon").val(objJson.data.INSTMN_DT);
+			$("#regist #limitType").val(objJson.data.LMT_CD);
+			$("#regist #detail").val(objJson.data.LMT_TYPE_CD);
+			$("#regist #cashLimit").val(objJson.data.AMT_TYPE);
+			$("#regist #limit").val(objJson.data.AMT_LMT);
+			$("#regist #countLimit").val(objJson.data.CNT_TYPE);
+			$("#regist #count").val(objJson.data.CNT_LMT);
+			$("#regist #sendChk").val(objJson.data.NOTI_FLG);
+			$("#regist #target").val(objJson.data.NOTI_TRG_TYPE);
+			$("#regist #pac").val(objJson.data.NOTI_PCT);
+			
+			$("#regist #maxCount").val(objJson.data.MAX_SND_CNT);
+			$("#regist #sendEmail").val(objJson.data.EMAIL_LIST);
+			$("#regist #sendSms").val(objJson.data.SMS_LIST);
+			$("#regist #regiReason").val(objJson.data.MEMO);
+			$("#regist #registType").val("1");	
+			$("#regist #seqNo").val(objJson.data.SEQ);	
+		}
+	} else {
+		IONPay.Msg.fnAlert(objJson.resultMessage);
+	}
+}
+
 /**------------------------------------------------------------
 * FAQ 등록/수정
 ------------------------------------------------------------*/

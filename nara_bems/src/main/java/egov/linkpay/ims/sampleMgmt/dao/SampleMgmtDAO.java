@@ -9,10 +9,10 @@ import org.springframework.stereotype.Repository;
 import egov.linkpay.ims.common.common.BaseDAO;
 
 /**------------------------------------------------------------
- * Package Name   : egov.linkpay.ims.businessmgmt.dao
- * File Name      : FaqMgmtDAO.java
- * Description    : 영업관리 - 가맹점관리 - FAQ
- * Author         : ymjo, 2015. 10. 13.
+ * Package Name   : egov.linkpay.ims.sampleMgmt.dao
+ * File Name      : SampleMgmtDAO.java
+ * Description    : SampleMgmtDAO
+ * Author         : st.lim, 2019. 02. 18.
  * Modify History : Just Created.
  ------------------------------------------------------------*/
 @Repository("sampleMgmtDAO")

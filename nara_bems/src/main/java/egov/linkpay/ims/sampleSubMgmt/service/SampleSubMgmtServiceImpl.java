@@ -11,19 +11,15 @@ import org.springframework.stereotype.Service;
 import egov.linkpay.ims.sampleSubMgmt.dao.SampleSubMgmtDAO;
 
 /**------------------------------------------------------------
- * Package Name   : egov.linkpay.ims.businessmgmt.service
- * File Name      : FaqMgmtServiceImpl.java
- * Description    : 영업관리 - 가맹점관리 - FAQ
- * Author         : ymjo, 2015. 10. 13.
+ * Package Name   : egov.linkpay.ims.sampleSubMgmt.service
+ * File Name      : SampleSubMgmtServiceImpl.java
+ * Description    : SampleSubMgmtServiceImpl
+ * Author         : st.lim, 2019. 02. 18.
  * Modify History : Just Created.
  ------------------------------------------------------------*/
-//@Service("faqMgmtService")
 @Service("sampleSubMgmtService")
 public class SampleSubMgmtServiceImpl implements SampleSubMgmtService {
     Logger logger = Logger.getLogger(this.getClass());
-    
-    /*@Resource(name="faqMgmtDAO")
-    private FaqMgmtDAO faqMgmtDAO;*/
     
     @Resource(name="sampleSubMgmtDAO")
     private SampleSubMgmtDAO sampleSubMgmtDAO;

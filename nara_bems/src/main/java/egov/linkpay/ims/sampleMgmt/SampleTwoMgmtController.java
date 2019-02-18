@@ -25,23 +25,31 @@ import egov.linkpay.ims.common.common.CommonUtils;
 import egov.linkpay.ims.sampleMgmt.service.SampleMgmtService;
 
 /**------------------------------------------------------------
- * Package Name   : egov.linkpay.ims.businessmgmt
- * File Name      : FaqMgmtController.java
- * Description    : 영업관리 - 가맹점관리 - FAQ
- * Author         : ymjo, 2015. 10. 13.
+ * Package Name   : egov.linkpay.ims.sampleMgmt
+ * File Name      : SampleTwoMgmtController.java
+ * Description    : SampleTwoMgmtController
+ * Author         : st.lim, 2019. 02. 18.
  * Modify History : Just Created.
  ------------------------------------------------------------*/
 @Controller
-//@RequestMapping(value="/businessMgmt/faqMgmt")
 @RequestMapping(value="/sampleMgmt/sampleTwoMgmt")
 public class SampleTwoMgmtController {
     Logger logger = Logger.getLogger(this.getClass());
     
-    //@Resource(name="faqMgmtService")
-    //private FaqMgmtService faqMgmtService;
-    
     @Resource(name="sampleMgmtService")
     private SampleMgmtService sampleMgmtService;
+    
+    /**--------------------------------------------------
+     * Method Name    : sampleTwoMgmt
+     * Description    : sample 02 view
+     * Author         : st.lim, 2019. 02. 18.
+     * Modify History : Just Created.
+     ----------------------------------------------------*/
+    @RequestMapping(value="/sampleTwoMgmt.do")
+    public String sampleTwoMgmt(Model model, CommonMap commonMap) throws Exception {
+    
+        return "/sampleMgmt/sampleTwoMgmt/sampleTwoMgmt";
+    }
     
     /**--------------------------------------------------
      * Method Name    : faqMgmt
@@ -49,195 +57,77 @@ public class SampleTwoMgmtController {
      * Author         : ymjo, 2015. 10. 8.
      * Modify History : Just Created.
      ----------------------------------------------------*/
-    //@RequestMapping(value="/faqMgmt.do")
-    @RequestMapping(value="/sampleTwoMgmt.do")
-    public String sampleTwoMgmt(Model model, CommonMap commonMap) throws Exception {
-        /*model.addAttribute("MENU",               commonMap.get("MENU_GRP_NO"));
-        model.addAttribute("SUBMENU",            commonMap.get("MENU_NO"));
-        model.addAttribute("MENU_TITLE",         CommonMessageDic.getMessage(commonMap.get("MENU_GRP_NM").toString()));
-        model.addAttribute("MENU_SUBMENU_TITLE", CommonMessageDic.getMessage(commonMap.get("MENU_NM").toString()));
-        model.addAttribute("MENU_SUBMENU_SGMNT", CommonConstants.BUSINESSMGMT_MERCHANTMGMT_FAQ_SEGMNT);
-        
-        model.addAttribute("division",   CommonDDLB.faqDivision(DDLBType.EDIT));
-        model.addAttribute("faqFlag",   CommonDDLB.faqFlag(DDLBType.EDIT));
-        model.addAttribute("BOARD_TYPE",   CommonDDLB.faqDivision(DDLBType.SEARCH));*/
-        
-        return "/sampleMgmt/sampleTwoMgmt/sampleTwoMgmt";
-    }
-    
-    /**--------------------------------------------------
-     * Method Name    : selectFaqMgmtList
-     * Description    : FAQ 리스트 조회
-     * Author         : ymjo, 2015. 10. 13.
-     * Modify History : Just Created.
-     ----------------------------------------------------*/
-    @RequestMapping(value="/selectFaqMgmtList.do", method=RequestMethod.POST)
-    public ModelAndView selectFaqMgmtList(@RequestBody String strJsonParameter) throws Exception {
-        ModelAndView             objMv   = new ModelAndView();
-        Map<String, Object>      objMap  = new HashMap<String, Object>();
-        List<Map<String,Object>> objList = new ArrayList<Map<String, Object>>();
-        
-        int    intPageTotalCnt  = 0;
-        int    intResultCode    = 0;
-        String strResultMessage = "";
-        
-        try {
-            if (!CommonUtils.isNullorEmpty(strJsonParameter)) {
-                objMap = CommonUtils.jsonToMap(strJsonParameter);
-               
-                CommonUtils.initSearchRange(objMap);
-    
-                objList         = sampleMgmtService.selectFaqMgmtList(objMap);
-                for( Map<String, Object> row : objList) {
-                	if(row.get("BODY") instanceof java.sql.Clob) {
-                		String body = CommonUtils.clobToString((java.sql.Clob)row.get("BODY"));
-                		row.put("BODY", body);
-                	}
-                }
-                intPageTotalCnt = (Integer)sampleMgmtService.selectFaqMgmtListTotal(objMap);
-            } else {
-                intResultCode    = 9999;
-                strResultMessage = CommonMessage.MSG_ERR_JSON_PARAMETER_EMPTY;
-            }
-        } catch(Exception ex) {
-            intResultCode    = 9999;
-            strResultMessage = CommonMessage.MSG_ERR_EXCEPTION;
-            logger.debug("selectFaqMgmtList.do exception : " + ex.getMessage());
-        } finally {
-            objMv = CommonUtils.resultList(objMv, objMap, objList, intPageTotalCnt, intResultCode, strResultMessage);
-        }
-        
-        objMv.setViewName("jsonView");
-        
-        return objMv;
-    }
-    
-    /**--------------------------------------------------
-     * Method Name    : selectFaqMgmt
-     * Description    : FAQ 게시물 조회(업데이트를 위한 조회)
-     * Author         : ymjo, 2015. 10. 13.
-     * Modify History : Just Created.
-     ----------------------------------------------------*/
-    @RequestMapping(value="/selectFaqMgmt.do", method=RequestMethod.POST)
-    public ModelAndView selectFaqMgmt(@RequestBody String strJsonParameter) throws Exception {
-        ModelAndView        objMv  = new ModelAndView();
-        Map<String, Object> objMap = new HashMap<String, Object>();
-        Map<String, Object> objRow = new HashMap<String, Object>();
-       
-        int    intResultCode    = 0;
-        String strResultMessage = "";
-        
-        try {
-            if (!CommonUtils.isNullorEmpty(strJsonParameter)) {
-                objMap = CommonUtils.jsonToMap(strJsonParameter);
-                objRow = sampleMgmtService.selectFaqMgmt(objMap);
-                if(objRow.get("BODY") instanceof java.sql.Clob) {
-            		String body = CommonUtils.clobToString((java.sql.Clob)objRow.get("BODY"));
-            		objRow.put("BODY", body);
-            	}
-                objMv.addObject("rowData", objRow);
-            } else {
-                intResultCode    = 9999;
-                strResultMessage = CommonMessage.MSG_ERR_JSON_PARAMETER_EMPTY;
-            }
-        } catch(Exception ex) {
-            intResultCode    = 9999;
-            strResultMessage = CommonMessage.MSG_ERR_EXCEPTION;
-            logger.debug("selectFaqMgmt.do exception : " + ex.getMessage());
-        } finally {
-            if (intResultCode == 0) {
-                objMv = CommonUtils.resultSuccess(objMv);
-            } else {
-                objMv = CommonUtils.resultFail(objMv, strResultMessage);
-            }
-        }
-        
-        objMv.setViewName("jsonView");
-        
-        return objMv;
-    }
-    
-    /**--------------------------------------------------
-     * Method Name    : insertFaqMgmt
-     * Description    : FAQ 등록
-     * Author         : ymjo, 2015. 10. 13.
-     * Modify History : Just Created.
-     ----------------------------------------------------*/
-    @RequestMapping(value="/insertFaqMgmt.do", method=RequestMethod.POST)
-    public ModelAndView insertFaqMgmt(@RequestBody String strJsonParameter, CommonMap commonMap) throws Exception {
-        ModelAndView        objMv  = new ModelAndView();
-        Map<String, Object> objMap = new HashMap<String, Object>();
-        
-        int    intResultCode    = 0;
-        String strResultMessage = "";
-        
-        try {            
-            if (!CommonUtils.isNullorEmpty(strJsonParameter)) {
-                objMap = CommonUtils.jsonToMap(strJsonParameter);
-                objMap.put("WORKER",    commonMap.get("USR_ID"));
-                
-                sampleMgmtService.insertFaqMgmt(objMap);                
-            } else {                
-                intResultCode    = 9999;
-                strResultMessage = CommonMessage.MSG_ERR_JSON_PARAMETER_EMPTY;
-            }
-        } catch(Exception ex) {
-            intResultCode    = 9999;
-            strResultMessage = CommonMessage.MSG_ERR_EXCEPTION;
-            logger.debug("insertFaqMgmt.do exception : " + ex.getMessage());
-        } finally {
-            if (intResultCode == 0) {
-                objMv = CommonUtils.resultSuccess(objMv);
-            } else {
-                objMv = CommonUtils.resultFail(objMv, strResultMessage);
-            }
-        }
-        
-        objMv.setViewName("jsonView");
-        
-        return objMv;
-    }
-    
-    /**--------------------------------------------------
-     * Method Name    : updateFaqMgmt
-     * Description    : FAQ 수정
-     * Author         : ymjo, 2015. 10. 13.
-     * Modify History : Just Created.
-     ----------------------------------------------------*/
-    @RequestMapping(value="/updateFaqMgmt.do", method=RequestMethod.POST)
-    public ModelAndView updateFaqMgmt(@RequestBody String strJsonParameter, CommonMap commonMap) throws Exception {
-        ModelAndView        objMv  = new ModelAndView();
-        Map<String, Object> objMap = new HashMap<String, Object>();
-        
-        int    intResultCode    = 0;
-        String strResultMessage = "";
-        
-        try {
-            if (!CommonUtils.isNullorEmpty(strJsonParameter)) {
-                objMap = CommonUtils.jsonToMap(strJsonParameter);
-                objMap.put("WORKER",    commonMap.get("USR_ID"));
-                
-                sampleMgmtService.updateFaqMgmt(objMap);
-                
-                objMv = CommonUtils.resultSuccess(objMv);
-            } else {
-                intResultCode    = 9999;
-                strResultMessage = CommonMessage.MSG_ERR_JSON_PARAMETER_EMPTY;
-            }
-        } catch(Exception ex) {
-            intResultCode    = 9999;
-            strResultMessage = CommonMessage.MSG_ERR_EXCEPTION;
-            logger.debug("updateFaqMgmt.do exception : " + ex.getMessage());
-        } finally {
-            if (intResultCode == 0) {
-                objMv = CommonUtils.resultSuccess(objMv);
-            } else {
-                objMv = CommonUtils.resultFail(objMv, strResultMessage);
-            }
-        }
-        
-        objMv.setViewName("jsonView");
-        
-        return objMv;
-    }
+    @RequestMapping(value = "/selectApproLimitDetail.do", method = RequestMethod.POST)
+	public ModelAndView selectApproLimitDetail(@RequestBody String strJsonParameter) throws Exception {
+		ModelAndView objMv = new ModelAndView();
+		Map<String, Object> objMap = new HashMap<String, Object>();
+		Map<String, Object> rstMap = new HashMap<String, Object>();
+		int intResultCode = 0;
+		int intPageTotalCnt = 0;
+		String strResultMessage = "";
+
+		try {
+			if (!CommonUtils.isNullorEmpty(strJsonParameter)) {
+				objMap = CommonUtils.jsonToMap(strJsonParameter);
+
+				//rstMap = rmApprovalService.getContLimitDetail(objMap);
+
+				// test
+				/*Map<String, Object> testMap = new HashMap<String, Object>();
+				testMap.put("SEQ", "1");
+				testMap.put("FR_DT", "20170629");
+				testMap.put("TO_DT", "20170629");
+				testMap.put("REG_DATE", "1");
+				testMap.put("WORKER", "1");
+				testMap.put("INSTMN_DT", "1");
+				testMap.put("LMT_CD_NM", "1");
+				testMap.put("LMT_CD", "1");
+				testMap.put("LMT_ID", "1");
+				testMap.put("LMT_TYPE_CD_NM", "1"); 
+				testMap.put("LMT_TYPE_CD", "1");
+				testMap.put("CATE1", "1");
+				testMap.put("CATE2", "1");
+				testMap.put("BLOCK_NM", "1");
+				testMap.put("BLOCK_FLG", "1");
+				testMap.put("LMT_CD_DESC", "1");
+				testMap.put("PM_NM", "1");
+				testMap.put("PM_CD", "1");
+				testMap.put("SPM_NM", "1");
+				testMap.put("SPM_CD", "1");
+				testMap.put("TRX_ST_NM", "1");
+				testMap.put("TRX_ST_CD", "1");
+				testMap.put("AMT_TYPE_NM", "1");
+				testMap.put("AMT_TYPE", "1");
+				testMap.put("AMT_LMT", "1");
+				testMap.put("CNT_TYPE_NM", "1");
+				testMap.put("CNT_TYPE", "1");
+				testMap.put("CNT_LMT", "1");
+				testMap.put("NOTI_NM", "1");
+				testMap.put("NOTI_FLG", "1");
+				testMap.put("NOTI_PCT", "1");
+				testMap.put("NOTI_TRG_TYPE_NM", "1"); 
+				testMap.put("NOTI_TRG_TYPE", "1");
+				testMap.put("MEMO", "1");
+				testMap.put("EMAIL_LIST", "1");
+				testMap.put("SMS_LIST", "1");
+				testMap.put("MODIFY_YN", "Y");*/
+				
+				objMv.addObject("data", rstMap);
+				//objMv.addObject("data", testMap);
+			}
+		} catch (Exception e) {
+			intResultCode = 9999;
+			//log.error("selectCateList.do exception : ", e);
+		} finally {
+			if (intResultCode == 0) {
+				objMv = CommonUtils.resultSuccess(objMv);
+			} else {
+				objMv = CommonUtils.resultFail(objMv, strResultMessage);
+			}
+		}
+
+		objMv.setViewName("jsonView");
+
+		return objMv;
+	}
 }

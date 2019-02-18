@@ -15,44 +15,35 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import egov.linkpay.ims.common.common.CommonConstants;
-import egov.linkpay.ims.common.common.CommonDDLB;
-import egov.linkpay.ims.common.common.CommonDDLB.DDLBType;
 import egov.linkpay.ims.common.common.CommonMap;
 import egov.linkpay.ims.common.common.CommonMessage;
-import egov.linkpay.ims.common.common.CommonMessageDic;
 import egov.linkpay.ims.common.common.CommonUtils;
 import egov.linkpay.ims.sampleMgmt.service.SampleMgmtService;
 
 /**------------------------------------------------------------
- * Package Name   : egov.linkpay.ims.businessmgmt
- * File Name      : FaqMgmtController.java
- * Description    : 영업관리 - 가맹점관리 - FAQ
- * Author         : ymjo, 2015. 10. 13.
+ * Package Name   : egov.linkpay.ims.sampleMgmt
+ * File Name      : SampleOneMgmtController.java
+ * Description    : SampleOneMgmtController
+ * Author         : st.lim, 2019. 02. 18.
  * Modify History : Just Created.
  ------------------------------------------------------------*/
 @Controller
-//@RequestMapping(value="/businessMgmt/faqMgmt")
 @RequestMapping(value="/sampleMgmt/sampleOneMgmt")
 public class SampleOneMgmtController {
     Logger logger = Logger.getLogger(this.getClass());
-    
-    //@Resource(name="faqMgmtService")
-    //private FaqMgmtService faqMgmtService;
     
     @Resource(name="sampleMgmtService")
     private SampleMgmtService sampleMgmtService;
     
     /**--------------------------------------------------
-     * Method Name    : faqMgmt
-     * Description    : 메뉴 진입
-     * Author         : ymjo, 2015. 10. 8.
+     * Method Name    : sampleOneMgmt
+     * Description    : sample 01 view
+     * Author         : st.lim, 2019. 02. 18.
      * Modify History : Just Created.
      ----------------------------------------------------*/
-    //@RequestMapping(value="/faqMgmt.do")
     @RequestMapping(value="/sampleOneMgmt.do")
     public String sampleOneMgmt(Model model, CommonMap commonMap) throws Exception {
-        /*model.addAttribute("MENU",               commonMap.get("MENU_GRP_NO"));
+    	/*model.addAttribute("MENU",               commonMap.get("MENU_GRP_NO"));
         model.addAttribute("SUBMENU",            commonMap.get("MENU_NO"));
         model.addAttribute("MENU_TITLE",         CommonMessageDic.getMessage(commonMap.get("MENU_GRP_NM").toString()));
         model.addAttribute("MENU_SUBMENU_TITLE", CommonMessageDic.getMessage(commonMap.get("MENU_NM").toString()));
@@ -61,17 +52,12 @@ public class SampleOneMgmtController {
         model.addAttribute("division",   CommonDDLB.faqDivision(DDLBType.EDIT));
         model.addAttribute("faqFlag",   CommonDDLB.faqFlag(DDLBType.EDIT));
         model.addAttribute("BOARD_TYPE",   CommonDDLB.faqDivision(DDLBType.SEARCH));*/
-        
+    	
         return "/sampleMgmt/sampleOneMgmt/sampleOneMgmt";
     }
     
-    /**--------------------------------------------------
-     * Method Name    : selectFaqMgmtList
-     * Description    : FAQ 리스트 조회
-     * Author         : ymjo, 2015. 10. 13.
-     * Modify History : Just Created.
-     ----------------------------------------------------*/
-    @RequestMapping(value="/selectFaqMgmtList.do", method=RequestMethod.POST)
+    
+    /*@RequestMapping(value="/selectFaqMgmtList.do", method=RequestMethod.POST)
     public ModelAndView selectFaqMgmtList(@RequestBody String strJsonParameter) throws Exception {
         ModelAndView             objMv   = new ModelAndView();
         Map<String, Object>      objMap  = new HashMap<String, Object>();
@@ -112,12 +98,7 @@ public class SampleOneMgmtController {
         return objMv;
     }
     
-    /**--------------------------------------------------
-     * Method Name    : selectFaqMgmt
-     * Description    : FAQ 게시물 조회(업데이트를 위한 조회)
-     * Author         : ymjo, 2015. 10. 13.
-     * Modify History : Just Created.
-     ----------------------------------------------------*/
+   
     @RequestMapping(value="/selectFaqMgmt.do", method=RequestMethod.POST)
     public ModelAndView selectFaqMgmt(@RequestBody String strJsonParameter) throws Exception {
         ModelAndView        objMv  = new ModelAndView();
@@ -157,12 +138,7 @@ public class SampleOneMgmtController {
         return objMv;
     }
     
-    /**--------------------------------------------------
-     * Method Name    : insertFaqMgmt
-     * Description    : FAQ 등록
-     * Author         : ymjo, 2015. 10. 13.
-     * Modify History : Just Created.
-     ----------------------------------------------------*/
+   
     @RequestMapping(value="/insertFaqMgmt.do", method=RequestMethod.POST)
     public ModelAndView insertFaqMgmt(@RequestBody String strJsonParameter, CommonMap commonMap) throws Exception {
         ModelAndView        objMv  = new ModelAndView();
@@ -198,12 +174,7 @@ public class SampleOneMgmtController {
         return objMv;
     }
     
-    /**--------------------------------------------------
-     * Method Name    : updateFaqMgmt
-     * Description    : FAQ 수정
-     * Author         : ymjo, 2015. 10. 13.
-     * Modify History : Just Created.
-     ----------------------------------------------------*/
+
     @RequestMapping(value="/updateFaqMgmt.do", method=RequestMethod.POST)
     public ModelAndView updateFaqMgmt(@RequestBody String strJsonParameter, CommonMap commonMap) throws Exception {
         ModelAndView        objMv  = new ModelAndView();
@@ -239,5 +210,5 @@ public class SampleOneMgmtController {
         objMv.setViewName("jsonView");
         
         return objMv;
-    }
+    }*/
 }
