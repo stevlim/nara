@@ -70,13 +70,13 @@
 	<div class="botsetting">
 		<ul class="listsetting">
 			<li>
-				<a href="#0">MegaPay</a>
+				<a href="/home/dashboard/dashboard.do">MegaPay</a>
 			</li>
 			<li>
 				<a href="#0"><span class="icon-setting"></span>Setting</a>
 			</li>
 			<li>
-				<a href="#0"><span class="icon-power"></span>Log-out</a>
+				<a href="<c:out value='/logOut.do'/>"><span class="icon-power"></span>Log-out</a>
 			</li>
 		</ul>
 	</div>
