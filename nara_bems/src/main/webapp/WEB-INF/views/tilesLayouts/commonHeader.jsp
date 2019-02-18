@@ -46,7 +46,7 @@
 			<h2 class="title_accmenu accmms">Sample information</h2>
 			<ul class="list_submenu pnl">				
 				<li><a class="left_menu_nm" href="/sampleMgmt/sampleOneMgmt/sampleOneMgmt.do">Sample 01</a></li>
-				<li><a class="left_menu_nm" href="/sampleMgmt/sampleTwoMgmt/sampleTwoMgmt.do">Sample 02</a></li>
+				<li><a class="left_menu_nm" href="/sampleMgmt/sampleTwoMgmt/sampleTwoMgmt.do">Sample 02 RealTime</a></li>
 				<!-- <li><a href="/baseInfoMgmt/keyInfoMgmt/keyInfoMgmt.do">sample 03</a></li> -->
 			</ul>
 			<h2 class="title_accmenu accmms">Sample Sub information</h2>

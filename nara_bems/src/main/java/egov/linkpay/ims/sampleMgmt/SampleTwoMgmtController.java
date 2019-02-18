@@ -52,9 +52,9 @@ public class SampleTwoMgmtController {
     }
     
     /**--------------------------------------------------
-     * Method Name    : faqMgmt
-     * Description    : 메뉴 진입
-     * Author         : ymjo, 2015. 10. 8.
+     * Method Name    : selectApproLimitDetail
+     * Description    : sample 02 view real time inquiry
+     * Author         : st.lim, 2019. 02. 18.
      * Modify History : Just Created.
      ----------------------------------------------------*/
     @RequestMapping(value = "/selectApproLimitDetail.do", method = RequestMethod.POST)
@@ -74,19 +74,18 @@ public class SampleTwoMgmtController {
 
 				// test
 				Map<String, Object> testMap = new HashMap<String, Object>();
-				testMap.put("DATA01", "11234");
-				testMap.put("DATA02", "13214");
-				testMap.put("DATA03", "12314");
-				testMap.put("DATA04", "13214");
-				testMap.put("DATA05", "13214");
-				testMap.put("DATA06", "134514");
-				testMap.put("DATA07", "124");
-				testMap.put("DATA08", "1645");
-				testMap.put("DATA09", "1436");
-				testMap.put("DATA10", "174334");
-				
-				testMap.put("DATA11", "176544");
-				testMap.put("DATA12", "14325");
+				testMap.put("DATA01", (int)(Math.random()*100));
+				testMap.put("DATA02", (int)(Math.random()*100));
+				testMap.put("DATA03", (int)(Math.random()*100));
+				testMap.put("DATA04", (int)(Math.random()*100));
+				testMap.put("DATA05", (int)(Math.random()*100));
+				testMap.put("DATA06", (int)(Math.random()*100));
+				testMap.put("DATA07", (int)(Math.random()*100));
+				testMap.put("DATA08", (int)(Math.random()*100));
+				testMap.put("DATA09", (int)(Math.random()*100));
+				testMap.put("DATA10", (int)(Math.random()*100));
+				testMap.put("DATA11", (int)(Math.random()*100));
+				testMap.put("DATA12", (int)(Math.random()*100));
 
 				
 				//objMv.addObject("data", rstMap);

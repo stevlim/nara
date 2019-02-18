@@ -6,9 +6,9 @@
 
 $(document).ready(function(){
 	
-	$("#hdingpgNm").text("Sample 02");
+	$("#hdingpgNm").text("Sample 02 RealTime");
+	setInterval("fnEdit()",1000);
 	
-	fnEdit();
 	
     //fnInitEvent();
     //fnSetDDLB();
