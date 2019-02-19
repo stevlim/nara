@@ -43,20 +43,20 @@ function fnInitEvent(){
 	<ul id="slide_merchant" class="content-slider">
 		<li>
 			<div class="boxmerchant">
-				<p class="title_merchant">14/12/2019 Payment from MegaPay</p>
+				<p class="title_merchant">14/02/2019 Today Power Value</p>
 				<div class="infomerchant">
-					<div class="prizemerchant">2,000,000 vnd</div>
+					<div class="prizemerchant">2,000,000 kW</div>
 				</div>
 			</div>
 		</li>
 		<li>
 			<div class="boxmerchant">
-				<p class="title_merchant">1 Week Transaction Chart</p>
+				<p class="title_merchant">1 Week Power Value Chart</p>
 				<div class="infomerchant">
 					<div class="chart-wrapper">
 						<div class="blueberryChart demo1"></div>
 					</div>
-					<p class="linedes"><span>All payment methord</span></p>
+					<p class="linedes"><span>All Power Value</span></p>
 				</div>
 			</div>
 		</li>
@@ -66,33 +66,33 @@ function fnInitEvent(){
 	<ul class="listtoday">
 		<li>
 			<a href="transaction.html" class="boxtoday">
-				<p>Today Approval
-					<span>(Transaction)</span>
+				<p>Today Average Power
+					<span>(Power)</span>
 				</p>
-				<h3 class="pricetoday">100</h3>
+				<h3 class="pricetoday">100 kW</h3>
 			</a>
 		</li>
 		<li>
 			<a href="transaction.htm" class="boxtoday">
-				<p>Today Refund
-					<span>(Transaction)</span>
+				<p>Today Average Voltage
+					<span>(volt)</span>
 				</p>
-				<h3 class="pricetoday">20</h3>
+				<h3 class="pricetoday">20 V</h3>
 			</a>
 		</li>
 		<li>
 			<a href="transaction.htm" class="boxtoday">
-				<p>Today Performance
-					<span>(1000 VND)</span>
+				<p>Today Average Current
+					<span>(Current)</span>
 				</p>
-				<h3 class="pricetoday">2,500</h3>
+				<h3 class="pricetoday">2,500 A</h3>
 			</a>
 		</li>
 	</ul>
 </div>
 <ul class="sett_tracs">
-	<li><a href="settlement1.html">Settlement<br />information</a></li>
-	<li><a href="transaction.html">Transaction<br />history</a></li>
+	<li><a href="settlement1.html">Temperature Value<br />history</a></li>
+	<li><a href="transaction.html">Power Value<br />history</a></li>
 </ul>
 <div class="row_support">
 	<span class="titlesupport">Customer support</span>
