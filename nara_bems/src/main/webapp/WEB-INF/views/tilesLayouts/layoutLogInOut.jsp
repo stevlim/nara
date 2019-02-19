@@ -36,6 +36,7 @@
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/login/private.css" />
     
     <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/element/element.css" />
+    <link rel="stylesheet" type="text/css" href="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/css/nara/font/style.css" />
     
     <!-- END CSS TEMPLATE -->
     <!-- BEGIN CORE JS FRAMEWORK-->

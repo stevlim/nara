@@ -17,7 +17,7 @@
 	<div class="contentnav">
 		<div class="headernav">
 			<div class="thumbuser"><span class="icon-user1"></span></div>
-			<h2 class="titlenav">Merchant name
+			<h2 class="titlenav">Manager name
 				<p>Company name</p>
 			</h2>
 			<a class="btnclosenav"><span class="icon-close"></span></a>

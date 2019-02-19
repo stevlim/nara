@@ -80,6 +80,16 @@ public class LogInOutController {
         }     
     }
     
+    @RequestMapping(value="/searchId.do")
+    public String searchId(Model model, HttpSession session) throws UnsupportedEncodingException, NoSuchAlgorithmException, GeneralSecurityException {        
+    	return "/logInOut/searchId";
+    }
+    
+    @RequestMapping(value="/searchPassword.do")
+    public String searchPassword(Model model, HttpSession session) throws UnsupportedEncodingException, NoSuchAlgorithmException, GeneralSecurityException {        
+    	return "/logInOut/searchPassword";
+    }
+    
     /**--------------------------------------------------
      * Method Name    : logInIMSNotice
      * Description    : 공지사항 조회
@@ -483,7 +493,7 @@ public class LogInOutController {
      ----------------------------------------------------
      * @throws Exception 
      */  
-    @RequestMapping(value="/merchantApply.do", method=RequestMethod.POST)
+    /*@RequestMapping(value="/merchantApply.do", method=RequestMethod.POST)
     public void merchantApply(@RequestBody String strJsonParameter, HttpSession session, HttpServletRequest request, HttpServletResponse response) throws Exception {
     	JSONObject outter = new JSONObject();
         
@@ -510,7 +520,7 @@ public class LogInOutController {
         
 		response.setCharacterEncoding("UTF-8");
 		response.getWriter().print(outter.toString());
-    }
+    }*/
     
     /**--------------------------------------------------
      * Method Name    : coNoDupChk
@@ -520,7 +530,7 @@ public class LogInOutController {
      ----------------------------------------------------
      * @throws Exception 
      */  
-    @RequestMapping(value="/coNoDupChk.do", method=RequestMethod.POST)
+    /*@RequestMapping(value="/coNoDupChk.do", method=RequestMethod.POST)
     public void coNoDupChk(@RequestBody String strJsonParameter, HttpSession session, HttpServletRequest request, HttpServletResponse response) throws Exception {
     	Map<String, Object> objRow = new HashMap<String, Object>();
     	JSONObject outter = new JSONObject();
@@ -552,6 +562,6 @@ public class LogInOutController {
         
 		response.setCharacterEncoding("UTF-8");
 		response.getWriter().print(outter.toString());
-    }
+    }*/
     
 }

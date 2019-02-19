@@ -370,8 +370,9 @@ function fnCoNoDupChkSuccessResult() {
 				<button class="btnlogin" id="btnLogin">Login</button>
 			</div>
 			<div class="rowforgot">
-				<a href="#0" class="linkfgid">Forgot my ID</a>|
-				<a href="#0" class="linkfgpwd">Forgot Password</a>
+				<a href="/searchId.do" class="linkfgid">Forgot my ID</a>|
+				<a href="/searchPassword.do" class="linkfgpwd">Forgot Password</a>
+				
 			</div>
 		</div>
 		<div class="botlogin">
@@ -380,66 +381,4 @@ function fnCoNoDupChkSuccessResult() {
 	</div>
 </div>
 
-<%-- 
-<div id="wrap_mms">
-	<input type="hidden" id="duplMsg" value="<spring:message code='IMS_MER_JOIN_0010'/>" />
-	<input type="hidden" id="notDuplMsg" value="<spring:message code='IMS_MER_JOIN_0011'/>" />
-	<input type="hidden" id="paramEmptyMsg" value="<spring:message code='IMS_MER_JOIN_0012'/>" />
-	<input type="hidden" id="merApplySuccessMsg" value="<spring:message code='IMS_MER_JOIN_0013'/>" />
-	<input type="hidden" id="merApplySuccessMsg2" value="<spring:message code='IMS_MER_JOIN_0027'/>" />
-	<input type="hidden" id="merApplyFailMsg" value="<spring:message code='IMS_MER_JOIN_0014'/>" />
-	<input type="hidden" id="merApplyValidCoNoMsg" value="<spring:message code='IMS_MER_JOIN_0015'/>" />
-	<input type="hidden" id="merApplyVaildMailMsg" value="<spring:message code='IMS_MER_JOIN_0016'/>" />
-	
-	<img src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/img/login/logo.png" height="10%" style="position: absolute; margin-top: 1em; margin-left: 2em;">
-	<div class="box_wrapper">
-		<div class="box_right">
-			<div class="right_title">
-				본인의 계정을 통해 로그인 해주세요.
-			</div>
-			
-			<div class="login_text_fixed">
-				merchant id2
-			</div>
-			<input type="text" id="MER_ID" name="MER_ID" placeholder="아이디를 입력해주세요" class="masked" value="erompay01m" />
-			
-			<div class="login_text_fixed">
-				username
-			</div>
-			<input type="text" id="USR_ID" name="USR_ID" placeholder="아이디를 입력해주세요" class="masked" value="eromuser01" />
-			<div class="login_text_fixed">
-				password
-			</div>
-			<input type="password" id="PSWD" name="PSWD" placeholder="비밀번호를 입력해주세요" class="masked" style="margin-bottom: 3.3em;" value="Eromuser01!" />
-			
-			<button class="login_btn" id="btnLogin" >로그인&nbsp;&nbsp;</button>
-			<button class="login_btn" id="btnChangePassword" style="padding: 12px 80x 12px 30px;" data-toggle='modal' data-target='#PWModal' >비밀번호 변경</button>
-			<button class="login_btn" id="btnApplyMerchant" style="padding: 12px 80x 12px 30px;" data-toggle='modal' data-target='#divApplyMerchantModal'>가맹점 요청</button>
-			<br/>
-			<div class="terms"><a href="#" data-toggle='modal' data-target='#useRuleModal'>&#9654; 이용 약관</a></div>
-			<div class="terms" style="margin-left: 1em;"><a href="#" data-toggle='modal' data-target='#personalInfoRuleModal'>&#9654; 개인정보처리방침</a></div>
-		</div>
-		<div class="box_left">
-			<div class="left_title">
-				MMS 가맹점 관리 시스템
-				<div class="line_white"></div>
-					<div class="left_text">
-						PAY EASY<br/>
-						PAY FAST<br/>
-						PAY SAFE<br/>
-					</div>
-				<div class="left_text_italic">
-					WITH EROMPAY
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="wrap_test"></div>
-	<div class="copyright">© 2018 Eromlab. All rights reserved.</div>
-</div>
-
-
-<button id="btnModalPW" data-toggle="modal" data-target="#PWModal" style="width:0px; height:0px; display:none;"></button>
-
- --%>
 
