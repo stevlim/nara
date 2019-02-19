@@ -39,15 +39,15 @@
     
     <!-- END CSS TEMPLATE -->
     <!-- BEGIN CORE JS FRAMEWORK-->
-    <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/jquery-1.11.3.min.js"></script>
+    <%-- <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/jquery-1.11.3.min.js"></script> --%>
     <!-- END CORE JS FRAMEWORK-->
     <!-- BEGIN I18N JS --> 
-    <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/jquery.i18n.properties-min-1.0.9.js"></script>
+    <%-- <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/jquery.i18n.properties-min-1.0.9.js"></script> --%>
     <!-- END I18N JS -->
     <!-- BEGIN IMS MSG JS --> 
-    <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/IONPayMSG.IMS.js?v=<fmt:formatDate pattern="yyyyMMddHHmmss" value="${date }" />"></script>
+    <%-- <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/IONPayMSG.IMS.js?v=<fmt:formatDate pattern="yyyyMMddHHmmss" value="${date }" />"></script> --%>
     <!-- END IMS MSG JS -->
-    
+    <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/IONPay/Js/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/js/nara/element/element.js"></script>
     
 </head>

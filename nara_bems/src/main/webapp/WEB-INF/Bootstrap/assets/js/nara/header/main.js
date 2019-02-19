@@ -188,7 +188,7 @@ $(document).ready(function() {
 //select dropdownlist
 $(document).ready(function() {
 	"use strict";
-  $('select:not(.ignore)').niceSelect();
+  //$('select:not(.ignore)').niceSelect();
 //  FastClick.attach(document.body);
 });
 

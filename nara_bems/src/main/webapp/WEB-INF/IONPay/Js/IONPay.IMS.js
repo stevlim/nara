@@ -49,11 +49,16 @@ IONPay.Init = {
 	 * Modify History : Just Created.
 	 ------------------------------------------------------------*/
     fnLoadPageEvent: function() {
-        IONPay.COMMONERRORMSG         = gMessage("IMS_JS_0001");
+        /*IONPay.COMMONERRORMSG         = gMessage("IMS_JS_0001");
         IONPay.AJAXERRORMSG           = gMessage("IMS_JS_0002");
         IONPay.FROMDATEERRORMSG       = gMessage("IMS_JS_0003");
         IONPay.SAVESUCCESSMSG         = gMessage("IMS_JS_0004");
-        IONPay.MERCHANTSEARCHERRORMSG = gMessage("IMS_JS_0007");
+        IONPay.MERCHANTSEARCHERRORMSG = gMessage("IMS_JS_0007");*/
+    	IONPay.COMMONERRORMSG         = "COMMONERRORMSG";
+        IONPay.AJAXERRORMSG           = "AJAXERRORMSG";
+        IONPay.FROMDATEERRORMSG       = "FROMDATEERRORMSG";
+        IONPay.SAVESUCCESSMSG         = "SAVESUCCESSMSG";
+        IONPay.MERCHANTSEARCHERRORMSG = "MERCHANTSEARCHERRORMSG";
 	}
 }
 

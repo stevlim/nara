@@ -57,6 +57,7 @@ public class SampleOneMgmtController {
     }
     
     
+    
     /*@RequestMapping(value="/selectFaqMgmtList.do", method=RequestMethod.POST)
     public ModelAndView selectFaqMgmtList(@RequestBody String strJsonParameter) throws Exception {
         ModelAndView             objMv   = new ModelAndView();
