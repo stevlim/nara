@@ -7,13 +7,13 @@
 		<div id='tiles-header'>
 			<div class="headerpg">
 				<h1 class="hdingpg" id="hdingpgNm">Dash Board</h1>
-				<button class="btnmenu"><span class="icon-nav"></span></button>
+				<button class="btnmenu" id="btnmenu"><span class="icon-nav"></span></button>
 			</div>
 		</div>
 	</center>
 </div>
 
-<div class="main_nav">
+<div class="main_nav" id="main_nav">
 	<div class="contentnav">
 		<div class="headernav">
 			<div class="thumbuser"><span class="icon-user1"></span></div>

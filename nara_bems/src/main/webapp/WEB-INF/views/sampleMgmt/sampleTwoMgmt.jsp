@@ -3,17 +3,44 @@
 <%@ include file="../tilesLayouts/commonPageLibrary.jsp" %>
 
 <script type="text/javascript">
-
+var realTimeVal;
 $(document).ready(function(){
 	
 	$("#hdingpgNm").text("RealTime Data Information (Sample 02)");
-	setInterval("fnEdit()",1000);
+	
+	fnInitEvent();
+	
+	realTimeVal = setInterval("fnEdit()",1000);
 	
 	
-    //fnInitEvent();
+    
     //fnSetDDLB();
     //fnEditFaqMgmt();
 });
+
+function fnInitEvent(){
+	// 다른메뉴 선택 중 엔 실시간 조회를 잠시 멈춤
+	$("#btnmenu").mouseenter(function () {
+		clearInterval(realTimeVal);
+    });
+	
+	// 메뉴 선택 영역을 벗어날 경우 실시간 조회 재시작
+	$("#btnmenu").mouseleave(function () {
+		realTimeVal = setInterval("fnEdit()",1000);
+    });
+    
+	// 다른메뉴 선택 중 엔 실시간 조회를 잠시 멈춤
+	$("#main_nav").mouseenter(function () {
+		clearInterval(realTimeVal);
+    });
+	
+	// 메뉴 선택 영역을 벗어날 경우 실시간 조회 재시작
+	$("#main_nav").mouseleave(function () {
+		realTimeVal = setInterval("fnEdit()",1000);
+    });
+}
+
+
 
 function fnEdit() {
 	//arrParameter = $("#regist").serializeObject();
