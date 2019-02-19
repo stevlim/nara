@@ -36,11 +36,6 @@ function fnInitEvent(){
 </script>
 
 
-<div class="headerpg">
-	<a class="toplogo"><img src="img/epay-logo.png" alt="mms" /></a>
-	<h1 class="hdingpg">MegaPay MMS</h1>
-	<button class="btnmenu"><span class="icon-nav"></span></button>
-</div>
 <div class="row_merchantname">
 	Name of Merchant (Merchant ID)
 </div>
