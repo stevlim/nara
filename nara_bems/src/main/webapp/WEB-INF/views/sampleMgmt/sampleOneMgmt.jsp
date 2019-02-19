@@ -7,7 +7,7 @@
 $(document).ready(function(){
 	
 	
-	$("#hdingpgNm").text("Sample 01");
+	$("#hdingpgNm").text("Power History (Sample 01)");
     //fnInitEvent();
     //fnSetDDLB();
     //fnEditFaqMgmt();
@@ -59,8 +59,8 @@ function fnEditFaqMgmtRet(objJson) {
 	<div class="tab_content">
 		<div class="transcontent">
 			<ul class="subtabsett">
-				<li><span class="subtitletabs">Settlement schedule</span></li>
-				<li><span class="subtitletabs">Synthetic performance</span></li>
+				<li><span class="subtitletabs">Energy System schedule</span></li>
+				<li><span class="subtitletabs">Energy Chart</span></li>
 			</ul>
 			<div class="tab_content_sett">
 				<div class="subcontentsett">
@@ -79,24 +79,24 @@ function fnEditFaqMgmtRet(objJson) {
 						</ul>
 					</div>
 					<div class="totalpay">
-						<p>Total payment from MegaPay</p>
-						<h3>22,000,000 vnd</h3>
+						<p>Total Power From Building</p>
+						<h3>22,000,000 kW</h3>
 					</div>
 					<ul class="listdatepayment">
 						<li class="adevent">
 							<span class="spndatepay">15/12</span>
 							<div class="boxpaymoney">
 								<div class="rowpaymoney">
-									<div class="lefttotalpay">Total Payment</div>
-									<div class="righttotalpay">10,000,000 VND</div>
+									<div class="lefttotalpay">Total Power</div>
+									<div class="righttotalpay">10,000,000 kW</div>
 								</div>
 								<div class="rowallpay">
 									<div class="innerrowallpay">
-										<h3>All transaction method <span>10,100,000 VND</span></h3>
-										<p>Domestic card <span>6,000,000 vnd</span></p>
-										<p>International card <span>4,000,000 VND</span></p>
-										<p>Dedicated account <span>0 VND</span></p>
-										<h3>Exceptional payment <span>(100,000) VND</span></h3>
+										<h3>All Power Value <span>10,100,000 kW</span></h3>
+										<p>Area 01 <span>6,000,000 kW</span></p>
+										<p>Area 02 <span>4,000,000 kW</span></p>
+										<p>Area 03 <span>0 kW</span></p>
+										<h3>Exceptional Power Value <span>(100,000) kW</span></h3>
 									</div>
 								</div>
 							</div>
@@ -105,16 +105,16 @@ function fnEditFaqMgmtRet(objJson) {
 							<span class="spndatepay">14/12</span>
 							<div class="boxpaymoney">
 								<div class="rowpaymoney">
-									<div class="lefttotalpay">Total Payment</div>
-									<div class="righttotalpay">10,000,000 VND</div>
+									<div class="lefttotalpay">Total Power</div>
+									<div class="righttotalpay">10,000,000 kW</div>
 								</div>
 								<div class="rowallpay">
 									<div class="innerrowallpay">
-										<h3>All transaction method <span>10,100,000 VND</span></h3>
-										<p>Domestic card <span>6,000,000 vnd</span></p>
-										<p>International card <span>4,000,000 VND</span></p>
-										<p>Dedicated account <span>0 VND</span></p>
-										<h3>Exceptional payment <span>(100,000) VND</span></h3>
+										<h3>All Power Value <span>10,100,000 kW</span></h3>
+										<p>Area 01 <span>6,000,000 kW</span></p>
+										<p>Area 02 <span>4,000,000 kW</span></p>
+										<p>Area 03 <span>0 kW</span></p>
+										<h3>Exceptional Power Value <span>(100,000) kW</span></h3>
 									</div>
 								</div>
 							</div>
@@ -123,16 +123,16 @@ function fnEditFaqMgmtRet(objJson) {
 							<span class="spndatepay">13/12</span>
 							<div class="boxpaymoney">
 								<div class="rowpaymoney">
-									<div class="lefttotalpay">Total Payment</div>
-									<div class="righttotalpay">10,000,000 VND</div>
+									<div class="lefttotalpay">Total Power</div>
+									<div class="righttotalpay">10,000,000 kW</div>
 								</div>
 								<div class="rowallpay">
 									<div class="innerrowallpay">
-										<h3>All transaction method <span>10,100,000 VND</span></h3>
-										<p>Domestic card <span>6,000,000 vnd</span></p>
-										<p>International card <span>4,000,000 VND</span></p>
-										<p>Dedicated account <span>0 VND</span></p>
-										<h3>Exceptional payment <span>(100,000) VND</span></h3>
+										<h3>All Power Value <span>10,100,000 kW</span></h3>
+										<p>Area 01 <span>6,000,000 kW</span></p>
+										<p>Area 02 <span>4,000,000 kW</span></p>
+										<p>Area 03 <span>0 kW</span></p>
+										<h3>Exceptional Power Value <span>(100,000) kW</span></h3>
 									</div>
 								</div>
 							</div>
@@ -141,16 +141,16 @@ function fnEditFaqMgmtRet(objJson) {
 							<span class="spndatepay">12/12</span>
 							<div class="boxpaymoney">
 								<div class="rowpaymoney">
-									<div class="lefttotalpay">Total Payment</div>
-									<div class="righttotalpay">10,000,000 VND</div>
+									<div class="lefttotalpay">Total Power</div>
+									<div class="righttotalpay">10,000,000 kW</div>
 								</div>
 								<div class="rowallpay">
 									<div class="innerrowallpay">
-										<h3>All transaction method <span>10,100,000 VND</span></h3>
-										<p>Domestic card <span>6,000,000 vnd</span></p>
-										<p>International card <span>4,000,000 VND</span></p>
-										<p>Dedicated account <span>0 VND</span></p>
-										<h3>Exceptional payment <span>(100,000) VND</span></h3>
+										<h3>All Power Value <span>10,100,000 kW</span></h3>
+										<p>Area 01 <span>6,000,000 kW</span></p>
+										<p>Area 02 <span>4,000,000 kW</span></p>
+										<p>Area 03 <span>0 kW</span></p>
+										<h3>Exceptional Power Value <span>(100,000) kW</span></h3>
 									</div>
 								</div>
 							</div>
@@ -159,16 +159,16 @@ function fnEditFaqMgmtRet(objJson) {
 							<span class="spndatepay">11/12</span>
 							<div class="boxpaymoney">
 								<div class="rowpaymoney">
-									<div class="lefttotalpay">Total Payment</div>
-									<div class="righttotalpay">10,000,000 VND</div>
+									<div class="lefttotalpay">Total Power</div>
+									<div class="righttotalpay">10,000,000 kW</div>
 								</div>
 								<div class="rowallpay">
 									<div class="innerrowallpay">
-										<h3>All transaction method <span>10,100,000 VND</span></h3>
-										<p>Domestic card <span>6,000,000 vnd</span></p>
-										<p>International card <span>4,000,000 VND</span></p>
-										<p>Dedicated account <span>0 VND</span></p>
-										<h3>Exceptional payment <span>(100,000) VND</span></h3>
+										<h3>All Power Value <span>10,100,000 kW</span></h3>
+										<p>Area 01 <span>6,000,000 kW</span></p>
+										<p>Area 02 <span>4,000,000 kW</span></p>
+										<p>Area 03 <span>0 kW</span></p>
+										<h3>Exceptional Power Value <span>(100,000) kW</span></h3>
 									</div>
 								</div>
 							</div>
@@ -177,16 +177,16 @@ function fnEditFaqMgmtRet(objJson) {
 							<span class="spndatepay">10/12</span>
 							<div class="boxpaymoney">
 								<div class="rowpaymoney">
-									<div class="lefttotalpay">Total Payment</div>
-									<div class="righttotalpay">10,000,000 VND</div>
+									<div class="lefttotalpay">Total Power</div>
+									<div class="righttotalpay">10,000,000 kW</div>
 								</div>
 								<div class="rowallpay">
 									<div class="innerrowallpay">
-										<h3>All transaction method <span>10,100,000 VND</span></h3>
-										<p>Domestic card <span>6,000,000 vnd</span></p>
-										<p>International card <span>4,000,000 VND</span></p>
-										<p>Dedicated account <span>0 VND</span></p>
-										<h3>Exceptional payment <span>(100,000) VND</span></h3>
+										<h3>All Power Value <span>10,100,000 kW</span></h3>
+										<p>Area 01 <span>6,000,000 kW</span></p>
+										<p>Area 02 <span>4,000,000 kW</span></p>
+										<p>Area 03 <span>0 kW</span></p>
+										<h3>Exceptional Power Value <span>(100,000) kW</span></h3>
 									</div>
 								</div>
 							</div>
@@ -194,7 +194,7 @@ function fnEditFaqMgmtRet(objJson) {
 					</ul>
 				</div>
 				<div class="subcontentsett">
-					fsdfsd
+					Not Developed
 				</div>
 			</div>
 		</div>

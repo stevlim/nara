@@ -6,7 +6,7 @@
 
 $(document).ready(function(){
 	
-	$("#hdingpgNm").text("Sample 02 RealTime");
+	$("#hdingpgNm").text("RealTime Data Information (Sample 02)");
 	setInterval("fnEdit()",1000);
 	
 	
@@ -58,54 +58,54 @@ function fnEditRet(objJson) {
 	</ul>
 	<div class="tab_content">
 		<div class="contentmerchant transcontent">
-			<h3 class="titlemerchant">Power information</h3>
+			<h3 class="titlemerchant">Energy Data information</h3>
 			<ul class="list_transhistory">
 				<li>
-					<span class="labeltranshistory">충전 제한 온도</span>
+					<span class="labeltranshistory">Charge Limit Temperature</span>
 					<span class="infotranshistory" id="data01"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">충전 제한 전력 값</span>
+					<span class="labeltranshistory">Charge Limit Power</span>
 					<span class="infotranshistory" id="data02"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">방전 제한 온도</span>
+					<span class="labeltranshistory">Discharge Limit Temperature</span>
 					<span class="infotranshistory" id="data03"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">방전 제한 전력 값</span>
+					<span class="labeltranshistory">Discharge Limit Power</span>
 					<span class="infotranshistory" id="data04"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">최대 충전 전력량</span>
+					<span class="labeltranshistory">Max Charge Power</span>
 					<span class="infotranshistory" id="data05"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">최대 방전 전력량</span>
+					<span class="labeltranshistory">Max Discharge Power</span>
 					<span class="infotranshistory" id="data06"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">기준 주파수</span>
+					<span class="labeltranshistory">Standard Frequency</span>
 					<span class="infotranshistory" id="data07"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">기준 접압</span>
+					<span class="labeltranshistory">Standard Voltage</span>
 					<span class="infotranshistory" id="data08"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">목표 충전량</span>
+					<span class="labeltranshistory">Target Charge Value</span>
 					<span class="infotranshistory" id="data09"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">목표 전력량</span>
+					<span class="labeltranshistory">Target Power Value</span>
 					<span class="infotranshistory" id="data10"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">PV 전력</span>
+					<span class="labeltranshistory">PV Power</span>
 					<span class="infotranshistory" id="data11"></span>
 				</li>
 				<li>
-					<span class="labeltranshistory">배터리 전력</span>
+					<span class="labeltranshistory">Battery Power</span>
 					<span class="infotranshistory" id="data12"></span>
 				</li>
 			</ul>

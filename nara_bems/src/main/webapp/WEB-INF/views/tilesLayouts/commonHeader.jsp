@@ -25,7 +25,7 @@
 		<div class="navservice">
 			<h2>Service</h2>
 			<ul class="listnavservice">
-				<li>
+				<!-- <li>
 					<a href="#0">
 						<span class="icon-pay1"></span>Domestic card
 					</a>
@@ -34,25 +34,25 @@
 					<a href="#0">
 						<span class="icon-pay2"></span>International card
 					</a>
-				</li>
+				</li> -->
 				<li>
-					<a href="#0">
-						<span class="icon-pay3"></span>Dedicated account
+					<a href="/home/dashboard/dashboard.do">
+						<span class="icon-pay3"></span>Dash Board
 					</a>
 				</li>
 			</ul>
 		</div>
 		<div class="mainmenu">
-			<h2 class="title_accmenu accmms">Sample information</h2>
+			<h2 class="title_accmenu accmms">Energy Data Information</h2>
 			<ul class="list_submenu pnl">				
-				<li><a class="left_menu_nm" href="/sampleMgmt/sampleOneMgmt/sampleOneMgmt.do">Sample 01</a></li>
-				<li><a class="left_menu_nm" href="/sampleMgmt/sampleTwoMgmt/sampleTwoMgmt.do">Sample 02 RealTime</a></li>
+				<li><a class="left_menu_nm" href="/sampleMgmt/sampleOneMgmt/sampleOneMgmt.do">Power History (Sample 01)</a></li>
+				<li><a class="left_menu_nm" href="/sampleMgmt/sampleTwoMgmt/sampleTwoMgmt.do">RealTime Data Information (Sample 02)</a></li>
 				<!-- <li><a href="/baseInfoMgmt/keyInfoMgmt/keyInfoMgmt.do">sample 03</a></li> -->
 			</ul>
-			<h2 class="title_accmenu accmms">Sample Sub information</h2>
+			<h2 class="title_accmenu accmms">Energy Charge information</h2>
 			<ul class="list_submenu pnl">
-				<li><a class="left_menu_nm" href="/sampleSubMgmt/sampleSubOneMgmt/sampleSubOneMgmt.do">Sample Sub 01</a></li>
-				<li><a class="left_menu_nm" href="/sampleSubMgmt/sampleSubTwoMgmt/sampleSubTwoMgmt.do">Sample Sub 02</a></li>
+				<li><a class="left_menu_nm" href="/sampleSubMgmt/sampleSubOneMgmt/sampleSubOneMgmt.do">Voltage History (Sample Sub 01)</a></li>
+				<li><a class="left_menu_nm" href="/sampleSubMgmt/sampleSubTwoMgmt/sampleSubTwoMgmt.do">Energy Inquiry (Sample Sub 02)</a></li>
 			</ul>
 			<!-- <h2 class="title_accmenu accmms">Settlement information</h2>
 			<ul class="list_submenu pnl">
@@ -70,7 +70,7 @@
 	<div class="botsetting">
 		<ul class="listsetting">
 			<li>
-				<a href="/home/dashboard/dashboard.do">MegaPay</a>
+				<a href="/home/dashboard/dashboard.do">C-BEMS</a>
 			</li>
 			<li>
 				<a href="#0"><span class="icon-setting"></span>Setting</a>
