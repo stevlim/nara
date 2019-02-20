@@ -314,11 +314,11 @@ function fnEditFaqMgmtRet(objJson) {
 <div id="dialog-1" class="boxdialog">
 	<div class="contentdialog">
 		<div class="headerdialog">
-			Refund rquest
+			Charge rquest
 			<a class="btncloserequest btnclose1"><span class="icon-close"></span></a>
 		</div>
 		<div class="containerdialog">
-			<h2 class="titledialog">Transaction history</h2>
+			<h2 class="titledialog">Charge history</h2>
 			<div class="boxrefund_pop">
 				<div class="leftproductorder">
 					<h3>Product: xyz</h3>
@@ -329,8 +329,8 @@ function fnEditFaqMgmtRet(objJson) {
 					<p class="ptime_rf">
 						<span class="daterf">14/12/2018</span>
 						<span class="timerf">09:00:00</span>
-						<span class="lblrf">International card</span>
-						<span class="pricelblrf">300,000 VND</span>
+						<span class="lblrf">Area 02</span>
+						<span class="pricelblrf">300,000 kW</span>
 					</p>
 				</div>
 				<div class="titletime_refund rredbg">
@@ -338,24 +338,24 @@ function fnEditFaqMgmtRet(objJson) {
 					<p class="ptime_rf">
 						<span class="daterf">14/12/2018</span>
 						<span class="timerf">09:00:00</span>
-						<span class="lblrf">International card</span>
-						<span class="pricelblrf">(200,000) VND</span>
+						<span class="lblrf">Area 02</span>
+						<span class="pricelblrf">(200,000) kW</span>
 					</p>
 				</div>
 				<div class="amountrefund">
-					Amount after refund
-					<span class="priceamount">100,000 VND</span>
+					Amount after Charge
+					<span class="priceamount">100,000 kW</span>
 				</div>
 			</div>
 			<div class="showhideamount">
 				<span class="arrshowhide"></span>
 			</div>
-			<h2 class="titledialog">Refund request</h2>
+			<h2 class="titledialog">Charge request</h2>
 			<div class="boxinputrefund">
 				<ul class="listmethod">
 					<li>
 						<div class="tbltitlerow">
-							<span class="titlerow">Buyer</span>
+							<span class="titlerow">Manager</span>
 						</div>
 						<div class="choisemethod">
 							<input type="text" class="txtboxtrans" name="id" autocomplete="on" placeholder="Dang Thi Kim ngan" disabled>
@@ -371,7 +371,7 @@ function fnEditFaqMgmtRet(objJson) {
 					</li>
 					<li>
 						<div class="tbltitlerow">
-							<span class="titlerow">Reason for refund</span>
+							<span class="titlerow">Reason for Charge</span>
 						</div>
 						<div class="choisemethod">
 							<input type="text" class="txtboxtrans" name="id" autocomplete="on" placeholder="">
@@ -379,7 +379,7 @@ function fnEditFaqMgmtRet(objJson) {
 					</li>
 					<li>
 						<div class="tbltitlerow">
-							<span class="titlerow">Refund amount</span>
+							<span class="titlerow">Charge amount</span>
 						</div>
 						<div class="choisemethod">
 							<input type="text" class="txtboxtrans" name="id" autocomplete="on" placeholder="100,000 VND">
@@ -388,10 +388,10 @@ function fnEditFaqMgmtRet(objJson) {
 				</ul>
 			</div>
 			<div class="noterefund">
-				The transaction is refunded ofter you click on SENT REFUND REQUEST. After sending the request successfully, please inquiry the transaction status again. In the case that the refund request is sent after the successful transaction over 1 day, the requested amount for refund would be refunded within the time regulated by the issuing bank.
+				The Charge is clicked on SENT Charge REQUEST. After sending the Charge successfully, please inquiry the Charge status again. In the case that the Charge request is sent after the successful Charge over 1 day, the requested amount for Charge would be Charged within the time regulated by the issuing FOM.
 			</div>
 			<div class="rowbtnrequest">
-				<button class="btnrequest">Send refund request</button>
+				<button class="btnrequest">Send Charge request</button>
 			</div>
 		</div>
 		
@@ -401,25 +401,25 @@ function fnEditFaqMgmtRet(objJson) {
 <div id="dialog-2" class="boxdialog">
 	<div class="contentdialog">
 		<div class="headerdialog">
-			Transaction details
+			Discharge details
 			<a class="btncloserequest btnclose2"><span class="icon-close"></span></a>
 		</div>
 		<div class="containerdialog">
-			<h2 class="titledialog">Transaction history</h2>
+			<h2 class="titledialog">Discharge history</h2>
 			<div class="boxrefund_pop">
 				<div class="leftproductorder">
 					<h3>Product: xyz</h3>
-					<p>Order number: 666777</p>
-					<p>Buyer: Dang Thi Kim Ngan</p>
-					<p>Card type: BIDV</p>
+					<p>Discharge number: 666777</p>
+					<p>User: Dang Thi Kim Ngan</p>
+					<p>Discharge type: BIDV</p>
 				</div>
 				<div class="titletime_refund sgraybg">
 					<span class="lableicon">r</span>
 					<p class="ptime_rf">
 						<span class="daterf">14/12/2018</span>
 						<span class="timerf">09:00:00</span>
-						<span class="lblrf">International card</span>
-						<span class="pricelblrf">300,000 VND</span>
+						<span class="lblrf">Area 01</span>
+						<span class="pricelblrf">300,000 kW</span>
 					</p>
 				</div>
 				<div class="titletime_refund rredbg">
@@ -427,23 +427,23 @@ function fnEditFaqMgmtRet(objJson) {
 					<p class="ptime_rf">
 						<span class="daterf">14/12/2018</span>
 						<span class="timerf">09:00:00</span>
-						<span class="lblrf">Refund | Partial refund</span>
-						<span class="pricelblrf">(200,000) VND</span>
+						<span class="lblrf">Discharge</span>
+						<span class="pricelblrf">(200,000) kW</span>
 					</p>
 				</div>
 				<div class="amountrefund">
-					Amount after refund
-					<span class="priceamount">100,000 VND</span>
+					Amount after Discharge
+					<span class="priceamount">100,000 kW</span>
 				</div>
 			</div>
 			<div class="showhideamount">
 				<span class="arrshowhide"></span>
 			</div>
-			<h2 class="titledialog">Refund request</h2>
+			<h2 class="titledialog">Charge request</h2>
 			<div class="boxinputrefund">
 				<ul class="list_transhistory">
 					<li>
-						<span class="labeltranshistory">Buyer</span>
+						<span class="labeltranshistory">User</span>
 						<span class="infotranshistory">Dang Thi Kim Ngan</span>
 					</li>
 					<li>
@@ -451,11 +451,11 @@ function fnEditFaqMgmtRet(objJson) {
 						<span class="infotranshistory">222333</span>
 					</li>
 					<li>
-						<span class="labeltranshistory">Card type</span>
+						<span class="labeltranshistory">Charge type</span>
 						<span class="infotranshistory">BIDV</span>
 					</li>
 					<li>
-						<span class="labeltranshistory">Reason for refund</span>
+						<span class="labeltranshistory">Reason for Charge</span>
 						<span class="infotranshistory">abc</span>
 					</li>
 				</ul>
