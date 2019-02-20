@@ -34,29 +34,29 @@ function fnSetChart() {
 	chart.data = [{
 	    "date": "2012-01-01",
 	    "distance": 227,
-	    "townName": "New York",
-	    "townName2": "New York",
+	    "townName": "New York Area",
+	    "townName2": "New York Area",
 	    "townSize": 12,
 	    "latitude": 40.71,
 	    "duration": 408
 	}, {
 	    "date": "2012-01-02",
 	    "distance": 371,
-	    "townName": "Washington",
+	    "townName": "Washington Area",
 	    "townSize": 7,
 	    "latitude": 38.89,
 	    "duration": 482
 	}, {
 	    "date": "2012-01-03",
 	    "distance": 433,
-	    "townName": "Wilmington",
+	    "townName": "Wilmington Area",
 	    "townSize": 3,
 	    "latitude": 34.22,
 	    "duration": 562
 	}, {
 	    "date": "2012-01-04",
 	    "distance": 345,
-	    "townName": "Jacksonville",
+	    "townName": "Jacksonville Area",
 	    "townSize": 3.5,
 	    "latitude": 30.35,
 	    "duration": 379
@@ -70,16 +70,16 @@ function fnSetChart() {
 	dateAxis.renderer.fullWidthTooltip = true;
 
 	var distanceAxis = chart.yAxes.push(new am4charts.ValueAxis());
-	distanceAxis.title.text = "Distance";
+	distanceAxis.title.text = "Power (kW)";
 	distanceAxis.renderer.grid.template.disabled = true;
 
-	var durationAxis = chart.yAxes.push(new am4charts.DurationAxis());
+	/* var durationAxis = chart.yAxes.push(new am4charts.DurationAxis());
 	durationAxis.title.text = "Duration";
 	durationAxis.baseUnit = "minute";
 	durationAxis.renderer.grid.template.disabled = true;
 	durationAxis.renderer.opposite = true;
 
-	durationAxis.durationFormatter.durationFormat = "hh'h' mm'min'";
+	durationAxis.durationFormatter.durationFormat = "hh'h' mm'min'"; */
 
 	var latitudeAxis = chart.yAxes.push(new am4charts.ValueAxis());
 	latitudeAxis.renderer.grid.template.disabled = true;
@@ -91,7 +91,8 @@ function fnSetChart() {
 	distanceSeries.dataFields.dateX = "date";
 	distanceSeries.yAxis = distanceAxis;
 	distanceSeries.tooltipText = "{valueY} miles";
-	distanceSeries.name = "Distance";
+	//distanceSeries.name = "Distance";
+	distanceSeries.name = "Zone 01";
 	distanceSeries.columns.template.fillOpacity = 0.7;
 	distanceSeries.columns.template.propertyFields.strokeDasharray = "dashLength";
 	distanceSeries.columns.template.propertyFields.fillOpacity = "alpha";
@@ -124,7 +125,8 @@ function fnSetChart() {
 	latitudeSeries.dataFields.valueY = "latitude";
 	latitudeSeries.dataFields.dateX = "date";
 	latitudeSeries.yAxis = latitudeAxis;
-	latitudeSeries.name = "Duration";
+	//latitudeSeries.name = "Duration";
+	latitudeSeries.name = "Zone 02";
 	latitudeSeries.strokeWidth = 2;
 	latitudeSeries.propertyFields.strokeDasharray = "dashLength";
 	latitudeSeries.tooltipText = "Latitude: {valueY} ({townName})";
@@ -165,7 +167,7 @@ function fnSetChart() {
 <input type="text" id="dashboardPageVal" value="1">
 
 <div class="row_merchantname">
-	Name of Merchant (Merchant ID)
+	FOM Daily Data
 </div>
 <div class="row_slidemerchant" id="row_slidemerchant_id">
 	<ul id="slide_merchant" class="content-slider" style="height: 500px;">

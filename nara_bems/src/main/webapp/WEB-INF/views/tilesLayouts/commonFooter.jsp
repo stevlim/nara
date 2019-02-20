@@ -8,8 +8,8 @@
 				Copyright(C) 2018 BY EROMLAB, All Rights Reserved
 			</span> -->
 			<div class="footerpg">
-				<h2>VNPT Electronic Payment JSC</h2>
-				<p>3 Floor, Vien Dong Building, 36 Hoan Cau, O Cho Dua Ward, Dong Da Distric, Hanoi</p>
+				<h2>Facility Operation Manager</h2>
+				<p>3 Floor, Seoul Building, 36 Gang-nam, 1928-3746</p>
 			</div>
 		</div>
 	</center>
