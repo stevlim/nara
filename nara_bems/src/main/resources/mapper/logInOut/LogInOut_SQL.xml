@@ -32,7 +32,7 @@
 			      ,STATUS
 			      ,WORKER
 			      ,WORKER_IP
-			FROM  TB_BO_USR_ACCT	
+			FROM  TB_USR_ACCT	
 			WHERE USR_ID   = #{USR_ID}
 			AND   PSWD     = #{PSWD}
 			AND   USR_TYPE = '2'
@@ -55,9 +55,7 @@
 			      ,UA.WORKER
 			      ,UA.WORKER_IP
 			      ,IFNULL(UA.FAIL_CNT, '0') AS FAIL_CNT
-			FROM  TB_BO_USR_ACCT UA	
-				LEFT OUTER JOIN TB_BO_USR_ACCT_MER UM
-	            ON UA.USR_ID = UM.USR_ID
+			FROM  TB_USR_ACCT UA	
 			WHERE 1=1 
 				AND UA.USR_ID   = #{USR_ID}
 			  AND UA.USR_TYPE = '2'
@@ -67,7 +65,7 @@
     <select id="selectPswdHistory" parameterType="hashmap" resultType="hashmap">
 	    <![CDATA[
 	    	SELECT CONCAT(COALESCE(OLD_PW1, '-'),',',COALESCE(OLD_PW2, '-'),',',COALESCE(OLD_PW3, '-'),',',COALESCE(OLD_PW4, '-'),',',COALESCE(OLD_PW5, '-')) AS OLD_PW
-			FROM TB_BO_USR_ACCT
+			FROM TB_USR_ACCT
 			WHERE USR_ID   = #{USR_ID}
 			  AND USR_TYPE = '2'
 	    ]]>
@@ -75,7 +73,7 @@
     
     <update id="updateAdminPSWD" parameterType="hashmap">
         <![CDATA[
-            UPDATE TB_BO_USR_ACCT 
+            UPDATE TB_USR_ACCT 
             SET PSWD = #{NEWPSWD}
                ,UPD_DT = (SELECT DATE_FORMAT(NOW(), "%Y%m%d%H%i%s") FROM DUAL)
                ,OLD_PW1 = #{PSWD}
@@ -90,15 +88,15 @@
     
     <update id="updateFailCnt" parameterType="hashmap">
         <![CDATA[
-            UPDATE TB_BO_USR_ACCT 
-			SET FAIL_CNT = (SELECT A.FAIL_CNT + 1 FROM (SELECT FAIL_CNT FROM TB_BO_USR_ACCT WHERE USR_ID = #{USR_ID}) A)
+            UPDATE TB_USR_ACCT 
+			SET FAIL_CNT = (SELECT A.FAIL_CNT + 1 FROM (SELECT FAIL_CNT FROM TB_USR_ACCT WHERE USR_ID = #{USR_ID}) A)
 			WHERE USR_ID = #{USR_ID}
         ]]>
     </update>
     
     <update id="updateFailCntInit" parameterType="hashmap">
         <![CDATA[
-            UPDATE TB_BO_USR_ACCT 
+            UPDATE TB_USR_ACCT 
 			SET FAIL_CNT = 0
 			WHERE USR_ID = #{USR_ID}
         ]]>
@@ -106,7 +104,7 @@
     
     <insert id="insertLoginLog" parameterType="hashmap">
     	<![CDATA[
-    		INSERT INTO TB_BO_USR_WORK_LOG(
+    		INSERT INTO TB_USR_WORK_LOG(
 			   SEQ_NO 
 			  ,USR_ID 
 			  ,MENU_NO 
@@ -115,7 +113,7 @@
 			  ,LOG_DESC
 			  ,WORKER_IP
 			) VALUES (
-			   (SELECT IF(COUNT(A.SEQ_NO)=0, 1, MAX(COALESCE(A.SEQ_NO, 0))+1) FROM TB_BO_USR_WORK_LOG A)
+			   (SELECT IF(COUNT(A.SEQ_NO)=0, 1, MAX(COALESCE(A.SEQ_NO, 0))+1) FROM TB_USR_WORK_LOG A)
 			  ,#{USR_ID}
 			  ,0                                -- LOGIN
 			  ,'/home/dashboard/dashboard.do'   -- DASHBORD
@@ -128,7 +126,7 @@
     
     <insert id="insertLogoutLog" parameterType="hashmap">
     	<![CDATA[
-    		INSERT INTO TB_BO_USR_WORK_LOG(
+    		INSERT INTO TB_USR_WORK_LOG(
 			   SEQ_NO 
 			  ,USR_ID 
 			  ,MENU_NO 
@@ -137,7 +135,7 @@
 			  ,LOG_DESC
 			  ,WORKER_IP
 			) VALUES (
-			   (SELECT IF(COUNT(A.SEQ_NO)=0, 1, MAX(COALESCE(A.SEQ_NO, 0))+1) FROM TB_BO_USR_WORK_LOG A)
+			   (SELECT IF(COUNT(A.SEQ_NO)=0, 1, MAX(COALESCE(A.SEQ_NO, 0))+1) FROM TB_USR_WORK_LOG A)
 			  ,#{USR_ID}
 			  ,0             -- Logout
 			  ,'/logIn.do'   -- login page

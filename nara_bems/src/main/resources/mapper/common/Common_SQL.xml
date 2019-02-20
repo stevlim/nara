@@ -4,9 +4,9 @@
 <mapper namespace="common">
     <insert id="insertUserWorkLog" parameterType="hashmap">
         <![CDATA[
-            INSERT INTO TB_BO_USR_WORK_LOG (SEQ_NO, USR_ID, MENU_NO, MENU_LINK, METHOD_NM ,LOG_DESC
+            INSERT INTO TB_USR_WORK_LOG (SEQ_NO, USR_ID, MENU_NO, MENU_LINK, METHOD_NM ,LOG_DESC
                                            ,WORKER_IP)
-	                                 VALUES((SELECT IF(COUNT(A.SEQ_NO)=0, 1, MAX(COALESCE(A.SEQ_NO, 0))+1) FROM TB_BO_USR_WORK_LOG A)
+	                                 VALUES((SELECT IF(COUNT(A.SEQ_NO)=0, 1, MAX(COALESCE(A.SEQ_NO, 0))+1) FROM TB_USR_WORK_LOG A)
 	                                 		, #{USR_ID}, #{MENU_NO}, #{MENU_LINK}, #{METHOD_NM}, #{LOG_DESC}
 	                                       ,#{WORKER_IP})
         ]]>
@@ -15,7 +15,7 @@
     <select id="selectUserPSWD" parameterType="hashmap" resultType="String">
         <![CDATA[
             SELECT PSWD
-            FROM TB_BO_USR_ACCT 
+            FROM TB_USR_ACCT 
             WHERE USR_ID = #{USR_ID}
         ]]>
     </select>
@@ -23,7 +23,7 @@
     <select id="selectChkAuthUserMenu" parameterType="hashmap" resultType="integer">
         <![CDATA[
 	        SELECT COUNT(C.AUTH_CD)
-			FROM TB_BO_USR_ACCT A
+			FROM TB_USR_ACCT A
 			INNER JOIN TB_BO_USR_AUTH B ON A.AUTH_NO = B.AUTH_NO
 			INNER JOIN TB_BO_USR_AUTH_DTL C ON B.AUTH_NO = C.AUTH_NO
 			INNER JOIN TB_BO_MENU D ON C.MENU_NO = D.MENU_NO
@@ -56,7 +56,7 @@
                   ,E.MENU_GRP_NO
                   ,E.MENU_GRP_NM
                   ,A.MASTER_CD
-            FROM TB_BO_USR_ACCT A
+            FROM TB_USR_ACCT A
             INNER JOIN TB_BO_USR_AUTH B ON A.AUTH_NO = B.AUTH_NO
             INNER JOIN TB_BO_USR_AUTH_DTL C ON B.AUTH_NO = C.AUTH_NO
             INNER JOIN TB_BO_MENU D ON C.MENU_NO = D.MENU_NO
@@ -86,7 +86,7 @@
 			    SELECT E.MENU_GRP_NO
 			          ,E.MENU_GRP_NM
 			          ,E.MENU_GRP_SEQ
-			    FROM TB_BO_USR_ACCT A
+			    FROM TB_USR_ACCT A
 			    INNER JOIN TB_BO_USR_AUTH B ON A.AUTH_NO = B.AUTH_NO
 			    INNER JOIN TB_BO_USR_AUTH_DTL C ON B.AUTH_NO = C.AUTH_NO
 			    INNER JOIN TB_BO_MENU D ON C.MENU_NO = D.MENU_NO
@@ -116,7 +116,7 @@
 			      ,E.STATUS
 			      ,COALESCE(D.AUTH_CD,'0') AS AUTH_CD
 			      ,CONCAT(E.PARENT_MENU_NO) AS PARENT_MENU_NO
-			FROM TB_BO_USR_ACCT B
+			FROM TB_USR_ACCT B
 			INNER JOIN TB_BO_USR_AUTH C ON B.AUTH_NO = C.AUTH_NO
 			INNER JOIN TB_BO_USR_AUTH_DTL D ON C.AUTH_NO = D.AUTH_NO
 			INNER JOIN TB_BO_MENU E ON D.MENU_NO = E.MENU_NO
@@ -144,7 +144,7 @@
 			    SELECT E.MENU_GRP_NO
 			          ,E.MENU_GRP_NM
 			          ,E.MENU_GRP_SEQ
-			    FROM TB_BO_USR_ACCT A
+			    FROM TB_USR_ACCT A
 			    INNER JOIN TB_BO_USR_AUTH B ON A.AUTH_NO = B.AUTH_NO
 			    INNER JOIN TB_BO_USR_AUTH_DTL C ON B.AUTH_NO = C.AUTH_NO
 			    INNER JOIN TB_BO_MENU D ON C.MENU_NO = D.MENU_NO
@@ -165,7 +165,7 @@
 			      ,(SELECT MENU_GRP_SEQ FROM TB_BO_MENU_GRP A WHERE A.MENU_GRP_NO = E.MENU_GRP_NO) AS PSORT_NO
 			      ,E.STATUS
 			      ,COALESCE(D.AUTH_CD,'0') AS AUTH_CD
-			FROM TB_BO_USR_ACCT B
+			FROM TB_USR_ACCT B
 			INNER JOIN TB_BO_USR_AUTH C ON B.AUTH_NO = C.AUTH_NO
 			INNER JOIN TB_BO_USR_AUTH_DTL D ON C.AUTH_NO = D.AUTH_NO
 			INNER JOIN TB_BO_MENU E ON D.MENU_NO = E.MENU_NO
