@@ -1,23 +1,13 @@
 package egov.linkpay.ims.sampleMgmt;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import javax.annotation.Resource;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.ModelAndView;
 
 import egov.linkpay.ims.common.common.CommonMap;
-import egov.linkpay.ims.common.common.CommonMessage;
-import egov.linkpay.ims.common.common.CommonUtils;
 import egov.linkpay.ims.sampleMgmt.service.SampleMgmtService;
 
 /**------------------------------------------------------------
