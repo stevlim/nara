@@ -57,7 +57,7 @@ function fnEditFaqMgmtRet(objJson) {
 		<li><a href="#0" class="titletabs">Failure transaction history</a></li>
 	</ul>
 	<div class="tab_content">
-		<div class="transcontent">
+		<div class="transcontent" style="margin-top: 5px;">
 			<div class="rowtype">
 				<div class="tbltitlerow">
 					<span class="titlerow">Charge type</span>
@@ -142,10 +142,10 @@ function fnEditFaqMgmtRet(objJson) {
 				</ul>
 				<ul class="listdaytoday">
 					<li>
-						<input type="text" id="datetimepicker2" class="txtdaytoday" name="id" autocomplete="on" placeholder="From" disabled>
+						<input type="text" id="datetimepicker2" class="txtdaytoday" name="id" autocomplete="on" placeholder="From" disabled style="min-height: 30px;">
 					</li>
 					<li>
-						<input type="text" id="datetimepicker3" class="txtdaytoday" name="id" autocomplete="on" placeholder="To" disabled>
+						<input type="text" id="datetimepicker3" class="txtdaytoday" name="id" autocomplete="on" placeholder="To" disabled style="min-height: 30px;">
 					</li>
 				</ul>
 				<div class="filterbtnsearch">
@@ -307,5 +307,160 @@ function fnEditFaqMgmtRet(objJson) {
 			</ul>
 			
 		</div>
+	</div>
+</div>
+
+
+<div id="dialog-1" class="boxdialog">
+	<div class="contentdialog">
+		<div class="headerdialog">
+			Refund rquest
+			<a class="btncloserequest btnclose1"><span class="icon-close"></span></a>
+		</div>
+		<div class="containerdialog">
+			<h2 class="titledialog">Transaction history</h2>
+			<div class="boxrefund_pop">
+				<div class="leftproductorder">
+					<h3>Product: xyz</h3>
+					<p>Order number: 666777</p>
+				</div>
+				<div class="titletime_refund sgraybg">
+					<span class="lableicon">a</span>
+					<p class="ptime_rf">
+						<span class="daterf">14/12/2018</span>
+						<span class="timerf">09:00:00</span>
+						<span class="lblrf">International card</span>
+						<span class="pricelblrf">300,000 VND</span>
+					</p>
+				</div>
+				<div class="titletime_refund rredbg">
+					<span class="lableicon">r</span>
+					<p class="ptime_rf">
+						<span class="daterf">14/12/2018</span>
+						<span class="timerf">09:00:00</span>
+						<span class="lblrf">International card</span>
+						<span class="pricelblrf">(200,000) VND</span>
+					</p>
+				</div>
+				<div class="amountrefund">
+					Amount after refund
+					<span class="priceamount">100,000 VND</span>
+				</div>
+			</div>
+			<div class="showhideamount">
+				<span class="arrshowhide"></span>
+			</div>
+			<h2 class="titledialog">Refund request</h2>
+			<div class="boxinputrefund">
+				<ul class="listmethod">
+					<li>
+						<div class="tbltitlerow">
+							<span class="titlerow">Buyer</span>
+						</div>
+						<div class="choisemethod">
+							<input type="text" class="txtboxtrans" name="id" autocomplete="on" placeholder="Dang Thi Kim ngan" disabled>
+						</div>
+					</li>
+					<li>
+						<div class="tbltitlerow">
+							<span class="titlerow">Requester</span>
+						</div>
+						<div class="choisemethod">
+							<input type="text" class="txtboxtrans" name="id" autocomplete="on" placeholder="">
+						</div>
+					</li>
+					<li>
+						<div class="tbltitlerow">
+							<span class="titlerow">Reason for refund</span>
+						</div>
+						<div class="choisemethod">
+							<input type="text" class="txtboxtrans" name="id" autocomplete="on" placeholder="">
+						</div>
+					</li>
+					<li>
+						<div class="tbltitlerow">
+							<span class="titlerow">Refund amount</span>
+						</div>
+						<div class="choisemethod">
+							<input type="text" class="txtboxtrans" name="id" autocomplete="on" placeholder="100,000 VND">
+						</div>
+					</li>
+				</ul>
+			</div>
+			<div class="noterefund">
+				The transaction is refunded ofter you click on SENT REFUND REQUEST. After sending the request successfully, please inquiry the transaction status again. In the case that the refund request is sent after the successful transaction over 1 day, the requested amount for refund would be refunded within the time regulated by the issuing bank.
+			</div>
+			<div class="rowbtnrequest">
+				<button class="btnrequest">Send refund request</button>
+			</div>
+		</div>
+		
+	</div>
+</div>
+
+<div id="dialog-2" class="boxdialog">
+	<div class="contentdialog">
+		<div class="headerdialog">
+			Transaction details
+			<a class="btncloserequest btnclose2"><span class="icon-close"></span></a>
+		</div>
+		<div class="containerdialog">
+			<h2 class="titledialog">Transaction history</h2>
+			<div class="boxrefund_pop">
+				<div class="leftproductorder">
+					<h3>Product: xyz</h3>
+					<p>Order number: 666777</p>
+					<p>Buyer: Dang Thi Kim Ngan</p>
+					<p>Card type: BIDV</p>
+				</div>
+				<div class="titletime_refund sgraybg">
+					<span class="lableicon">r</span>
+					<p class="ptime_rf">
+						<span class="daterf">14/12/2018</span>
+						<span class="timerf">09:00:00</span>
+						<span class="lblrf">International card</span>
+						<span class="pricelblrf">300,000 VND</span>
+					</p>
+				</div>
+				<div class="titletime_refund rredbg">
+					<span class="lableicon">a</span>
+					<p class="ptime_rf">
+						<span class="daterf">14/12/2018</span>
+						<span class="timerf">09:00:00</span>
+						<span class="lblrf">Refund | Partial refund</span>
+						<span class="pricelblrf">(200,000) VND</span>
+					</p>
+				</div>
+				<div class="amountrefund">
+					Amount after refund
+					<span class="priceamount">100,000 VND</span>
+				</div>
+			</div>
+			<div class="showhideamount">
+				<span class="arrshowhide"></span>
+			</div>
+			<h2 class="titledialog">Refund request</h2>
+			<div class="boxinputrefund">
+				<ul class="list_transhistory">
+					<li>
+						<span class="labeltranshistory">Buyer</span>
+						<span class="infotranshistory">Dang Thi Kim Ngan</span>
+					</li>
+					<li>
+						<span class="labeltranshistory">Requester</span>
+						<span class="infotranshistory">222333</span>
+					</li>
+					<li>
+						<span class="labeltranshistory">Card type</span>
+						<span class="infotranshistory">BIDV</span>
+					</li>
+					<li>
+						<span class="labeltranshistory">Reason for refund</span>
+						<span class="infotranshistory">abc</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		
 	</div>
 </div>

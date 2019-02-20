@@ -916,6 +916,7 @@
 	position: relative;
 	padding-right: 70px;
 	letter-spacing: -1px;
+	text-align: right;
 }
 
 .txttrans {
@@ -934,6 +935,7 @@
 	position: relative;
 	padding-right: 24px;
 	letter-spacing: -1px;
+	text-align: right;
 }
 
 .colsmsize {
