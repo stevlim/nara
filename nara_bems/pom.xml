@@ -391,6 +391,13 @@
 			<artifactId>tomcat-jdbc</artifactId>
 			<version>7.0.35</version>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.webjars/amcharts -->
+		<dependency>
+		    <groupId>org.webjars</groupId>
+		    <artifactId>amcharts</artifactId>
+		    <version>3.20.13</version>
+		</dependency>
     </dependencies>
     <build>
         <plugins>

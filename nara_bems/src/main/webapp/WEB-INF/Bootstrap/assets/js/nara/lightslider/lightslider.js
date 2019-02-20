@@ -513,6 +513,14 @@
                     if (!this.doCss() && settings.mode === 'fade' && t === false) {
                         ob.eq(sc).fadeIn(settings.speed);
                     }
+                    
+                    //대시보드 차트 조회시 높이 조정
+                    if($("#dashArea02").hasClass("active")) {
+            			$("#slide_merchant").css("height", 500);
+            		}else {
+            			$("#slide_merchant").css("height", 117);
+            		}
+                    
                     ob.eq(sc).addClass('active');
                 } else {
                     ob.removeClass('active');
