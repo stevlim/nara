@@ -53,7 +53,7 @@
 }
 .icon-farr-left:before {
   content: "\e904";
-	color: #fff;
+	/* color: #fff; */
 }
 .icon-farr-right:before {
   content: "\e905";

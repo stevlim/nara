@@ -16,8 +16,8 @@ $(document).ready(function() {
 	<div class="topintro">
 		<a class="btnback" href="/logIn.do"><span class="icon-farr-left"></span></a>
 		<div class="boxintro">
-			<span class="logomms"><img src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/img/nara/login/C-BEMS_logo.png" alt="epay" /></span>
-			<h1>Building Energy Management System</h1>
+			<span class="logomms"><img src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/img/nara/login/FOM_logo.png" alt="epay" /></span>
+			<h1>Facility Operation Manager</h1>
 		</div>
 	</div>
 	<div class="loginpg"  style="background-color: #f3f3f3;">
@@ -37,7 +37,7 @@ $(document).ready(function() {
 			<button class="btnlogin">Confirm</button>
 		</div>
 		<div class="botlogin">
-			Copyright © 2019 C-BEMS. All Rights Reserved.
+			Copyright © 2019 FOM. All Rights Reserved.
 		</div>
 	</div>
 </div>

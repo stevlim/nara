@@ -352,14 +352,14 @@ function fnCoNoDupChkSuccessResult() {
 <div class="mmslogin">
 	<div class="topintro">
 		<div class="boxintro">
-			<span class="logomms"><img src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/img/nara/login/C-BEMS_logo.png" alt="epay" /></span>
-			<h1>Building Energy Management System</h1>
+			<span class="logomms"><img src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/img/nara/login/FOM_logo.png" alt="epay" /></span>
+			<h1>Facility Operation Manager</h1>
 		</div>
 	</div>
 	<div class="loginpg">
 		<div class="formlogin">
 			<div class="headerlogin">
-				<h2 class="titlelogin">BEMS Log-in</h2>
+				<h2 class="titlelogin">Log-in</h2>
 				<div class="checkid">
 					<label class="lblcheck">Remember ID<input type="checkbox" name="sport[]" value="Remember ID" checked="checked" /></label>
 				</div>
@@ -376,7 +376,7 @@ function fnCoNoDupChkSuccessResult() {
 			</div>
 		</div>
 		<div class="botlogin">
-			Copyright © 2019 C-BEMS. All Rights Reserved.
+			Copyright © 2019 FOM. All Rights Reserved.
 		</div>
 	</div>
 </div>
