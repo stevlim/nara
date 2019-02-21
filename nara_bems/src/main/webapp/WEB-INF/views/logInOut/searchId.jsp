@@ -16,7 +16,7 @@ $(document).ready(function() {
 	<div class="topintro">
 		<a class="btnback" href="/logIn.do"><span class="icon-farr-left"></span></a>
 		<div class="boxintro">
-			<span class="logomms"><img src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/img/nara/login/FOM_logo.png" alt="epay" /></span>
+			<span class="logomms"><img src="//<spring:eval expression="@config['SERVICE_DOMAIN']"/>/Bootstrap/assets/img/nara/login/FMS_logo.png" alt="epay" /></span>
 			<h1>Facility Operation Manager</h1>
 		</div>
 	</div>
